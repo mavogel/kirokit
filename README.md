@@ -20,6 +20,18 @@ go build -o kirokit ./cmd/kirokit
 ./kirokit onboard my-new-team
 ```
 
+## Taskfile
+
+A [`Taskfile.yml`](https://taskfile.dev) wraps the common Go commands. Install `task` via Homebrew (`brew install go-task`), then:
+
+```bash
+task build   # go build -o kirokit ./cmd/kirokit
+task vet     # go vet ./...
+task lint    # golangci-lint run
+task test    # go test ./... -v (includes every team's golden-file comparisons)
+task ci      # build + vet + lint + test, matching .github/workflows/ci.yaml
+```
+
 ## Directory Layout
 
 ```

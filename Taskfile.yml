@@ -1,0 +1,30 @@
+version: "3"
+
+tasks:
+  build:
+    desc: Build the kirokit binary
+    cmds:
+      - go build -o kirokit ./cmd/kirokit
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run
+
+  test:
+    desc: Run the Go test suite (includes golden-file comparisons)
+    cmds:
+      - go test ./... -v
+
+  ci:
+    desc: Run the same checks as CI (build, vet, lint, test)
+    cmds:
+      - task: build
+      - task: vet
+      - task: lint
+      - task: test
