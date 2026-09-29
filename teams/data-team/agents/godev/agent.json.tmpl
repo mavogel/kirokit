@@ -2,7 +2,20 @@
   "name": "godev",
   "description": "Go backend developer agent for data-team, with access to the build pipeline status via a local, non-secret MCP server.",
   "prompt": "file://prompts/pipeline-status.md",
-  "tools": ["read", "write", "@pipeline-mcp"],
+  "tools": ["read", "write", "glob", "knowledge", "shell", "@pipeline-mcp"],
+  "permissions": {
+    "rules": [
+      { "capability": "fs_read", "match": ["**"], "effect": "allow" },
+      { "capability": "fs_write", "match": ["**/*.go", "go.mod", "go.sum"], "effect": "allow" },
+      { "capability": "fs_write", "match": ["/tmp/**"], "effect": "allow" },
+      { "capability": "fs_write", "match": ["**/secrets.enc.yaml", "**/*.sops.yaml"], "effect": "deny" },
+      { "capability": "mcp", "match": ["@pipeline-mcp/*"], "effect": "allow" },
+      { "capability": "shell", "match": ["rm *"], "effect": "deny" },
+      { "capability": "shell", "match": ["git push --force*", "git push -f*", "git push * --force*", "git push * -f*"], "effect": "deny" },
+      { "capability": "shell", "match": ["git push * main", "git push * main *"], "effect": "deny" },
+      { "capability": "shell", "match": ["git branch -d *", "git branch -D *", "git branch --delete*"], "effect": "deny" }
+    ]
+  },
   "resources": [
     "skill://skills/sql-helper/SKILL.md"
   ],

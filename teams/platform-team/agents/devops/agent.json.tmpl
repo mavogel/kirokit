@@ -2,7 +2,18 @@
   "name": "devops",
   "description": "Triages and resolves Jira tickets for platform-team, following the team's shared security baseline steering.",
   "prompt": "file://prompts/jira-triage.md",
-  "tools": ["read", "@jira-mcp"],
+  "tools": ["read", "write", "glob", "knowledge", "shell", "@jira-mcp"],
+  "permissions": {
+    "rules": [
+      { "capability": "fs_read", "match": ["**"], "effect": "allow" },
+      { "capability": "fs_write", "match": ["/tmp/**"], "effect": "allow" },
+      { "capability": "mcp", "match": ["@jira-mcp/*"], "effect": "ask" },
+      { "capability": "shell", "match": ["rm *"], "effect": "deny" },
+      { "capability": "shell", "match": ["git push --force*", "git push -f*", "git push * --force*", "git push * -f*"], "effect": "deny" },
+      { "capability": "shell", "match": ["git push * main", "git push * main *"], "effect": "deny" },
+      { "capability": "shell", "match": ["git branch -d *", "git branch -D *", "git branch --delete*"], "effect": "deny" }
+    ]
+  },
   "resources": [
     "skill://skills/jira-search/SKILL.md"
   ],

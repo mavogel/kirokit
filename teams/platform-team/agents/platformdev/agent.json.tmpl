@@ -2,7 +2,18 @@
   "name": "platformdev",
   "description": "Looks up Confluence documentation for platform-team, following the team's shared security baseline steering.",
   "prompt": "file://prompts/confluence-search.md",
-  "tools": ["read", "@confluence-mcp"],
+  "tools": ["read", "write", "glob", "knowledge", "shell", "@confluence-mcp"],
+  "permissions": {
+    "rules": [
+      { "capability": "fs_read", "match": ["**"], "effect": "allow" },
+      { "capability": "fs_write", "match": ["/tmp/**"], "effect": "allow" },
+      { "capability": "mcp", "match": ["@confluence-mcp/*"], "effect": "allow" },
+      { "capability": "shell", "match": ["rm *"], "effect": "deny" },
+      { "capability": "shell", "match": ["git push --force*", "git push -f*", "git push * --force*", "git push * -f*"], "effect": "deny" },
+      { "capability": "shell", "match": ["git push * main", "git push * main *"], "effect": "deny" },
+      { "capability": "shell", "match": ["git branch -d *", "git branch -D *", "git branch --delete*"], "effect": "deny" }
+    ]
+  },
   "resources": [
     "skill://skills/confluence-lookup/SKILL.md"
   ],

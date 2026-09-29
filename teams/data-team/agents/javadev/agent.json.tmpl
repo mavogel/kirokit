@@ -2,7 +2,20 @@
   "name": "javadev",
   "description": "Java backend developer agent for data-team, with access to the analytics warehouse via Snowflake.",
   "prompt": "file://prompts/warehouse-query.md",
-  "tools": ["read", "write", "@snowflake-mcp"],
+  "tools": ["read", "write", "glob", "knowledge", "shell", "@snowflake-mcp"],
+  "permissions": {
+    "rules": [
+      { "capability": "fs_read", "match": ["**"], "effect": "allow" },
+      { "capability": "fs_write", "match": ["**/*.java", "pom.xml", "build.gradle*"], "effect": "allow" },
+      { "capability": "fs_write", "match": ["/tmp/**"], "effect": "allow" },
+      { "capability": "fs_write", "match": ["**/secrets.enc.yaml", "**/*.sops.yaml"], "effect": "deny" },
+      { "capability": "mcp", "match": ["@snowflake-mcp/*"], "effect": "ask" },
+      { "capability": "shell", "match": ["rm *"], "effect": "deny" },
+      { "capability": "shell", "match": ["git push --force*", "git push -f*", "git push * --force*", "git push * -f*"], "effect": "deny" },
+      { "capability": "shell", "match": ["git push * main", "git push * main *"], "effect": "deny" },
+      { "capability": "shell", "match": ["git branch -d *", "git branch -D *", "git branch --delete*"], "effect": "deny" }
+    ]
+  },
   "resources": [
     "skill://skills/sql-helper/SKILL.md"
   ],
