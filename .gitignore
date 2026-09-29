@@ -1,2 +1,7 @@
 /dist/
 /kirokit
+/tmp/
+.claude/*
+!.claude/rules/
+!.claude/skills/
+demo-runbook-*
