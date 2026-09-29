@@ -1,3 +1,8 @@
+---
+inclusion: fileMatch
+fileMatchPattern: ["**/*.go", "**/*.java"]
+---
+
 # data-team Conventions
 
 data-team does not opt into any global steering; these conventions are standalone.
