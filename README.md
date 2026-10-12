@@ -93,7 +93,14 @@ A secret an agent's MCP server needs (a personal Jira/Confluence token, a wareho
 3. `sops exec-env <file> "<command>"` decrypts the file and launches the real command with its keys set as env vars, entirely at MCP-server-launch time — never at template-render time, and never through Kiro CLI's own (currently unreliable) `${VAR}` substitution.
 4. `kirokit install` copies each agent's encrypted secrets file to `$KIRO_HOME/kirokit-secrets/<team>/<agent>/secrets.enc.yaml` so the baked-in path actually resolves at runtime.
 
-Decrypting requires a SOPS-compatible key (age, PGP, or KMS) that is a recipient in `.sops.yaml`. This repo's own `.sops.yaml` and `testdata/sops-test-key/age-test-key.txt` are **test-only fixtures** used solely by this kit's own tests/CI — their private key material is committed and public, and must never be reused to encrypt a real secret. A real team onboarding real secrets should add its own `creation_rules` entry to `.sops.yaml` scoped to its own team's path, naming its own engineers' age/PGP/KMS recipients, and never write real secret values into this test key's recipients.
+Decrypting requires a SOPS-compatible key (age, PGP, or KMS) that is a recipient in `.sops.yaml`. Each team has its own `creation_rules` entry in `.sops.yaml` naming that team's age public key(s); a team's key cannot decrypt another team's secrets. Private keys are never committed — keep them outside the repo, e.g. `~/.config/sops/age/<team>.txt`, and point SOPS at the right one:
+
+```bash
+SOPS_AGE_KEY_FILE=~/.config/sops/age/platform-team.txt sops teams/platform-team/agents/devops/env/secrets.enc.yaml   # edit
+age-keygen -o ~/.config/sops/age/my-team.txt                                                                          # new team key
+```
+
+To add an engineer to a team, append their age public key (comma-separated) to that team's rule and run `sops updatekeys <file>` for each of the team's secrets files. The secret values committed here are placeholders; replace them with real tokens via `sops <file>`.
 
 ## Golden Tests
 
