@@ -1,7 +1,7 @@
 {
   "name": "javadev",
   "description": "Java backend developer agent for data-team, with access to the analytics warehouse via Snowflake.",
-  "prompt": "file://prompts/warehouse-query.md",
+  "prompt": "file://../prompts/warehouse-query.md",
   "tools": ["read", "write", "glob", "knowledge", "shell", "@snowflake-mcp"],
   "permissions": {
     "rules": [
@@ -17,7 +17,7 @@
     ]
   },
   "resources": [
-    "skill://skills/sql-helper/SKILL.md"
+    "skill:///kiro-home/skills/sql-helper/SKILL.md"
   ],
   "mcpServers": {
     "snowflake-mcp": {

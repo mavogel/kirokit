@@ -1,7 +1,7 @@
 {
   "name": "devops",
   "description": "Triages and resolves Jira tickets for platform-team, following the team's shared security baseline steering.",
-  "prompt": "file://prompts/jira-triage.md",
+  "prompt": "file://../prompts/jira-triage.md",
   "tools": ["read", "write", "glob", "knowledge", "shell", "@atlassian", "@context7"],
   "permissions": {
     "rules": [
@@ -16,12 +16,12 @@
     ]
   },
   "resources": [
-    "skill://skills/jira-search/SKILL.md"
+    "skill://{{ .KiroHome }}/skills/jira-search/SKILL.md"
   ],
   "mcpServers": {
     "atlassian": {
       "command": {{ sopsCommand }},
-      "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/platform-team/devops/secrets.enc.yaml" .KiroHome) "npx" "-y" (printf "mcp-remote@%s" (mcpVersion "mcp-remote")) "https://mcp.atlassian.com/v2/mcp" "--header" "Authorization:${ATLASSIAN_AUTH}" }},
+      "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/platform-team/devops/secrets.enc.yaml" .KiroHome) "npx" "-y" (printf "mcp-remote@%s" (mcpVersion "mcp-remote")) "https://mcp.atlassian.com/v2/mcp" "--header" "Authorization: ${ATLASSIAN_AUTH}" }},
       "timeout": 60000
     },
     "context7": {

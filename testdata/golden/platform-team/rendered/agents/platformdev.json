@@ -1,7 +1,7 @@
 {
   "name": "platformdev",
   "description": "Looks up Confluence documentation for platform-team, following the team's shared security baseline steering.",
-  "prompt": "file://prompts/confluence-search.md",
+  "prompt": "file://../prompts/confluence-search.md",
   "tools": ["read", "write", "glob", "knowledge", "shell", "@confluence-mcp"],
   "permissions": {
     "rules": [
@@ -15,7 +15,7 @@
     ]
   },
   "resources": [
-    "skill://skills/confluence-lookup/SKILL.md"
+    "skill:///kiro-home/skills/confluence-lookup/SKILL.md"
   ],
   "mcpServers": {
     "confluence-mcp": {
