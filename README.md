@@ -136,6 +136,19 @@ kirokit uninstall <team>
 
 The three `--kb-*` flags (all-or-nothing) attach a local `knowledgeBase`-type resource to one installed agent: `--kb-source` is a local folder, `--kb-mount` is where it gets symlinked (never copied), and `--kb-agent` is which installed agent's `resources` array gets the new entry. `uninstall` removes the symlink but never touches the real source folder's content.
 
+## Git Hooks
+
+[Lefthook](https://lefthook.dev) runs checks on every commit (`brew install lefthook gitleaks commitizen uv`, then once per clone):
+
+```bash
+lefthook install
+```
+
+- **pre-commit:** `trailing-whitespace`, `end-of-file-fixer`, `check-yaml`, `check-json` (from [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks), run via `uvx`) and `gitleaks` on the staged changes. The two fixers re-stage what they change but fail the commit, so run it again. They skip `testdata/golden/**` (byte-compared by `kirokit test`) and `*.enc.yaml` (SOPS MAC).
+- **commit-msg:** `cz check` enforces Conventional Commits, which `semantic-release` needs. Use `cz commit` for an interactive prompt.
+
+Run everything on demand with `lefthook run pre-commit --all-files`.
+
 ## Releases
 
 Releases follow Conventional Commits on `main`:

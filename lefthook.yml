@@ -1,0 +1,44 @@
+# Git hooks, managed by lefthook (https://lefthook.dev). Install once per clone:
+#   lefthook install
+#
+# The file-hygiene checks come from pre-commit-hooks and run through uvx, so
+# no Python environment needs to be set up.
+#
+# Excluded from the fixers on purpose:
+#   - testdata/golden/**  golden files are compared byte-for-byte by `kirokit test`
+#   - **/*.enc.yaml       SOPS files carry a MAC over their exact content
+#   - .claude/**          tool state, not source
+
+pre-commit:
+  jobs:
+    - name: trailing-whitespace
+      run: uvx --from pre-commit-hooks==6.0.0 trailing-whitespace-fixer {staged_files}
+      exclude:
+        - "testdata/golden/**"
+        - ".claude/**"
+        - "**/*.enc.yaml"
+      stage_fixed: true
+
+    - name: end-of-file-fixer
+      run: uvx --from pre-commit-hooks==6.0.0 end-of-file-fixer {staged_files}
+      exclude:
+        - "testdata/golden/**"
+        - ".claude/**"
+        - "**/*.enc.yaml"
+      stage_fixed: true
+
+    - name: check-yaml
+      glob: "*.{yaml,yml}"
+      run: uvx --from pre-commit-hooks==6.0.0 check-yaml --allow-multiple-documents {staged_files}
+
+    - name: check-json
+      glob: "*.json"
+      run: uvx --from pre-commit-hooks==6.0.0 check-json {staged_files}
+
+    - name: gitleaks
+      run: gitleaks git --staged --redact --no-banner
+
+commit-msg:
+  jobs:
+    - name: commitizen
+      run: cz check --commit-msg-file {1}
