@@ -7,6 +7,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/mavogel/kiro-cli-kit/internal/scaffold"
 )
 
 // setupFixture builds a minimal team tree (one agent, one hook, one
@@ -340,4 +342,30 @@ func indexOf(s, substr string) int {
 		}
 	}
 	return -1
+}
+
+func TestRenderTeam_FreshlyScaffoldedTeamRendersWithoutPlaceholders(t *testing.T) {
+	teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+	if err := scaffold.Scaffold(teamsRoot, "fresh-team"); err != nil {
+		t.Fatalf("Scaffold: %v", err)
+	}
+	// The starter agent pins "example-mcp", which the real env file provides.
+	if err := os.WriteFile(envVersionsPath, []byte("example-mcp: \"1.0.0\"\n"), 0o600); err != nil {
+		t.Fatalf("write env versions: %v", err)
+	}
+	outDir := filepath.Join(t.TempDir(), "out")
+
+	if err := RenderTeam(teamsRoot, "fresh-team", globalRoot, envVersionsPath, outDir, ""); err != nil {
+		t.Fatalf("RenderTeam on a freshly scaffolded team: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(outDir, "agents", "example-agent.json")); err != nil {
+		t.Errorf("expected agents/example-agent.json: %v", err)
+	}
+	_ = filepath.WalkDir(outDir, func(path string, d os.DirEntry, err error) error {
+		if err == nil && d.Name() == ".gitkeep" {
+			t.Errorf("placeholder leaked into rendered output: %s", path)
+		}
+		return nil
+	})
 }

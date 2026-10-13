@@ -49,6 +49,11 @@ func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir, kiroHome s
 		if path == filepath.Join(teamDir, "manifest.yaml") {
 			return nil
 		}
+		// `kirokit onboard` leaves .gitkeep placeholders in empty categories;
+		// they are not config and must not be validated or rendered.
+		if d.Name() == ".gitkeep" {
+			return nil
+		}
 
 		relPath, err := filepath.Rel(teamDir, path)
 		if err != nil {
