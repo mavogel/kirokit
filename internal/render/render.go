@@ -26,6 +26,7 @@ func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir, kiroHome s
 		return err
 	}
 	funcMap := FuncMap(ctx)
+	globalURIs := globalSteeringURIs(ctx)
 
 	teamDir := filepath.Join(teamsRoot, team)
 
@@ -76,6 +77,13 @@ func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir, kiroHome s
 			}
 		}
 
+		if strings.HasPrefix(outRel, "agents/") {
+			content, err = addResources(content, globalURIs)
+			if err != nil {
+				return fmt.Errorf("render: %s: add global steerings to resources: %w", relPath, err)
+			}
+		}
+
 		if err := validateOutput(outRel, content); err != nil {
 			return fmt.Errorf("render: %s: %w", relPath, err)
 		}
@@ -91,6 +99,9 @@ func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir, kiroHome s
 	})
 	if walkErr != nil {
 		return walkErr
+	}
+	if err := writeGlobalSteerings(tmpDir, ctx); err != nil {
+		return err
 	}
 
 	if err := os.RemoveAll(outDir); err != nil {

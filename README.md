@@ -66,6 +66,8 @@ globalSteerings:
 
 `globalSteerings` may be an empty list (`[]`) to explicitly opt out — see `teams/data-team/manifest.yaml`.
 
+Every opted-in global steering is added to the `resources` of **every agent** of the team automatically, as `file://$KIRO_HOME/kirokit-steerings/<team>/<slug>.md` (appended to the agent's own `resources`, created if missing). The steering is rendered to that file, not to Kiro's auto-loaded `steering/` directory, so it applies only to the opted-in team's agents. A template can still inline a global steering with `{{ globalSteering "<slug>" }}`.
+
 ## Central env/mcp-versions.yaml
 
 A flat map of MCP server name to pinned version/tag:

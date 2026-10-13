@@ -16,7 +16,8 @@
     ]
   },
   "resources": [
-    "skill:///kiro-home/skills/jira-search/SKILL.md"
+    "skill:///kiro-home/skills/jira-search/SKILL.md",
+    "file:///kiro-home/kirokit-steerings/platform-team/security-baseline.md"
   ],
   "mcpServers": {
     "atlassian": {

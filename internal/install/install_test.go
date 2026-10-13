@@ -100,6 +100,47 @@ func TestUninstall_RemovesExactlyWhatInstallWroteAndNothingElse(t *testing.T) {
 	}
 }
 
+func TestInstall_GlobalSteeringIsInstalledPerTeamAndReferencedByTheAgent(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	const slug = "security-baseline"
+	mustWrite(t, filepath.Join(roots.GlobalRoot, slug+".md"), "# Security Baseline\n")
+	for _, tm := range []string{team, "other-team"} {
+		mustWrite(t, filepath.Join(roots.TeamsRoot, tm, "manifest.yaml"), "team: "+tm+"\nglobalSteerings:\n  - "+slug+"\n")
+	}
+	mustWrite(t, filepath.Join(roots.TeamsRoot, "other-team", "agents", "agent2", "agent.json.tmpl"), `{"name": "agent2", "mcpServers": {"s": {"command": "c"}}}`)
+
+	for _, tm := range []string{team, "other-team"} {
+		if err := Install(roots, tm, kiroHome, nil); err != nil {
+			t.Fatalf("Install(%s) returned error: %v", tm, err)
+		}
+	}
+
+	steering := func(tm string) string { return filepath.Join(kiroHome, "kirokit-steerings", tm, slug+".md") }
+	for _, tm := range []string{team, "other-team"} {
+		if _, err := os.Stat(steering(tm)); err != nil {
+			t.Fatalf("expected %s's installed global steering: %v", tm, err)
+		}
+	}
+	agentJSON, err := os.ReadFile(filepath.Join(kiroHome, "agents", "agent1.json"))
+	if err != nil {
+		t.Fatalf("read installed agent1.json: %v", err)
+	}
+	if !strings.Contains(string(agentJSON), "file://"+steering(team)) {
+		t.Errorf("installed agent1.json = %s, want a resources entry for %s", agentJSON, steering(team))
+	}
+
+	if err := Uninstall(kiroHome, team); err != nil {
+		t.Fatalf("Uninstall returned error: %v", err)
+	}
+	if _, err := os.Stat(steering(team)); !os.IsNotExist(err) {
+		t.Errorf("uninstalled team's steering still exists (err=%v)", err)
+	}
+	if _, err := os.Stat(steering("other-team")); err != nil {
+		t.Errorf("uninstalling one team removed another team's steering: %v", err)
+	}
+}
+
 func TestInstall_WithKnowledgeBaseCreatesSymlinkAndResourceEntry(t *testing.T) {
 	roots, team, _ := setupFixture(t)
 	kiroHome := t.TempDir()
