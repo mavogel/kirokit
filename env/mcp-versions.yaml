@@ -5,3 +5,7 @@ jira-mcp: "1.4.2"
 confluence-mcp: "2.1.0"
 snowflake-mcp: "0.9.1"
 pipeline-mcp: "3.0.0"
+# npm packages launched via npx; the Atlassian server itself is remote-hosted
+# (https://mcp.atlassian.com/v2/mcp) and reached through the mcp-remote proxy.
+mcp-remote: "0.14.3"
+context7-mcp: "4.3.0"

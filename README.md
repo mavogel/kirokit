@@ -93,6 +93,8 @@ A secret an agent's MCP server needs (a personal Jira/Confluence token, a wareho
 3. `sops exec-env <file> "<command>"` decrypts the file and launches the real command with its keys set as env vars, entirely at MCP-server-launch time — never at template-render time, and never through Kiro CLI's own (currently unreliable) `${VAR}` substitution.
 4. `kirokit install` copies each agent's encrypted secrets file to `$KIRO_HOME/kirokit-secrets/<team>/<agent>/secrets.enc.yaml` so the baked-in path actually resolves at runtime.
 
+**Remote (HTTP) MCP servers** such as the official Atlassian server (`https://mcp.atlassian.com/v2/mcp`) have no local binary, so they are launched through the pinned `mcp-remote` proxy under the same `sops exec-env` wrapper. The secret holds the full header value (`Bearer <key>` for a service-account API key, or `Basic <base64(email:token)>` for a personal API token) and the template passes `--header 'Authorization:${ATLASSIAN_AUTH}'`; the single quotes keep the placeholder literal in the rendered file, and `mcp-remote` expands it from the environment sops sets at launch. See `teams/platform-team/agents/devops/agent.json.tmpl`. Atlassian API-token auth must be enabled by an org admin (Atlassian Administration → Rovo → Rovo MCP server → Authentication).
+
 Decrypting requires a SOPS-compatible key (age, PGP, or KMS) that is a recipient in `.sops.yaml`. Each team has its own `creation_rules` entry in `.sops.yaml` naming that team's age public key(s); a team's key cannot decrypt another team's secrets. Private keys are never committed — keep them outside the repo, e.g. `~/.config/sops/age/<team>.txt`, and point SOPS at the right one:
 
 ```bash

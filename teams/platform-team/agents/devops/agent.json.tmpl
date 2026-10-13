@@ -2,12 +2,13 @@
   "name": "devops",
   "description": "Triages and resolves Jira tickets for platform-team, following the team's shared security baseline steering.",
   "prompt": "file://prompts/jira-triage.md",
-  "tools": ["read", "write", "glob", "knowledge", "shell", "@jira-mcp"],
+  "tools": ["read", "write", "glob", "knowledge", "shell", "@atlassian", "@context7"],
   "permissions": {
     "rules": [
       { "capability": "fs_read", "match": ["**"], "effect": "allow" },
       { "capability": "fs_write", "match": ["/tmp/**"], "effect": "allow" },
-      { "capability": "mcp", "match": ["@jira-mcp/*"], "effect": "ask" },
+      { "capability": "mcp", "match": ["@atlassian/*"], "effect": "ask" },
+      { "capability": "mcp", "match": ["@context7/*"], "effect": "allow" },
       { "capability": "shell", "match": ["rm *"], "effect": "deny" },
       { "capability": "shell", "match": ["git push --force*", "git push -f*", "git push * --force*", "git push * -f*"], "effect": "deny" },
       { "capability": "shell", "match": ["git push * main", "git push * main *"], "effect": "deny" },
@@ -18,9 +19,14 @@
     "skill://skills/jira-search/SKILL.md"
   ],
   "mcpServers": {
-    "jira-mcp": {
+    "atlassian": {
       "command": {{ sopsCommand }},
-      "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/platform-team/devops/secrets.enc.yaml" .KiroHome) "jira-mcp-server" "--port" "8080" "--server-version" (mcpVersion "jira-mcp") }},
+      "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/platform-team/devops/secrets.enc.yaml" .KiroHome) "npx" "-y" (printf "mcp-remote@%s" (mcpVersion "mcp-remote")) "https://mcp.atlassian.com/v2/mcp" "--header" "Authorization:${ATLASSIAN_AUTH}" }},
+      "timeout": 60000
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", {{ printf "@upstash/context7-mcp@%s" (mcpVersion "context7-mcp") | jsonString }}],
       "timeout": 60000
     }
   }
