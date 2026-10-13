@@ -26,7 +26,7 @@ func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir, kiroHome s
 		return err
 	}
 	funcMap := FuncMap(ctx)
-	globalURIs := globalSteeringURIs(ctx)
+	agentResources := append(globalSteeringURIs(ctx), workspaceResources...)
 
 	teamDir := filepath.Join(teamsRoot, team)
 
@@ -78,9 +78,9 @@ func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir, kiroHome s
 		}
 
 		if strings.HasPrefix(outRel, "agents/") {
-			content, err = addResources(content, globalURIs)
+			content, err = addResources(content, agentResources)
 			if err != nil {
-				return fmt.Errorf("render: %s: add global steerings to resources: %w", relPath, err)
+				return fmt.Errorf("render: %s: add steering to resources: %w", relPath, err)
 			}
 		}
 

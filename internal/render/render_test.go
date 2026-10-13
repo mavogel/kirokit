@@ -173,6 +173,8 @@ const (
 	fixtureSteeringContent = "# Security Baseline\n\nFollow least privilege.\n"
 	fixtureSteeringRel     = "kirokit-steerings/fixture-team/security-baseline.md"
 	fixtureSteeringURI     = "file:///kh/" + fixtureSteeringRel
+	workspaceSteeringURI   = "file://.kiro/steering/**/*.md"
+	workspaceSkillsURI     = "skill://.kiro/skills/**/SKILL.md"
 )
 
 // renderedResources renders the fixture with KiroHome=/kh and returns the
@@ -209,11 +211,11 @@ func TestRenderTeam_AddsOptedInGlobalSteeringToEveryAgent(t *testing.T) {
 	outDir, res1, _ := renderedResources(t, teamsRoot, globalRoot, envVersionsPath, "agent1")
 	_, res2, _ := renderedResources(t, teamsRoot, globalRoot, envVersionsPath, "agent2")
 
-	if !slices.Equal(res1, []string{fixtureSteeringURI}) {
-		t.Errorf("agent1 resources = %v, want [%s]", res1, fixtureSteeringURI)
+	if want := []string{fixtureSteeringURI, workspaceSteeringURI, workspaceSkillsURI}; !slices.Equal(res1, want) {
+		t.Errorf("agent1 resources = %v, want %v", res1, want)
 	}
-	if !slices.Equal(res2, []string{"file:///own.md", fixtureSteeringURI}) {
-		t.Errorf("agent2 resources = %v, want its own entry followed by [%s]", res2, fixtureSteeringURI)
+	if want := []string{"file:///own.md", fixtureSteeringURI, workspaceSteeringURI, workspaceSkillsURI}; !slices.Equal(res2, want) {
+		t.Errorf("agent2 resources = %v, want its own entry followed by %v", res2, want[1:])
 	}
 
 	steering, err := os.ReadFile(filepath.Join(outDir, filepath.FromSlash(fixtureSteeringRel)))
@@ -233,13 +235,15 @@ func TestRenderTeam_GlobalSteeringResourceFitsEveryResourcesShape(t *testing.T) 
 		want     []string
 		prefix   string // formatting of the author's text that must survive untouched
 	}{
-		{"no resources key", `{"name": "agent1"}`, []string{fixtureSteeringURI}, ""},
-		{"no resources key, multi-line", "{\n  \"name\": \"agent1\"\n}\n", []string{fixtureSteeringURI}, "{\n  \"name\": \"agent1\""},
-		{"key with an escaped quote, multi-line", "{\n  \"a\\\"b\": 1\n}\n", []string{fixtureSteeringURI}, "{\n  \"a\\\"b\": 1,\n  \"resources\": ["},
-		{"empty array", `{"name": "agent1", "resources": []}`, []string{fixtureSteeringURI}, ""},
-		{"inline array", `{"resources": ["file:///own.md"], "name": "agent1"}`, []string{"file:///own.md", fixtureSteeringURI}, `{"resources": ["file:///own.md"`},
-		{"multi-line array", multiLine, []string{"file:///own.md", fixtureSteeringURI}, "{\n  \"name\": \"agent1\",\n  \"resources\": [\n    \"file:///own.md\""},
-		{"already listed by the template", `{"name": "agent1", "resources": ["` + fixtureSteeringURI + `"]}`, []string{fixtureSteeringURI}, ""},
+		{"no resources key", `{"name": "agent1"}`, []string{fixtureSteeringURI, workspaceSteeringURI, workspaceSkillsURI}, ""},
+		{"no resources key, multi-line", "{\n  \"name\": \"agent1\"\n}\n", []string{fixtureSteeringURI, workspaceSteeringURI, workspaceSkillsURI}, "{\n  \"name\": \"agent1\""},
+		{"key with an escaped quote, multi-line", "{\n  \"a\\\"b\": 1\n}\n", []string{fixtureSteeringURI, workspaceSteeringURI, workspaceSkillsURI}, "{\n  \"a\\\"b\": 1,\n  \"resources\": ["},
+		{"empty array", `{"name": "agent1", "resources": []}`, []string{fixtureSteeringURI, workspaceSteeringURI, workspaceSkillsURI}, ""},
+		{"inline array", `{"resources": ["file:///own.md"], "name": "agent1"}`, []string{"file:///own.md", fixtureSteeringURI, workspaceSteeringURI, workspaceSkillsURI}, `{"resources": ["file:///own.md"`},
+		{"multi-line array", multiLine, []string{"file:///own.md", fixtureSteeringURI, workspaceSteeringURI, workspaceSkillsURI}, "{\n  \"name\": \"agent1\",\n  \"resources\": [\n    \"file:///own.md\""},
+		{"already listed by the template", `{"name": "agent1", "resources": ["` + fixtureSteeringURI + `"]}`, []string{fixtureSteeringURI, workspaceSteeringURI, workspaceSkillsURI}, ""},
+		{"workspace glob already listed by the template", `{"name": "agent1", "resources": ["` + workspaceSteeringURI + `"]}`, []string{workspaceSteeringURI, fixtureSteeringURI, workspaceSkillsURI}, ""},
+		{"skills glob already listed by the template", `{"name": "agent1", "resources": ["` + workspaceSkillsURI + `"]}`, []string{workspaceSkillsURI, fixtureSteeringURI, workspaceSteeringURI}, ""},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -261,7 +265,7 @@ func TestRenderTeam_GlobalSteeringResourceFitsEveryResourcesShape(t *testing.T) 
 	}
 }
 
-func TestRenderTeam_TeamThatOptedOutGetsNoGlobalSteeringResource(t *testing.T) {
+func TestRenderTeam_TeamThatOptedOutOnlyGetsTheWorkspaceResources(t *testing.T) {
 	teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
 	manifest := filepath.Join(teamsRoot, "fixture-team", "manifest.yaml")
 	if err := os.WriteFile(manifest, []byte("team: fixture-team\nglobalSteerings: []\n"), 0o600); err != nil {
@@ -274,8 +278,8 @@ func TestRenderTeam_TeamThatOptedOutGetsNoGlobalSteeringResource(t *testing.T) {
 
 	outDir, resources, raw := renderedResources(t, teamsRoot, globalRoot, envVersionsPath, "agent1")
 
-	if len(resources) != 0 || strings.Contains(raw, "resources") {
-		t.Errorf("opted-out agent1.json = %s, want no resources added", raw)
+	if want := []string{workspaceSteeringURI, workspaceSkillsURI}; !slices.Equal(resources, want) {
+		t.Errorf("opted-out agent1.json resources = %v, want only the workspace globs %v\n%s", resources, want, raw)
 	}
 	if _, err := os.Stat(filepath.Join(outDir, "kirokit-steerings")); !os.IsNotExist(err) {
 		t.Errorf("kirokit-steerings exists for a team with no global steerings (err=%v)", err)

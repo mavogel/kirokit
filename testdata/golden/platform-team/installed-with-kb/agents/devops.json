@@ -90,6 +90,8 @@
   "resources": [
     "skill:///kiro-home/skills/jira-search/SKILL.md",
     "file:///kiro-home/kirokit-steerings/platform-team/security-baseline.md",
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/**/SKILL.md",
     {
       "autoUpdate": true,
       "include": [

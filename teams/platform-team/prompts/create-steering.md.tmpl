@@ -1,0 +1,67 @@
+# Create Kiro steering files
+
+Create, or refresh, the Kiro steering files in `.kiro/steering/` for the repository you are working in. Focus area, if I gave one: `$ARGUMENTS` (for example `testing` or `api`). When it is empty, do a full pass.
+
+## Ground rules
+
+- **Read before you write.** Everything you put in a steering file must be verifiable in this repository: code, configs, CI, existing docs. Never invent a convention. Anything you cannot verify goes under "Open questions" in your report, not into a file.
+- **Never overwrite.** List `.kiro/steering/` and any `AGENTS.md` first. For an existing file, propose the edit and ask.
+- **One domain per file, short, with the why.** Explain why a rule exists, and show a small good/bad example taken from this repository's own code. A file that is long or vague costs context on every turn and gets ignored.
+- **Link, do not copy.** Reference live files with `#[[file:path]]` (an OpenAPI spec, a lint config, a `tsconfig`) instead of pasting them, so the steering cannot go stale.
+- **No secrets.** No tokens, keys, internal hostnames, or customer data. Steering is committed and loaded into the model's context.
+{{- if .Team.GlobalSteerings }}
+- **Do not restate what is already global.** These steerings are already added to this team's agents; link to the topic instead of repeating it:
+{{- range .Team.GlobalSteerings }}
+  - `{{ . }}`
+{{- end }}
+{{- end }}
+
+## 1. Investigate
+
+Read, in this order: the README and docs, `CONTRIBUTING`, package manifests (`go.mod`, `package.json`, `pyproject.toml`, `pom.xml`, ...), CI workflows, `Makefile` or `Taskfile`, lint and format configs, the test layout, and the directory tree two or three levels deep. Reuse what existing agent instructions already say (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md`) and do not contradict it.
+
+## 2. Foundation files (always included)
+
+Create these three first. Start each with this front matter, as the very first thing in the file:
+
+```yaml
+---
+inclusion: always
+---
+```
+
+| File | Content |
+| --- | --- |
+| `product.md` | What the project is for, who uses it, its key features and business goals. About one screen. |
+| `tech.md` | Languages and versions, frameworks, libraries, the exact build, test and lint commands, technical constraints, and the rule for adding a dependency. |
+| `structure.md` | Directory layout, where new code goes, naming conventions, import patterns, and architectural decisions. |
+
+## 3. Add focused files only where the repository shows a need
+
+Name a file for its domain (`testing-standards.md`, not `notes.md`). Create one only when you can point at the evidence.
+
+| File | Create it when | Inclusion |
+| --- | --- | --- |
+| `testing-standards.md` | Tests exist and have recurring patterns | `fileMatch`, derived from the real test layout |
+| `api-standards.md` | There is HTTP or API code, or an OpenAPI spec | `fileMatch` on the API directories |
+| `code-conventions.md` | Lint or format configs, or patterns that go beyond `tech.md` | `always` if short, otherwise `fileMatch` per language |
+| `security-policies.md` | Auth, secrets, or input handling exist | `always` if short, otherwise `auto` |
+| `deployment-workflow.md` | CI/CD, infrastructure code, or a release process exists | `fileMatch` on workflow, Dockerfile and infra paths, or `manual` |
+| A troubleshooting or migration guide | A recurring procedure exists | `manual` (invoked with `#file-name`) |
+| A large domain reference | Reference material would be heavy to load every turn | `auto` |
+
+## Inclusion modes
+
+- `always` (the default): small and universal. Everything in this mode is loaded on every turn, so keep the total small.
+- `fileMatch` with `fileMatchPattern`: a string or a list of workspace-relative globs. Be specific: `**/*_test.go` or `**/*.test.ts`, not `**/*.go` or `**/*.ts`.
+- `manual`: loaded only when I type `#file-name` in chat.
+- `auto`: needs `name` and a `description` that says when to use it ("Use when creating or modifying API endpoints"). Loaded when my request matches.
+
+The front matter must be the first content in the file: no blank line or heading above it, or Kiro ignores it.
+
+## 4. How to proceed
+
+1. Present a plan as one table: file, inclusion mode, and the repository files that justify it. **Wait for my confirmation** before writing anything.
+2. Write the files.
+3. Report: the files created or changed, your open questions, and anything you could not verify.
+4. Remind me to commit `.kiro/steering/` and review it like code. Agents installed by this kit already list `file://.kiro/steering/**/*.md` in their `resources`, so they load these files when started in this repository. Kiro's docs say any other custom agent needs that line added to its `resources`. To check the result, start a new chat and ask which steering files are loaded.

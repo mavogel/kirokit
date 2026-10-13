@@ -17,7 +17,9 @@
     ]
   },
   "resources": [
-    "skill:///kiro-home/skills/sql-helper/SKILL.md"
+    "skill:///kiro-home/skills/sql-helper/SKILL.md",
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/**/SKILL.md"
   ],
   "mcpServers": {
     "pipeline-mcp": {

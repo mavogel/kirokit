@@ -165,16 +165,22 @@ func TestInstall_WithKnowledgeBaseKeepsExistingResourcesAndWritesTheExactEntry(t
 	if err := json.Unmarshal(data, &agent); err != nil {
 		t.Fatalf("installed agent1.json is not valid JSON: %v\n%s", err, data)
 	}
-	if len(agent.Resources) != 2 {
-		t.Fatalf("resources = %s, want the agent's own entry followed by the knowledge base", data)
+	if len(agent.Resources) != 4 {
+		t.Fatalf("resources = %s, want the agent's own entry, the two workspace globs, then the knowledge base", data)
 	}
 	var own string
 	if err := json.Unmarshal(agent.Resources[0], &own); err != nil || own != "file:///own.md" {
 		t.Errorf("resources[0] = %s, want the agent's own %q entry preserved first", agent.Resources[0], "file:///own.md")
 	}
+	for i, want := range []string{"file://.kiro/steering/**/*.md", "skill://.kiro/skills/**/SKILL.md"} {
+		var got string
+		if err := json.Unmarshal(agent.Resources[1+i], &got); err != nil || got != want {
+			t.Errorf("resources[%d] = %s, want the workspace glob %q", 1+i, agent.Resources[1+i], want)
+		}
+	}
 	var kb map[string]any
-	if err := json.Unmarshal(agent.Resources[1], &kb); err != nil {
-		t.Fatalf("resources[1] = %s, want a knowledgeBase object: %v", agent.Resources[1], err)
+	if err := json.Unmarshal(agent.Resources[3], &kb); err != nil {
+		t.Fatalf("resources[3] = %s, want a knowledgeBase object: %v", agent.Resources[3], err)
 	}
 	want := map[string]any{
 		"type":       "knowledgeBase",

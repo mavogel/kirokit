@@ -16,7 +16,9 @@
   },
   "resources": [
     "skill:///kiro-home/skills/confluence-lookup/SKILL.md",
-    "file:///kiro-home/kirokit-steerings/platform-team/security-baseline.md"
+    "file:///kiro-home/kirokit-steerings/platform-team/security-baseline.md",
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/**/SKILL.md"
   ],
   "mcpServers": {
     "confluence-mcp": {

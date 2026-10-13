@@ -56,6 +56,8 @@ Every templated source file uses a double extension, `<real-extension>.tmpl` (e.
 
 Two fully-worked example teams are included: `teams/platform-team/` (`devops` + `platformdev`, both with SOPS-secured MCP servers, opted into the shared `security-baseline` global steering) and `teams/data-team/` (`javadev` with a SOPS-secured Snowflake MCP server, `godev` with a plain non-secret MCP server, opted **out** of any global steering). Copy either as a starting point, or use `kirokit onboard` — duplication between teams is expected and fine.
 
+A prompt that no agent uses as its `prompt` is still useful: Kiro CLI v3 lists every file in `$KIRO_HOME/prompts/` as a slash command (`@name` on other engines), and `$ARGUMENTS` / `${1}` in the file are filled in from what you type. For example, `teams/platform-team/prompts/create-steering.md.tmpl` becomes `/create-steering [focus]` after `kirokit install platform-team`: it walks an agent through creating a repository's `.kiro/steering/` files (the `product.md` / `tech.md` / `structure.md` foundation plus focused `fileMatch`, `manual` and `auto` files only where the repo shows a need), and uses the team's opted-in global steerings to tell the agent not to restate them.
+
 ## manifest.yaml Reference
 
 ```yaml
@@ -67,6 +69,8 @@ globalSteerings:
 `globalSteerings` may be an empty list (`[]`) to explicitly opt out — see `teams/data-team/manifest.yaml`.
 
 Every opted-in global steering is added to the `resources` of **every agent** of the team automatically, as `file://$KIRO_HOME/kirokit-steerings/<team>/<slug>.md` (appended to the agent's own `resources`, created if missing). The steering is rendered to that file, not to Kiro's auto-loaded `steering/` directory, so it applies only to the opted-in team's agents. A global steering file should start with Kiro's steering front matter (e.g. `inclusion: always`, as `global/steerings/security-baseline.md` does). A template can still inline one with `{{ globalSteering "<slug>" }}`, but that inlines the front matter verbatim too, so prefer the automatic resource.
+
+Every agent of every team, opted in or not, also gets `file://.kiro/steering/**/*.md` and `skill://.kiro/skills/**/SKILL.md` in its `resources`, after any global steerings. They are relative paths, so an agent loads the steering and skills of whichever workspace Kiro is started in (nothing is loaded when those folders do not exist). Skills use the `skill://` scheme, so only their metadata is loaded at startup and the rest on demand. A template that already lists an entry is not duplicated.
 
 ## Central env/mcp-versions.yaml
 

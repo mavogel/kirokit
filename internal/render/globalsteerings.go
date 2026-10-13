@@ -18,6 +18,17 @@ import (
 // copy so uninstalling one team never deletes a file another still uses.
 const globalSteeringsDir = "kirokit-steerings"
 
+// workspaceResources are added to every rendered agent so it loads the steering
+// files and skills of whichever workspace it is started in (relative to the
+// current directory). Kiro's docs say a custom agent has to list them in its
+// resources explicitly. Skills use the skill:// scheme, which loads only a
+// skill's metadata at startup and the rest on demand; file:// would put every
+// skill's full text into the context.
+var workspaceResources = []string{
+	"file://.kiro/steering/**/*.md",
+	"skill://.kiro/skills/**/SKILL.md",
+}
+
 // globalSteeringRel is the output-tree path of one opted-in global steering.
 func globalSteeringRel(team, slug string) string {
 	return path.Join(globalSteeringsDir, team, slug+".md")
