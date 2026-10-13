@@ -66,7 +66,7 @@ globalSteerings:
 
 `globalSteerings` may be an empty list (`[]`) to explicitly opt out — see `teams/data-team/manifest.yaml`.
 
-Every opted-in global steering is added to the `resources` of **every agent** of the team automatically, as `file://$KIRO_HOME/kirokit-steerings/<team>/<slug>.md` (appended to the agent's own `resources`, created if missing). The steering is rendered to that file, not to Kiro's auto-loaded `steering/` directory, so it applies only to the opted-in team's agents. A template can still inline a global steering with `{{ globalSteering "<slug>" }}`.
+Every opted-in global steering is added to the `resources` of **every agent** of the team automatically, as `file://$KIRO_HOME/kirokit-steerings/<team>/<slug>.md` (appended to the agent's own `resources`, created if missing). The steering is rendered to that file, not to Kiro's auto-loaded `steering/` directory, so it applies only to the opted-in team's agents. A global steering file should start with Kiro's steering front matter (e.g. `inclusion: always`, as `global/steerings/security-baseline.md` does). A template can still inline one with `{{ globalSteering "<slug>" }}`, but that inlines the front matter verbatim too, so prefer the automatic resource.
 
 ## Central env/mcp-versions.yaml
 

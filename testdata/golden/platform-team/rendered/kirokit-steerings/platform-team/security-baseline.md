@@ -1,3 +1,7 @@
+---
+inclusion: always
+---
+
 # Security Baseline
 
 Shared security conventions for every team that opts into this steering.
