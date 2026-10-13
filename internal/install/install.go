@@ -164,10 +164,16 @@ func addKnowledgeBaseResource(agentJSONPath, mountPoint string) error {
 	}
 
 	agentName := strings.TrimSuffix(filepath.Base(agentJSONPath), ".json")
-	newResource, err := json.Marshal(map[string]string{
-		"type":   "knowledgeBase",
-		"source": "file://" + mountPoint,
-		"name":   agentName + "-kb",
+	// indexType and autoUpdate are the documented knowledgeBase resource
+	// fields; include (a list of globs, with exclude as its counterpart) is
+	// accepted by kiro-cli's own parser but absent from the agent-config docs.
+	newResource, err := json.Marshal(map[string]any{
+		"type":       "knowledgeBase",
+		"source":     "file://" + mountPoint,
+		"name":       agentName + "-kb",
+		"indexType":  "best",
+		"include":    []string{"**/*.md"},
+		"autoUpdate": true,
 	})
 	if err != nil {
 		return fmt.Errorf("install: %w", err)

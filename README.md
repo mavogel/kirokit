@@ -118,6 +118,8 @@ kirokit update [team]               # render + overwrite testdata/golden/<team>/
 
 Omitting `[team]` processes every directory under `teams/`. `test` exits non-zero and lists every mismatched file when a team's templates have drifted from its committed goldens. `update` regenerates a team's `testdata/golden/<team>/rendered/` tree and `context.json` snapshot after an intentional template change — review the diff before committing it.
 
+`go test ./internal/golden` also runs `kiro-cli agent validate` on every committed golden agent config, and on the installed `platform-team` agents with the committed `testdata/knowledgebase/` folder attached as `devops`'s knowledge base (the install-time rewrite no golden covers), so a config Kiro itself would reject fails the test even when the golden diff is clean. It skips when `kiro-cli` is not installed or not logged in (`validate` needs a login); set `KIROKIT_REQUIRE_KIRO_CLI=1` to make those skips failures. The complete agent config with that knowledge base attached is also compared to `testdata/golden/platform-team/installed-with-kb/agents/devops.json` (re-indented, with the scratch `KIRO_HOME` replaced by `/kiro-home`); regenerate it with `go test ./internal/golden -run KnowledgeBaseRenderedIntoAgentJSON -update-kb-golden` and review the diff. Note that `validate` exits 0 on error and reports on stderr, and it does not check permission rules, MCP server shape, or that `file://`/`skill://` resources exist.
+
 Rendering always uses the fixed `KiroHome` sentinel `/kiro-home` for `render`/`test`/`update`, so golden fixtures are identical on every machine and in CI regardless of the real `$KIRO_HOME`; only `install` bakes in the real resolved value.
 
 ## Onboarding a New Team
@@ -138,7 +140,7 @@ kirokit uninstall <team>
 
 `install` renders a team with its real `$KIRO_HOME` baked in (respecting the `KIRO_HOME` env var, falling back to Kiro CLI's own default `~/.kiro` when unset) and copies the rendered tree plus each agent's encrypted secrets file into that location — real, usable files where Kiro CLI actually reads them. `uninstall` removes exactly what the matching `install` wrote, tracked via an install manifest under `$KIRO_HOME/.kirokit-installed/<team>.json`, leaving every other team's installed files and anything Kiro CLI itself manages untouched.
 
-The three `--kb-*` flags (all-or-nothing) attach a local `knowledgeBase`-type resource to one installed agent: `--kb-source` is a local folder, `--kb-mount` is where it gets symlinked (never copied), and `--kb-agent` is which installed agent's `resources` array gets the new entry. `uninstall` removes the symlink but never touches the real source folder's content.
+The three `--kb-*` flags (all-or-nothing) attach a local `knowledgeBase`-type resource to one installed agent: `--kb-source` is a local folder, `--kb-mount` is where it gets symlinked (never copied), and `--kb-agent` is which installed agent's `resources` array gets the new entry. The entry is named `<agent>-kb` and sets `indexType: "best"` (semantic search), `include: ["**/*.md"]` (index only Markdown) and `autoUpdate: true` (re-index when the agent spawns). `include` is accepted by `kiro-cli` but not yet in Kiro's agent-config docs, and Kiro issues report that agent-config knowledge bases are not always indexed automatically, so check `/knowledge show` in a session. `uninstall` removes the symlink but never touches the real source folder's content.
 
 ## Git Hooks
 

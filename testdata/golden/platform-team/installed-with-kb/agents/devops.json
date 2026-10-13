@@ -1,0 +1,113 @@
+{
+  "description": "Triages and resolves Jira tickets for platform-team, following the team's shared security baseline steering.",
+  "mcpServers": {
+    "atlassian": {
+      "command": "sops",
+      "args": [
+        "exec-env",
+        "/kiro-home/kirokit-secrets/platform-team/devops/secrets.enc.yaml",
+        "npx -y mcp-remote@0.14.3 https://mcp.atlassian.com/v2/mcp --header 'Authorization: ${ATLASSIAN_AUTH}'"
+      ],
+      "timeout": 60000
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@4.3.0"
+      ],
+      "timeout": 60000
+    }
+  },
+  "name": "devops",
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_read",
+        "match": [
+          "**"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          "/tmp/**"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "mcp",
+        "match": [
+          "@atlassian/*"
+        ],
+        "effect": "ask"
+      },
+      {
+        "capability": "mcp",
+        "match": [
+          "@context7/*"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "rm *"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "git push --force*",
+          "git push -f*",
+          "git push * --force*",
+          "git push * -f*"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "git push * main",
+          "git push * main *"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "git branch -d *",
+          "git branch -D *",
+          "git branch --delete*"
+        ],
+        "effect": "deny"
+      }
+    ]
+  },
+  "prompt": "file://../prompts/jira-triage.md",
+  "resources": [
+    "skill:///kiro-home/skills/jira-search/SKILL.md",
+    "file:///kiro-home/kirokit-steerings/platform-team/security-baseline.md",
+    {
+      "autoUpdate": true,
+      "include": [
+        "**/*.md"
+      ],
+      "indexType": "best",
+      "name": "devops-kb",
+      "source": "file:///kiro-home/kirokit-kb/platform-team/devops",
+      "type": "knowledgeBase"
+    }
+  ],
+  "tools": [
+    "read",
+    "write",
+    "glob",
+    "knowledge",
+    "shell",
+    "@atlassian",
+    "@context7"
+  ]
+}

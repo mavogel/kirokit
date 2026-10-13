@@ -1,8 +1,10 @@
 package install
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -138,6 +140,123 @@ func TestInstall_GlobalSteeringIsInstalledPerTeamAndReferencedByTheAgent(t *test
 	}
 	if _, err := os.Stat(steering("other-team")); err != nil {
 		t.Errorf("uninstalling one team removed another team's steering: %v", err)
+	}
+}
+
+func TestInstall_WithKnowledgeBaseKeepsExistingResourcesAndWritesTheExactEntry(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	kbSource := t.TempDir()
+	mustWrite(t, filepath.Join(roots.TeamsRoot, team, "agents", "agent1", "agent.json.tmpl"),
+		`{"name": "agent1", "resources": ["file:///own.md"], "mcpServers": {"s": {"command": "c"}}}`)
+	kbMount := filepath.Join(kiroHome, "kirokit-kb", team, "agent1")
+
+	if err := Install(roots, team, kiroHome, &KnowledgeBase{Agent: "agent1", Source: kbSource, Mount: kbMount}); err != nil {
+		t.Fatalf("Install with KnowledgeBase returned error: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(kiroHome, "agents", "agent1.json"))
+	if err != nil {
+		t.Fatalf("read installed agent1.json: %v", err)
+	}
+	var agent struct {
+		Resources []json.RawMessage `json:"resources"`
+	}
+	if err := json.Unmarshal(data, &agent); err != nil {
+		t.Fatalf("installed agent1.json is not valid JSON: %v\n%s", err, data)
+	}
+	if len(agent.Resources) != 2 {
+		t.Fatalf("resources = %s, want the agent's own entry followed by the knowledge base", data)
+	}
+	var own string
+	if err := json.Unmarshal(agent.Resources[0], &own); err != nil || own != "file:///own.md" {
+		t.Errorf("resources[0] = %s, want the agent's own %q entry preserved first", agent.Resources[0], "file:///own.md")
+	}
+	var kb map[string]any
+	if err := json.Unmarshal(agent.Resources[1], &kb); err != nil {
+		t.Fatalf("resources[1] = %s, want a knowledgeBase object: %v", agent.Resources[1], err)
+	}
+	want := map[string]any{
+		"type":       "knowledgeBase",
+		"source":     "file://" + kbMount,
+		"name":       "agent1-kb",
+		"indexType":  "best",
+		"include":    []any{"**/*.md"},
+		"autoUpdate": true,
+	}
+	if !reflect.DeepEqual(kb, want) {
+		t.Errorf("knowledge base entry = %v, want exactly %v", kb, want)
+	}
+}
+
+func TestAttachKnowledgeBase_RejectsUnusableInputs(t *testing.T) {
+	setup := func(t *testing.T) (agentJSON, mount, source string) {
+		t.Helper()
+		dir := t.TempDir()
+		agentJSON = filepath.Join(dir, "agent1.json")
+		mustWrite(t, agentJSON, `{"name": "agent1"}`)
+		source = filepath.Join(dir, "kb")
+		mustWrite(t, filepath.Join(source, "doc.md"), "# Docs\n")
+		return agentJSON, filepath.Join(dir, "mount"), source
+	}
+
+	t.Run("source folder does not exist", func(t *testing.T) {
+		agentJSON, mount, source := setup(t)
+		err := AttachKnowledgeBase(agentJSON, mount, filepath.Join(source, "missing"))
+		if err == nil || !strings.Contains(err.Error(), "knowledge base source") {
+			t.Fatalf("err = %v, want it to name the unusable knowledge base source", err)
+		}
+	})
+
+	t.Run("source is a file, not a folder", func(t *testing.T) {
+		agentJSON, mount, source := setup(t)
+		err := AttachKnowledgeBase(agentJSON, mount, filepath.Join(source, "doc.md"))
+		if err == nil || !strings.Contains(err.Error(), "not a directory") {
+			t.Fatalf("err = %v, want a %q error", err, "not a directory")
+		}
+	})
+
+	t.Run("mount point is a real file and is left untouched", func(t *testing.T) {
+		agentJSON, mount, source := setup(t)
+		mustWrite(t, mount, "precious\n")
+		err := AttachKnowledgeBase(agentJSON, mount, source)
+		if err == nil || !strings.Contains(err.Error(), "refusing to overwrite") {
+			t.Fatalf("err = %v, want a %q error", err, "refusing to overwrite")
+		}
+		if got, _ := os.ReadFile(mount); string(got) != "precious\n" {
+			t.Errorf("mount point content = %q, want it untouched", got)
+		}
+	})
+
+	t.Run("agent config does not exist", func(t *testing.T) {
+		agentJSON, mount, source := setup(t)
+		missing := filepath.Join(filepath.Dir(agentJSON), "nope.json")
+		err := AttachKnowledgeBase(missing, mount, source)
+		if err == nil || !strings.Contains(err.Error(), "nope.json") {
+			t.Fatalf("err = %v, want it to name the missing agent config", err)
+		}
+	})
+}
+
+func TestAttachKnowledgeBase_ReplacesAStaleSymlinkAtTheMountPoint(t *testing.T) {
+	dir := t.TempDir()
+	agentJSON := filepath.Join(dir, "agent1.json")
+	mustWrite(t, agentJSON, `{"name": "agent1"}`)
+	oldSource, newSource := filepath.Join(dir, "old"), filepath.Join(dir, "new")
+	mustWrite(t, filepath.Join(oldSource, "a.md"), "old\n")
+	mustWrite(t, filepath.Join(newSource, "b.md"), "new\n")
+	mount := filepath.Join(dir, "mount")
+	if err := os.Symlink(oldSource, mount); err != nil {
+		t.Fatalf("seed stale symlink: %v", err)
+	}
+
+	if err := AttachKnowledgeBase(agentJSON, mount, newSource); err != nil {
+		t.Fatalf("AttachKnowledgeBase returned error: %v", err)
+	}
+
+	target, err := os.Readlink(mount)
+	if err != nil || target != newSource {
+		t.Errorf("mount point -> %q (err=%v), want it repointed to %q", target, err, newSource)
 	}
 }
 
