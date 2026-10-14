@@ -41,6 +41,23 @@ changelog:
       - "^test:"
       - "^chore:"
 
+homebrew_casks:
+  - name: kirokit
+    repository:
+      owner: mavogel
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: https://github.com/mavogel/kiro-cli-kit
+    description: Render, test, and install multi-team Kiro CLI v3 configs
+    # The binaries are not notarized; without this macOS reports "kirokit is damaged".
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr",
+                           args: ["-dr", "com.apple.quarantine", "#{staged_path}/kirokit"]
+          end
+
 release:
   github:
     owner: mavogel

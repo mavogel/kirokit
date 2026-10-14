@@ -146,6 +146,33 @@ kirokit uninstall <team>
 
 The three `--kb-*` flags (all-or-nothing) attach a local `knowledgeBase`-type resource to one installed agent: `--kb-source` is a local folder, `--kb-mount` is where it gets symlinked (never copied), and `--kb-agent` is which installed agent's `resources` array gets the new entry. The entry is named `<agent>-kb` and sets `indexType: "best"` (semantic search), `include: ["**/*.md"]` (index only Markdown) and `autoUpdate: true` (re-index when the agent spawns). `include` is accepted by `kiro-cli` but not yet in Kiro's agent-config docs, and Kiro issues report that agent-config knowledge bases are not always indexed automatically, so check `/knowledge show` in a session. `uninstall` removes the symlink but never touches the real source folder's content.
 
+## Installing the CLI
+
+```bash
+brew install --cask mavogel/tap/kirokit
+```
+
+Each release publishes a Homebrew cask to [mavogel/homebrew-tap](https://github.com/mavogel/homebrew-tap) (`brew upgrade --cask kirokit` picks up new versions). The cask covers macOS and Linux (arm64 and amd64). The binaries are not notarized, so on macOS it clears the quarantine attribute after install. The release workflow needs a `HOMEBREW_TAP_GITHUB_TOKEN` repository secret: a fine-grained PAT with `contents: write` on the tap repo.
+
+## Sync (automatic updates)
+
+```bash
+kirokit sync <team> --repo ~/.kirokit-config
+kirokit sync <team> --repo ~/.kirokit-config --latest-tag
+```
+
+`sync` updates a checkout of this repository and then installs the team from it: `git fetch --tags`, then a fast-forward `git pull` of the checked-out branch (or, with `--latest-tag`, a checkout of the newest `v*` tag, so only `semantic-release` releases reach the machine), then the same install as `kirokit install`. Unlike `install`, it also removes files the team's previous install wrote that the new version no longer ships (a deleted agent, prompt, or secrets file) and any directories that leaves empty. `--repo` defaults to the current directory, and the `--kb-*` flags behave as for `install`; without them a previously attached knowledge base is dropped, so pass them on every run if you use one.
+
+`scripts/kirokit-sync-setup.sh` sets this up on a user's machine: it clones the config repository, runs a first sync, and registers a launchd agent (macOS) or systemd user timer (Linux) that repeats it.
+
+```bash
+scripts/kirokit-sync-setup.sh --team platform-team --repo-url git@github.com:org/kiro-config.git --latest-tag
+scripts/kirokit-sync-setup.sh --team platform-team --dry-run ...   # print the scheduler definition only
+scripts/kirokit-sync-setup.sh --team platform-team --remove        # unregister (checkout and installed config stay)
+```
+
+Options: `--dir` (checkout location, default `~/.kirokit-config`) and `--interval` (hours, default 4). It needs `git` and `kirokit` on `PATH`, logs to `~/.kirokit-sync.log`, and each user still needs their own SOPS age key for the encrypted secrets. Keep the checkout dedicated to syncing: a fast-forward pull fails on local commits, and `--latest-tag` leaves it on a detached HEAD.
+
 ## Git Hooks
 
 [Lefthook](https://lefthook.dev) runs checks on every commit (`brew install lefthook gitleaks commitizen uv`, then once per clone):

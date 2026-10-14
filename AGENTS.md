@@ -3,7 +3,7 @@
 ## Project
 `kirokit` is a Go CLI (cobra, `go 1.23`) that renders per-team Kiro CLI v3 config templates into Kiro's real config layout. `README.md` is the detailed reference; `docs/prd/` and `docs/plans/` hold the product requirements and implementation plan.
 
-- `cmd/kirokit/` — cobra commands (`render`, `test`, `update`, `install`, `uninstall`, `onboard`)
+- `cmd/kirokit/` — cobra commands (`render`, `test`, `update`, `install`, `uninstall`, `sync`, `onboard`)
 - `internal/` — `render` (templates + funcs), `golden` (golden-file harness), `install`/`manifest` (install + uninstall tracking), `sopswrap`, `mcpversions`, `kiroconfig` (agent config validation), `scaffold` (`onboard` starter layout)
 - `teams/<team>/` — template sources (`*.tmpl`, double extension); `global/steerings/` — shared steerings; `env/mcp-versions.yaml` — central MCP version pins
 - `testdata/golden/<team>/` — committed expected output; compared byte-for-byte
