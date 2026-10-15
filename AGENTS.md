@@ -23,7 +23,7 @@ Run `kirokit` from the repository root: it resolves `teams/`, `global/`, `env/` 
 - Secrets never appear in plaintext in templates, rendered files, or goldens; MCP servers needing them launch via `sopsCommand`/`sopsArgsJSON` (`sops exec-env`) with a `.KiroHome`-absolute secrets path.
 - MCP versions come from `env/mcp-versions.yaml` via `mcpVersion`; an undefined key must fail the render.
 - `go test ./internal/golden` also runs `kiro-cli agent validate`; it skips without a logged-in `kiro-cli` unless `KIROKIT_REQUIRE_KIRO_CLI=1`.
-- Commits follow Conventional Commits (`cz check` in lefthook; `semantic-release` consumes them). `.claude/` is gitignored tool state.
+- Commits follow Conventional Commits (`cz check` in lefthook; `svu` consumes them). `.claude/` is gitignored tool state.
 - Update `README.md` in the same change when a command, flag, manifest field, or template function changes.
 
 ## Agent assets

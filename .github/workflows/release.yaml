@@ -7,6 +7,11 @@ on:
 permissions:
   contents: write
 
+# One release at a time; a push that lands mid-release queues instead of racing the tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -21,24 +26,42 @@ jobs:
         with:
           go-version: stable
 
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: lts/*
+      - name: Install svu
+        run: go install github.com/caarlos0/svu/v3@v3.4.1
 
-      - name: Install goreleaser (binary only, invoked by semantic-release)
-        uses: goreleaser/goreleaser-action@v7
-        with:
-          distribution: goreleaser
-          version: "~> v2"
-          install-only: true
+      # svu reads the Conventional Commits since the latest tag. --v0 keeps a
+      # breaking change from jumping 0.x to 1.0.0 by accident; it has no effect
+      # once the project is at v1.
+      - name: Compute next version
+        id: version
+        run: |
+          current="$(svu current)"
+          next="$(svu next --v0)"
+          echo "current=$current next=$next"
+          if [ "$current" = "$next" ]; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "No releasable commits since $current."
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$next" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Install release dependencies
-        run: npm ci
+      - name: Tag
+        if: steps.version.outputs.release == 'true'
+        run: |
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
 
       - name: Release
+        if: steps.version.outputs.release == 'true'
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser-pro
+          version: "~> v2"
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GoReleaser Pro license key.
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           # Fine-grained PAT with contents:write on mavogel/homebrew-tap.
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
-        run: npx semantic-release

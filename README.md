@@ -182,7 +182,7 @@ lefthook install
 ```
 
 - **pre-commit:** `trailing-whitespace`, `end-of-file-fixer`, `check-yaml`, `check-json` (from [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks), run via `uvx`) and `gitleaks` on the staged changes. The two fixers re-stage what they change but fail the commit, so run it again. They skip `testdata/golden/**` (byte-compared by `kirokit test`) and `*.enc.yaml` (SOPS MAC).
-- **commit-msg:** `cz check` enforces Conventional Commits, which `semantic-release` needs. Use `cz commit` for an interactive prompt.
+- **commit-msg:** `cz check` enforces Conventional Commits, which `svu` needs to compute versions. Use `cz commit` for an interactive prompt.
 
 Run everything on demand with `lefthook run pre-commit --all-files`.
 
@@ -190,9 +190,10 @@ Run everything on demand with `lefthook run pre-commit --all-files`.
 
 Releases follow Conventional Commits on `main`:
 
-1. `semantic-release` (configured in `.releaserc.yml`) analyzes commits, computes the next version, generates a changelog, and creates the git tag.
-2. Its `@semantic-release/exec` plugin invokes `goreleaser release` (configured in `.goreleaser.yaml`), which builds and publishes the `kirokit` binary for **darwin and linux only** (amd64 + arm64) as GitHub release archives attached to the tag semantic-release just created.
+1. `.github/workflows/release.yaml` runs on every push to `main`. [`svu`](https://github.com/caarlos0/svu) reads the Conventional Commits since the latest tag and computes the next version (`feat` bumps minor, `fix` patch, a breaking change major, held at `0.x` until a `v1` is cut deliberately). When no commit warrants a release, the job stops.
+2. Otherwise it pushes the new `vX.Y.Z` tag and runs `goreleaser release` (GoReleaser Pro, configured in `.goreleaser.yaml`), which builds the `kirokit` binary for **darwin and linux only** (amd64 + arm64), attaches the archives to a GitHub release with changelog notes grouped from the commits, and publishes the Homebrew cask. There is no committed `CHANGELOG.md`; the notes live on the GitHub release.
 3. `.github/workflows/ci.yaml` runs `go build`, `go vet`, `golangci-lint`, and `go test ./...` (which includes every team's golden-file comparisons) on every pull request and push to `main` — a template change that breaks a golden fixture fails CI.
-4. `.github/workflows/release.yaml` runs the release step on every push to `main`.
 
-The first live release requires this repository to be pushed to `github.com/mavogel/kiro-cli-kit` with a real git remote; until then, `goreleaser check` and a `goreleaser release --snapshot --clean` locally, plus `npx semantic-release --dry-run`, are how the release configuration is validated.
+The release job needs two repository secrets besides the default `GITHUB_TOKEN`: `GORELEASER_KEY` (the GoReleaser Pro license key) and `HOMEBREW_TAP_GITHUB_TOKEN` (see *Installing the CLI*).
+
+The first live release requires this repository to be pushed to `github.com/mavogel/kiro-cli-kit` with a real git remote; until then, `goreleaser check` and a `goreleaser release --snapshot --clean` locally, plus `svu current` / `svu next --v0`, are how the release configuration is validated.
