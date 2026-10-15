@@ -178,6 +178,17 @@ kirokit uninstall <team>
 
 The three `--kb-*` flags (all-or-nothing) attach a local `knowledgeBase`-type resource to one installed agent: `--kb-source` is a local folder, `--kb-mount` is where it gets symlinked (never copied), and `--kb-agent` is which installed agent's `resources` array gets the new entry. The entry is named `<agent>-kb` and sets `indexType: "best"` (semantic search), `include: ["**/*.md"]` (index only Markdown) and `autoUpdate: true` (re-index when the agent spawns). `include` is accepted by `kiro-cli` but not yet in Kiro's agent-config docs, and Kiro issues report that agent-config knowledge bases are not always indexed automatically, so check `/knowledge show` in a session. `uninstall` removes the symlink but never touches the real source folder's content.
 
+### Existing files are backed up
+
+Before `kirokit render --out <dir>`, `install` or `sync` changes something that is already on disk, the folder is kept as a backup beside it, named `YYYYMMDD-HHmmss-<folder>.backup` (local time):
+
+- **`render --out <dir>`:** if `<dir>` exists and its content would change, it is renamed to `YYYYMMDD-HHmmss-<dir name>.backup` next to it (for example `out` becomes `20261015-101530-out.backup`) and a fresh `<dir>` is rendered, so `<dir>` always holds exactly the render. A `<dir>` that already matches, or is empty, is left alone.
+- **`install` and `sync`:** if a file in `$KIRO_HOME` would change, each top-level folder that holds such a file (`agents`, `prompts`, `skills`, `steering`, `hooks`, `kirokit-steerings`, `kirokit-secrets`) is first copied to `$KIRO_HOME/YYYYMMDD-HHmmss-<folder>.backup`, for example `20261015-101530-agents.backup`, and then the files are written. Folders where nothing changes, and Kiro's own data in `$KIRO_HOME` (sessions and the like), are not copied. A backup folder has a different name than the live folder, so Kiro does not load it as configuration.
+- A re-install or `sync` that changes nothing makes no backup, so a scheduled `sync` only produces one when the shipped config really changed.
+- If two backups of the same folder happen in the same second, a counter follows the timestamp (`20261015-101530-2-agents.backup`).
+- Backups are not recorded in the install manifest, so `uninstall` leaves them in place and does not restore them. Delete them when you no longer need them.
+- Deleting is different: `sync` removes files the team stopped shipping, and `uninstall` removes everything the install wrote, without a backup. Only files listed in the install manifest are ever removed.
+
 ## Installing the CLI
 
 ```bash

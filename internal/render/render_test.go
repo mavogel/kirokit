@@ -369,3 +369,135 @@ func TestRenderTeam_FreshlyScaffoldedTeamRendersWithoutPlaceholders(t *testing.T
 		return nil
 	})
 }
+
+func backupFolders(t *testing.T, parent string) []string {
+	t.Helper()
+	entries, err := os.ReadDir(parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var found []string
+	for _, e := range entries {
+		if strings.HasSuffix(e.Name(), ".backup") {
+			found = append(found, filepath.Join(parent, e.Name()))
+		}
+	}
+	return found
+}
+
+func TestRenderTeam_MovesAnExistingOutputFolderToABackupBeforeRenderingFresh(t *testing.T) {
+	teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+	parent := t.TempDir()
+	outDir := filepath.Join(parent, "out")
+	for rel, content := range map[string]string{"agents/agent1.json": `{"name": "mine"}`, "notes.txt": "keep me"} {
+		p := filepath.Join(outDir, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := RenderTeam(teamsRoot, "fixture-team", globalRoot, envVersionsPath, outDir, "/kh"); err != nil {
+		t.Fatalf("RenderTeam: %v", err)
+	}
+
+	backups := backupFolders(t, parent)
+	if len(backups) != 1 || !strings.HasSuffix(backups[0], "-out.backup") {
+		t.Fatalf("backup folders = %v, want exactly one YYYYMMDD-HHmmss-out.backup beside out", backups)
+	}
+	if got, _ := os.ReadFile(filepath.Join(backups[0], "agents", "agent1.json")); string(got) != `{"name": "mine"}` {
+		t.Errorf("backup agent1.json = %q, want the previous content", got)
+	}
+	if got, _ := os.ReadFile(filepath.Join(backups[0], "notes.txt")); string(got) != "keep me" {
+		t.Errorf("backup notes.txt = %q, want the whole previous folder preserved", got)
+	}
+	if got, err := os.ReadFile(filepath.Join(outDir, "agents", "agent1.json")); err != nil || strings.Contains(string(got), `"mine"`) {
+		t.Errorf("out/agents/agent1.json = %q (%v), want the freshly rendered config", got, err)
+	}
+	if _, err := os.Stat(filepath.Join(outDir, "notes.txt")); !os.IsNotExist(err) {
+		t.Errorf("out still holds a file the render did not write (err=%v); the output must be exactly the render", err)
+	}
+	if entries, _ := filepath.Glob(filepath.Join(parent, ".kirokit-render-*")); len(entries) != 0 {
+		t.Errorf("scratch render directories left behind: %v", entries)
+	}
+}
+
+func TestRenderTeam_RerenderingUnchangedOutputCreatesNoBackup(t *testing.T) {
+	teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+	parent := t.TempDir()
+	outDir := filepath.Join(parent, "out")
+
+	for i := 0; i < 3; i++ {
+		if err := RenderTeam(teamsRoot, "fixture-team", globalRoot, envVersionsPath, outDir, "/kh"); err != nil {
+			t.Fatalf("RenderTeam #%d: %v", i+1, err)
+		}
+	}
+
+	if got := backupFolders(t, parent); len(got) != 0 {
+		t.Errorf("re-rendering identical output created backups: %v", got)
+	}
+	if _, err := os.Stat(filepath.Join(outDir, "agents", "agent1.json")); err != nil {
+		t.Errorf("rendered output missing after re-renders: %v", err)
+	}
+}
+
+func TestRenderTeam_FreshOrEmptyOutputFolderNeedsNoBackup(t *testing.T) {
+	for name, prepare := range map[string]func(out string){
+		"does not exist": func(string) {},
+		"empty folder":   func(out string) { _ = os.MkdirAll(out, 0o755) },
+	} {
+		t.Run(name, func(t *testing.T) {
+			teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+			parent := t.TempDir()
+			outDir := filepath.Join(parent, "out")
+			prepare(outDir)
+
+			if err := RenderTeam(teamsRoot, "fixture-team", globalRoot, envVersionsPath, outDir, "/kh"); err != nil {
+				t.Fatal(err)
+			}
+
+			entries, err := os.ReadDir(parent)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(entries) != 1 || entries[0].Name() != "out" {
+				t.Errorf("parent holds %v, want only out (no backup, no scratch directory)", entries)
+			}
+		})
+	}
+}
+
+func TestRenderTeam_RestoresTheOutputFolderWhenPublishingTheFreshRenderFails(t *testing.T) {
+	teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+	parent := t.TempDir()
+	outDir := filepath.Join(parent, "out")
+	if err := os.MkdirAll(filepath.Join(outDir, "agents"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	mine := filepath.Join(outDir, "agents", "agent1.json")
+	if err := os.WriteFile(mine, []byte(`{"name": "mine"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	prev := renameDir
+	renameDir = func(oldPath, newPath string) error {
+		if newPath == outDir {
+			return os.ErrPermission // the move of the fresh render into place fails
+		}
+		return os.Rename(oldPath, newPath)
+	}
+	t.Cleanup(func() { renameDir = prev })
+
+	err := RenderTeam(teamsRoot, "fixture-team", globalRoot, envVersionsPath, outDir, "/kh")
+
+	if err == nil || !strings.Contains(err.Error(), "restored") {
+		t.Fatalf("err = %v, want an error saying the previous output was restored", err)
+	}
+	if got, readErr := os.ReadFile(mine); readErr != nil || string(got) != `{"name": "mine"}` {
+		t.Errorf("out/agents/agent1.json = %q (%v), want the original output back in place", got, readErr)
+	}
+	if left := backupFolders(t, parent); len(left) != 0 {
+		t.Errorf("backup folders left after a successful restore: %v", left)
+	}
+}

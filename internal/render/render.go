@@ -13,6 +13,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/mavogel/kiro-cli-kit/internal/backup"
 	"github.com/mavogel/kiro-cli-kit/internal/externalskills"
 	"github.com/mavogel/kiro-cli-kit/internal/kiroconfig"
 )
@@ -118,13 +119,62 @@ func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir, kiroHome s
 		return err
 	}
 
-	if err := os.RemoveAll(outDir); err != nil {
+	return publish(tmpDir, outDir)
+}
+
+// renameDir is replaced in tests.
+var renameDir = os.Rename
+
+// publish makes outDir hold exactly the rendered tree. An existing outDir
+// whose content would change is first moved to a timestamped backup beside it
+// (see backup.MoveAside), so nothing in it is lost; one that already matches is
+// left alone, and an empty one is simply replaced.
+func publish(tmpDir, outDir string) error {
+	var movedTo string // where the previous outDir went, if it was moved aside
+	info, err := os.Lstat(outDir)
+	switch {
+	case os.IsNotExist(err):
+		// nothing to preserve
+	case err != nil:
 		return fmt.Errorf("render: %w", err)
+	case info.IsDir():
+		same, err := backup.TreesEqual(outDir, tmpDir)
+		if err != nil {
+			return fmt.Errorf("render: %w", err)
+		}
+		if same {
+			return nil // the deferred cleanup removes tmpDir
+		}
+		if empty, err := isEmptyDir(outDir); err != nil {
+			return fmt.Errorf("render: %w", err)
+		} else if empty {
+			if err := os.Remove(outDir); err != nil {
+				return fmt.Errorf("render: %w", err)
+			}
+			break
+		}
+		fallthrough
+	default:
+		if movedTo, err = backup.MoveAside(outDir, backup.Stamp()); err != nil {
+			return fmt.Errorf("render: %w", err)
+		}
 	}
-	if err := os.Rename(tmpDir, outDir); err != nil {
-		return fmt.Errorf("render: finalize output: %w", err)
+	if err := renameDir(tmpDir, outDir); err != nil {
+		if movedTo == "" {
+			return fmt.Errorf("render: finalize output: %w", err)
+		}
+		// Put the previous output back rather than leave outDir missing.
+		if restoreErr := os.Rename(movedTo, outDir); restoreErr != nil {
+			return fmt.Errorf("render: finalize output: %w (the previous output is preserved at %s)", err, movedTo)
+		}
+		return fmt.Errorf("render: finalize output: %w (the previous output was restored)", err)
 	}
 	return nil
+}
+
+func isEmptyDir(dir string) (bool, error) {
+	entries, err := os.ReadDir(dir)
+	return err == nil && len(entries) == 0, err
 }
 
 func renderTemplate(path, relPath string, funcMap template.FuncMap, ctx *Context) ([]byte, error) {

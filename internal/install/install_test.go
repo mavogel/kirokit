@@ -331,6 +331,16 @@ func TestUninstall_WithKnowledgeBaseRemovesSymlinkButNotRealSource(t *testing.T)
 	}
 }
 
+// installTree plans and writes a rendered tree the way Install does, without
+// the backup step.
+func installTree(renderedDir, kiroHome string) ([]string, error) {
+	planned, err := planRenderedTree(renderedDir, kiroHome)
+	if err != nil {
+		return nil, err
+	}
+	return writePlanned(planned)
+}
+
 func TestCopyRenderedTree_PreservesOwnerExecuteBit(t *testing.T) {
 	rendered := t.TempDir()
 	kiroHome := t.TempDir()
@@ -342,7 +352,7 @@ func TestCopyRenderedTree_PreservesOwnerExecuteBit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := copyRenderedTree(rendered, kiroHome); err != nil {
+	if _, err := installTree(rendered, kiroHome); err != nil {
 		t.Fatalf("copyRenderedTree: %v", err)
 	}
 
@@ -368,7 +378,7 @@ func TestCopyRenderedTree_ReinstallMakesAPreviouslyPlainFileExecutable(t *testin
 	script := filepath.Join(rendered, "skills", "pdf", "run.sh")
 	installed := filepath.Join(kiroHome, "skills", "pdf", "run.sh")
 	mustWrite(t, script, "echo hi\n")
-	if _, err := copyRenderedTree(rendered, kiroHome); err != nil {
+	if _, err := installTree(rendered, kiroHome); err != nil {
 		t.Fatal(err)
 	}
 	if info, _ := os.Stat(installed); info.Mode().Perm() != 0o600 {
@@ -378,10 +388,226 @@ func TestCopyRenderedTree_ReinstallMakesAPreviouslyPlainFileExecutable(t *testin
 	if err := os.Chmod(script, 0o700); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := copyRenderedTree(rendered, kiroHome); err != nil {
+	if _, err := installTree(rendered, kiroHome); err != nil {
 		t.Fatal(err)
 	}
 	if info, err := os.Stat(installed); err != nil || info.Mode().Perm() != 0o700 {
 		t.Errorf("after re-install mode = %v (%v), want 700", info.Mode().Perm(), err)
+	}
+}
+
+func backupDirs(t *testing.T, root string) []string {
+	t.Helper()
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, e := range entries {
+		if e.IsDir() && strings.HasSuffix(e.Name(), ".backup") {
+			names = append(names, e.Name())
+		}
+	}
+	return names
+}
+
+func backupOf(t *testing.T, root, folder string) string {
+	t.Helper()
+	for _, n := range backupDirs(t, root) {
+		if strings.HasSuffix(n, "-"+folder+".backup") {
+			return filepath.Join(root, n)
+		}
+	}
+	return ""
+}
+
+func TestInstall_BacksUpTheFoldersItWouldChangeBeforeWritingAnything(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	mustWrite(t, filepath.Join(kiroHome, "agents", "agent1.json"), `{"name": "my-own-agent"}`)
+	mustWrite(t, filepath.Join(kiroHome, "agents", "other.json"), `{"name": "someone else's"}`)
+	mustWrite(t, filepath.Join(kiroHome, "kirokit-secrets", team, "agent1", "secrets.enc.yaml"), "previous ciphertext\n")
+	mustWrite(t, filepath.Join(kiroHome, "sessions", "log.txt"), "kiro's own data")
+	mustWrite(t, filepath.Join(kiroHome, "skills", "unrelated", "SKILL.md"), "a skill kirokit does not touch")
+
+	if err := Install(roots, team, kiroHome, nil); err != nil {
+		t.Fatalf("Install: %v", err)
+	}
+
+	agents := backupOf(t, kiroHome, "agents")
+	secrets := backupOf(t, kiroHome, "kirokit-secrets")
+	if agents == "" || secrets == "" {
+		t.Fatalf("backup folders = %v, want one for agents and one for kirokit-secrets", backupDirs(t, kiroHome))
+	}
+	if got, _ := os.ReadFile(filepath.Join(agents, "agent1.json")); string(got) != `{"name": "my-own-agent"}` {
+		t.Errorf("agents backup holds agent1.json = %q, want the previous content", got)
+	}
+	if got, _ := os.ReadFile(filepath.Join(agents, "other.json")); string(got) != `{"name": "someone else's"}` {
+		t.Errorf("agents backup is missing the file kirokit does not manage: %q", got)
+	}
+	if got, _ := os.ReadFile(filepath.Join(secrets, team, "agent1", "secrets.enc.yaml")); string(got) != "previous ciphertext\n" {
+		t.Errorf("secrets backup = %q, want the previous ciphertext", got)
+	}
+	for _, untouched := range []string{"sessions", "skills"} {
+		if b := backupOf(t, kiroHome, untouched); b != "" {
+			t.Errorf("%s was backed up (%s) although no file in it changed", untouched, b)
+		}
+	}
+	if got, _ := os.ReadFile(filepath.Join(kiroHome, "agents", "other.json")); string(got) != `{"name": "someone else's"}` {
+		t.Errorf("the live agents/other.json changed: %q", got)
+	}
+	if got, _ := os.ReadFile(filepath.Join(kiroHome, "agents", "agent1.json")); strings.Contains(string(got), "my-own-agent") {
+		t.Errorf("agent1.json still holds the old content: %s", got)
+	}
+}
+
+func TestInstall_NoBackupFileEverLandsInsideALiveFolder(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	mustWrite(t, filepath.Join(kiroHome, "agents", "agent1.json"), `{"name": "mine"}`)
+
+	if err := Install(roots, team, kiroHome, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, live := range []string{"agents", "kirokit-secrets"} {
+		matches, _ := filepath.Glob(filepath.Join(kiroHome, live, "*.backup"))
+		if len(matches) != 0 {
+			t.Errorf("%s/ contains backup entries %v; a backup there could be loaded as live config", live, matches)
+		}
+	}
+}
+
+func TestInstall_BackupsAreNotTrackedSoUninstallLeavesThem(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	mustWrite(t, filepath.Join(kiroHome, "agents", "agent1.json"), `{"name": "mine"}`)
+	if err := Install(roots, team, kiroHome, nil); err != nil {
+		t.Fatal(err)
+	}
+	recorded, err := os.ReadFile(installManifestPath(kiroHome, team))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(recorded), ".backup") {
+		t.Errorf("install manifest lists a backup: %s", recorded)
+	}
+
+	if err := Uninstall(kiroHome, team); err != nil {
+		t.Fatal(err)
+	}
+
+	backup := backupOf(t, kiroHome, "agents")
+	if got, err := os.ReadFile(filepath.Join(backup, "agent1.json")); err != nil || string(got) != `{"name": "mine"}` {
+		t.Errorf("backup after uninstall = %q (%v), want the user's file preserved", got, err)
+	}
+}
+
+func TestInstall_ReinstallingUnchangedConfigCreatesNoBackups(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+
+	for i := 0; i < 3; i++ { // what a scheduled sync does
+		if err := Install(roots, team, kiroHome, nil); err != nil {
+			t.Fatalf("Install #%d: %v", i+1, err)
+		}
+	}
+
+	if got := backupDirs(t, kiroHome); len(got) != 0 {
+		t.Errorf("repeated installs of unchanged config created backups: %v", got)
+	}
+}
+
+func TestSync_BacksUpOnlyWhenTheShippedConfigChanged(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	if _, err := Sync(roots, team, kiroHome, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := backupDirs(t, kiroHome); len(got) != 0 {
+		t.Fatalf("first sync created backups: %v", got)
+	}
+
+	agentTmpl := filepath.Join(roots.TeamsRoot, team, "agents", "agent1", "agent.json.tmpl")
+	mustWrite(t, agentTmpl, `{"name": "agent1-v2"}`)
+	if _, err := Sync(roots, team, kiroHome, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	agents := backupOf(t, kiroHome, "agents")
+	if agents == "" {
+		t.Fatalf("a changed agent did not produce an agents backup: %v", backupDirs(t, kiroHome))
+	}
+	if got, _ := os.ReadFile(filepath.Join(agents, "agent1.json")); strings.Contains(string(got), "agent1-v2") {
+		t.Errorf("the backup holds the new content: %s", got)
+	}
+}
+
+func TestInstall_ReinstallingWithAKnowledgeBaseCreatesNoBackups(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	kbSource := t.TempDir()
+	mustWrite(t, filepath.Join(kbSource, "doc.md"), "# Docs\n")
+	kb := &KnowledgeBase{Agent: "agent1", Source: kbSource, Mount: filepath.Join(kiroHome, "kirokit-kb", team, "agent1")}
+
+	for i := 0; i < 3; i++ { // a scheduled sync with --kb-* flags
+		if err := Install(roots, team, kiroHome, kb); err != nil {
+			t.Fatalf("Install #%d: %v", i+1, err)
+		}
+	}
+
+	if got := backupDirs(t, kiroHome); len(got) != 0 {
+		t.Errorf("re-installing an unchanged config with a knowledge base created backups: %v", got)
+	}
+	agentJSON, err := os.ReadFile(filepath.Join(kiroHome, "agents", "agent1.json"))
+	if err != nil || strings.Count(string(agentJSON), "knowledgeBase") != 1 {
+		t.Errorf("agent1.json = %s (%v), want exactly one knowledgeBase resource after repeated installs", agentJSON, err)
+	}
+}
+
+func TestInstall_AChangedAgentWithAKnowledgeBaseIsBackedUpWithItsPreviousKnowledgeBase(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	kbSource := t.TempDir()
+	mustWrite(t, filepath.Join(kbSource, "doc.md"), "# Docs\n")
+	kb := &KnowledgeBase{Agent: "agent1", Source: kbSource, Mount: filepath.Join(kiroHome, "kirokit-kb", team, "agent1")}
+	if err := Install(roots, team, kiroHome, kb); err != nil {
+		t.Fatal(err)
+	}
+
+	mustWrite(t, filepath.Join(roots.TeamsRoot, team, "agents", "agent1", "agent.json.tmpl"), `{"name": "agent1-v2"}`)
+	if err := Install(roots, team, kiroHome, kb); err != nil {
+		t.Fatal(err)
+	}
+
+	agents := backupOf(t, kiroHome, "agents")
+	if agents == "" {
+		t.Fatalf("a changed agent produced no agents backup: %v", backupDirs(t, kiroHome))
+	}
+	old, _ := os.ReadFile(filepath.Join(agents, "agent1.json"))
+	if !strings.Contains(string(old), "knowledgeBase") || strings.Contains(string(old), "agent1-v2") {
+		t.Errorf("backup = %s, want the previous agent with its knowledge base attached", old)
+	}
+	now, _ := os.ReadFile(filepath.Join(kiroHome, "agents", "agent1.json"))
+	if !strings.Contains(string(now), "agent1-v2") || !strings.Contains(string(now), "knowledgeBase") {
+		t.Errorf("installed agent = %s, want the new agent with the knowledge base attached", now)
+	}
+}
+
+func TestBackupChangedFolders_ARootLevelFileIsBackedUpAsItself(t *testing.T) {
+	kiroHome := t.TempDir()
+	mustWrite(t, filepath.Join(kiroHome, "settings.json"), "mine")
+
+	err := backupChangedFolders(kiroHome, []plannedFile{{target: filepath.Join(kiroHome, "settings.json"), data: []byte("new"), perm: 0o600}})
+	if err != nil {
+		t.Fatalf("backupChangedFolders: %v", err)
+	}
+
+	matches, _ := filepath.Glob(filepath.Join(kiroHome, "*-settings.json.backup"))
+	if len(matches) != 1 {
+		t.Fatalf("backups = %v, want the root-level file backed up as itself", matches)
+	}
+	if got, _ := os.ReadFile(matches[0]); string(got) != "mine" {
+		t.Errorf("backup = %q, want the previous content", got)
 	}
 }
