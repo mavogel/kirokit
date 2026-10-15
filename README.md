@@ -64,6 +64,16 @@ A prompt that no agent uses as its `prompt` is still useful: Kiro CLI v3 lists e
 team: my-team
 globalSteerings:
   - security-baseline   # must match a file under global/steerings/<slug>.md
+externalSkills:         # optional, see "External Skills"
+  - source: https://github.com/anthropics/skills.git   # git URL; no credentials in it
+    ref: <commit-sha>   # tag, branch or commit
+    path: skills/pdf    # the skill's directory inside the repository
+    name: pdf           # optional; defaults to the last element of path
+  - source: https://github.com/anthropics/skills.git   # or every skill in a directory:
+    ref: <commit-sha>
+    path: skills        # a directory of skills
+    all: true           # vendor each subdirectory that holds a SKILL.md
+    exclude: [docx]     # optional; skip these skill directories
 ```
 
 `globalSteerings` may be an empty list (`[]`) to explicitly opt out — see `teams/data-team/manifest.yaml`.
@@ -71,6 +81,28 @@ globalSteerings:
 Every opted-in global steering is added to the `resources` of **every agent** of the team automatically, as `file://$KIRO_HOME/kirokit-steerings/<team>/<slug>.md` (appended to the agent's own `resources`, created if missing). The steering is rendered to that file, not to Kiro's auto-loaded `steering/` directory, so it applies only to the opted-in team's agents. A global steering file should start with Kiro's steering front matter (e.g. `inclusion: always`, as `global/steerings/security-baseline.md` does). A template can still inline one with `{{ globalSteering "<slug>" }}`, but that inlines the front matter verbatim too, so prefer the automatic resource.
 
 Every agent of every team, opted in or not, also gets `file://.kiro/steering/**/*.md` and `skill://.kiro/skills/**/SKILL.md` in its `resources`, after any global steerings. They are relative paths, so an agent loads the steering and skills of whichever workspace Kiro is started in (nothing is loaded when those folders do not exist). Skills use the `skill://` scheme, so only their metadata is loaded at startup and the rest on demand. A template that already lists an entry is not duplicated.
+
+## External Skills
+
+A team can use skills that live in other git repositories, such as [anthropics/skills](https://github.com/anthropics/skills), pinned to a version and, for private repositories, authenticated through git. Each `externalSkills` entry names a repository (`source`), a `ref` (tag, branch, or commit) and the `path` of one skill directory inside it; the optional `name` overrides the default name (the last element of `path`). An entry vendors exactly one skill directory. To take every skill in a directory, set `all: true` on an entry whose `path` is that directory (see below); to take just a few, add one entry per skill.
+
+```bash
+kirokit skills fetch <team>      # or without a team: every team that declares external skills
+kirokit update <team>            # refresh goldens, then review and commit the diff
+```
+
+`skills fetch` resolves each `ref` to a commit with your machine's `git`, copies the skill directory byte for byte into `teams/<team>/external/skills/<name>/`, and records the source, ref, resolved commit and a content hash in `teams/<team>/external/skills.lock.yaml`. Both are committed. Fetching is the only step that uses the network: `render`, `test`, `install` and `sync` work offline and need no credentials, so users who install the team never touch the source repository. If any entry fails, nothing is changed.
+
+Rendering and installing then place the files at `$KIRO_HOME/skills/<name>/` and add `skill://$KIRO_HOME/skills/<name>/SKILL.md` to the `resources` of **every agent** of the team. Scripts keep their executable bit. Vendored files are never run through the template engine, so a file named `*.tmpl` or containing `{{ }}` arrives intact.
+
+- **All skills of a repository (`all: true`):** `path` is then a directory of skills, such as `skills` in `anthropics/skills`. Every immediate subdirectory containing a `SKILL.md` is vendored, other directories are ignored, and `exclude` lists skill directories to skip. `name` cannot be combined with `all`. Each skill gets its own entry in the lock file, with `from` naming the collection, and its own `skill://` resource on every agent. Skills added upstream appear only when you re-fetch at a newer `ref`; re-fetching with a longer `exclude` removes the newly excluded skills. An `exclude` that names a directory that does not exist is an error, so a typo cannot silently vendor a skill you meant to skip.
+- **Updating:** change `ref` (or re-run `fetch` to move a branch ref forward), run `kirokit skills fetch <team>` and review the vendored diff in the pull request. Files the new revision dropped are removed.
+- **Sources without tags:** `anthropics/skills` publishes no tags, so pin a commit SHA (or follow a branch). Whatever the `ref`, the lock records the exact commit.
+- **Drift is an error:** if `manifest.yaml`, the lock file and the vendored files disagree (a hand-edited vendored file, a changed `ref` without a re-fetch, a vendored directory with no entry), `render`, `test`, `install` and `sync` fail naming the skill. Never edit `teams/<team>/external/**` by hand.
+- **Name collisions:** an external skill whose name equals a team-authored `skills/<name>` (or another external skill) is an error (two entries, or an entry and a collection, providing the same name also fails the fetch); set `name` on a single-skill entry, or `exclude` the skill from the collection, to resolve it.
+- **Private sources:** use an SSH URL (`git@github.com:org/repo.git`, `ssh://git@host/org/repo.git`) with your SSH agent, or an HTTPS URL with a git credential helper (for example `gh auth setup-git`). `kirokit` stores no credential: a `source` URL containing credentials (`https://token@host/...`) is rejected. A `source` must be an `https`, `http`, `ssh`, `git` or `file` URL, an scp-style address, or a local path; values git would parse as an option (leading `-`) or as a transport helper (`ext::...`), and a `ref` starting with `-` or containing whitespace, are rejected. Only the person who runs `skills fetch` needs access; if git cannot authenticate, the error names the source and nothing is written.
+- **Symbolic links** inside a skill directory are rejected, and a skill must contain a `SKILL.md` at its root.
+- **Licences:** a source skill may carry its own licence terms (for example a `LICENSE.txt` in its directory). Those files are vendored with it; check that the terms allow you to redistribute the skill inside your repository. This matters most with `all: true`: a repository can mix licences (some skills in `anthropics/skills` carry restrictive terms), so `exclude` those or review each before vendoring everything.
 
 ## Central env/mcp-versions.yaml
 

@@ -1,3 +1,30 @@
 team: platform-team
 globalSteerings:
   - security-baseline
+
+# External skills vendored from a git repository, pinned to a ref. Uncomment,
+# run `kirokit skills fetch platform-team`, review the vendored files under
+# teams/platform-team/external/, then `kirokit update platform-team`. Every
+# agent of the team then gets the skill. See "External Skills" in the README.
+#
+# externalSkills:
+#   - source: https://github.com/anthropics/skills.git
+#     # One entry vendors one skill directory; add an entry per skill you want.
+#     # anthropics/skills publishes no tags, so pin a commit (or follow a branch).
+#     ref: dbd4588f9e1033efb41dad4bef2f7947c8993d44
+#     path: skills/frontend-design
+#     # name: frontend-design  # optional; defaults to the last element of path
+#
+#   # Or every skill in a directory (each gets its own lock entry). Check the
+#   # licence of what you take; some skills in this repository are restricted.
+#   - source: https://github.com/anthropics/skills.git
+#     ref: dbd4588f9e1033efb41dad4bef2f7947c8993d44
+#     path: skills
+#     all: true
+#     exclude: [docx, pdf, pptx, xlsx]
+#
+#   # A private repository authenticates through your git login (SSH key or
+#   # credential helper); never put a token in the URL.
+#   - source: git@github.com:your-org/private-skills.git
+#     ref: v1.2.0
+#     path: skills/jira-triage

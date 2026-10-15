@@ -13,6 +13,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/mavogel/kiro-cli-kit/internal/externalskills"
 	"github.com/mavogel/kiro-cli-kit/internal/kiroconfig"
 )
 
@@ -26,9 +27,14 @@ func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir, kiroHome s
 		return err
 	}
 	funcMap := FuncMap(ctx)
-	agentResources := append(globalSteeringURIs(ctx), workspaceResources...)
 
 	teamDir := filepath.Join(teamsRoot, team)
+	externalNames, err := externalskills.Resolve(teamDir, ctx.Team.ExternalSkills)
+	if err != nil {
+		return fmt.Errorf("render: %w", err)
+	}
+	agentResources := append(globalSteeringURIs(ctx), externalSkillURIs(ctx.KiroHome, externalNames)...)
+	agentResources = append(agentResources, workspaceResources...)
 
 	if err := os.MkdirAll(filepath.Dir(outDir), 0o755); err != nil {
 		return fmt.Errorf("render: %w", err)
@@ -108,6 +114,9 @@ func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir, kiroHome s
 	if err := writeGlobalSteerings(tmpDir, ctx); err != nil {
 		return err
 	}
+	if err := writeExternalSkills(tmpDir, teamDir, externalNames); err != nil {
+		return err
+	}
 
 	if err := os.RemoveAll(outDir); err != nil {
 		return fmt.Errorf("render: %w", err)
@@ -171,6 +180,11 @@ func mapOutputPath(relPath string) (outRelPath string, skip bool, err error) {
 			return "agents/" + agent + ".json", false, nil
 		}
 		return "", false, fmt.Errorf("unexpected path under agents/%s/: %s", agent, relPath)
+
+	case "external":
+		// Vendored external skills and their lock file are copied into the
+		// output by writeExternalSkills, never rendered as team sources.
+		return "", true, nil
 
 	case "hooks", "skills", "prompts":
 		return strings.TrimSuffix(relPath, ".tmpl"), false, nil

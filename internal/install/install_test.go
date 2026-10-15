@@ -330,3 +330,58 @@ func TestUninstall_WithKnowledgeBaseRemovesSymlinkButNotRealSource(t *testing.T)
 		t.Errorf("uninstall removed the real knowledge base source content: %v", err)
 	}
 }
+
+func TestCopyRenderedTree_PreservesOwnerExecuteBit(t *testing.T) {
+	rendered := t.TempDir()
+	kiroHome := t.TempDir()
+	script := filepath.Join(rendered, "skills", "pdf", "scripts", "run.sh")
+	plain := filepath.Join(rendered, "skills", "pdf", "SKILL.md")
+	mustWrite(t, script, "echo hi\n")
+	mustWrite(t, plain, "skill\n")
+	if err := os.Chmod(script, 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := copyRenderedTree(rendered, kiroHome); err != nil {
+		t.Fatalf("copyRenderedTree: %v", err)
+	}
+
+	modeOf := func(p string) os.FileMode {
+		t.Helper()
+		info, err := os.Stat(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return info.Mode().Perm()
+	}
+	if got := modeOf(filepath.Join(kiroHome, "skills", "pdf", "scripts", "run.sh")); got != 0o700 {
+		t.Errorf("installed script mode = %o, want 700", got)
+	}
+	if got := modeOf(filepath.Join(kiroHome, "skills", "pdf", "SKILL.md")); got != 0o600 {
+		t.Errorf("installed plain file mode = %o, want 600", got)
+	}
+}
+
+func TestCopyRenderedTree_ReinstallMakesAPreviouslyPlainFileExecutable(t *testing.T) {
+	rendered := t.TempDir()
+	kiroHome := t.TempDir()
+	script := filepath.Join(rendered, "skills", "pdf", "run.sh")
+	installed := filepath.Join(kiroHome, "skills", "pdf", "run.sh")
+	mustWrite(t, script, "echo hi\n")
+	if _, err := copyRenderedTree(rendered, kiroHome); err != nil {
+		t.Fatal(err)
+	}
+	if info, _ := os.Stat(installed); info.Mode().Perm() != 0o600 {
+		t.Fatalf("precondition: first install mode = %o, want 600", info.Mode().Perm())
+	}
+
+	if err := os.Chmod(script, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := copyRenderedTree(rendered, kiroHome); err != nil {
+		t.Fatal(err)
+	}
+	if info, err := os.Stat(installed); err != nil || info.Mode().Perm() != 0o700 {
+		t.Errorf("after re-install mode = %v (%v), want 700", info.Mode().Perm(), err)
+	}
+}

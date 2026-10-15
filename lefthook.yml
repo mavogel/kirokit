@@ -7,6 +7,8 @@
 # Excluded from the fixers on purpose:
 #   - testdata/golden/**  golden files are compared byte-for-byte by `kirokit test`
 #   - **/*.enc.yaml       SOPS files carry a MAC over their exact content
+#   - teams/*/external/** vendored external skills are pinned by a content hash
+#                         in skills.lock.yaml and are not ours to reformat or lint
 
 pre-commit:
   jobs:
@@ -15,6 +17,7 @@ pre-commit:
       exclude:
         - "testdata/golden/**"
         - "**/*.enc.yaml"
+        - "teams/*/external/**"
       stage_fixed: true
 
     - name: end-of-file-fixer
@@ -22,14 +25,19 @@ pre-commit:
       exclude:
         - "testdata/golden/**"
         - "**/*.enc.yaml"
+        - "teams/*/external/**"
       stage_fixed: true
 
     - name: check-yaml
       glob: "*.{yaml,yml}"
+      exclude:
+        - "teams/*/external/**"
       run: uvx --from pre-commit-hooks==6.0.0 check-yaml --allow-multiple-documents {staged_files}
 
     - name: check-json
       glob: "*.json"
+      exclude:
+        - "teams/*/external/**"
       run: uvx --from pre-commit-hooks==6.0.0 check-json {staged_files}
 
     - name: gitleaks

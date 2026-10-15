@@ -264,11 +264,25 @@ func copyRenderedTree(renderedDir, kiroHome string) ([]string, error) {
 		if err != nil {
 			return fmt.Errorf("install: read %s: %w", rel, err)
 		}
+		info, err := d.Info()
+		if err != nil {
+			return fmt.Errorf("install: stat %s: %w", rel, err)
+		}
+		// Files stay private to the user, but a script (for example one a
+		// vendored skill ships) keeps its owner-execute bit.
+		perm := os.FileMode(0o600)
+		if info.Mode().Perm()&0o100 != 0 {
+			perm = 0o700
+		}
 		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
 			return fmt.Errorf("install: %w", err)
 		}
-		if err := os.WriteFile(target, data, 0o600); err != nil {
+		if err := os.WriteFile(target, data, perm); err != nil {
 			return fmt.Errorf("install: write %s: %w", target, err)
+		}
+		// WriteFile leaves the mode of an existing file alone.
+		if err := os.Chmod(target, perm); err != nil {
+			return fmt.Errorf("install: chmod %s: %w", target, err)
 		}
 		written = append(written, target)
 		return nil
