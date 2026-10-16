@@ -6,10 +6,15 @@ A `kirokit` Go CLI plus repository layout that lets multiple teams own their own
 
 ## Quickstart
 
+Homebrew installs only the `kirokit` binary. The team configs (`teams/`, `global/`, `env/`) live in this repository, and `kirokit` reads them from the current directory, so clone it and run every command from its root. The example `platform-team` also launches SOPS-secured MCP servers, so install `sops` (`brew install sops`) and have a key that can decrypt its secrets file before starting the agent.
+
 ```bash
 # install the binary via homebrew
 brew install --cask mavogel/tap/kirokit
 kirokit version
+
+# get the team configs and work from the repository root
+git clone https://github.com/mavogel/kirokit.git && cd kirokit
 
 # let's backup first, if you have used it
 export KIRO_HOME_BACKUP=$KIRO_HOME
