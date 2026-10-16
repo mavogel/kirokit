@@ -20,6 +20,9 @@ builds:
       - arm64
     ldflags:
       - -s -w
+      - -X github.com/mavogel/kiro-cli-kit/cmd/kirokit/commands.version={{ .Version }}
+      - -X github.com/mavogel/kiro-cli-kit/cmd/kirokit/commands.commit={{ .Commit }}
+      - -X github.com/mavogel/kiro-cli-kit/cmd/kirokit/commands.date={{ .Date }}
 
 archives:
   - id: default
