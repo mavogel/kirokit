@@ -1,0 +1,43 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits", "helpers:pinGitHubActionDigests"],
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "labels": ["dependencies"],
+  "schedule": ["before 6am on monday"],
+  "timezone": "Europe/Berlin",
+  "lockFileMaintenance": { "enabled": true },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "npm MCP servers pinned in env/mcp-versions.yaml",
+      "managerFilePatterns": ["/^env/mcp-versions\\.yaml$/"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*npm=(?<depName>\\S+)\\s*\\n\\s*[\\w-]+:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "description": "golangci-lint version in CI workflow",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.ya?ml$/"],
+      "matchStrings": ["version:\\s*(?<currentValue>v\\d+\\.\\d+\\.\\d+)"],
+      "depNameTemplate": "golangci/golangci-lint",
+      "datasourceTemplate": "github-releases"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Auto-merge minor/patch Go modules and Actions once CI passes",
+      "matchManagers": ["gomod", "github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true
+    },
+    {
+      "description": "Group MCP server bumps; they change rendered output, so goldens need `kirokit update`",
+      "matchFileNames": ["env/mcp-versions.yaml"],
+      "groupName": "mcp servers",
+      "automerge": false
+    }
+  ]
+}
