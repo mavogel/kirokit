@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mavogel/kiro-cli-kit/cmd/kirokit/commands"
+	"github.com/mavogel/kirokit/cmd/kirokit/commands"
 )
 
 func main() {

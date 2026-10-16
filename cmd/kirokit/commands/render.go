@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/mavogel/kiro-cli-kit/internal/render"
+	"github.com/mavogel/kirokit/internal/render"
 	"github.com/spf13/cobra"
 )
 

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mavogel/kiro-cli-kit/internal/manifest"
+	"github.com/mavogel/kirokit/internal/manifest"
 )
 
 func git(t *testing.T, dir string, args ...string) string {

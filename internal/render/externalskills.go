@@ -7,7 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/mavogel/kiro-cli-kit/internal/externalskills"
+	"github.com/mavogel/kirokit/internal/externalskills"
 )
 
 // externalSkillURIs returns the skill:// resource of every vendored external

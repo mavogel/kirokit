@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mavogel/kiro-cli-kit/internal/backup"
-	"github.com/mavogel/kiro-cli-kit/internal/render"
+	"github.com/mavogel/kirokit/internal/backup"
+	"github.com/mavogel/kirokit/internal/render"
 )
 
 // Roots are the shared repository-relative paths Install needs to render a

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mavogel/kiro-cli-kit/internal/externalskills"
+	"github.com/mavogel/kirokit/internal/externalskills"
 )
 
 const (

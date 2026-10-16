@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mavogel/kiro-cli-kit/internal/install"
+	"github.com/mavogel/kirokit/internal/install"
 )
 
 var updateKnowledgeBaseGolden = flag.Bool("update-kb-golden", false,

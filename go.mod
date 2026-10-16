@@ -1,4 +1,4 @@
-module github.com/mavogel/kiro-cli-kit
+module github.com/mavogel/kirokit
 
 go 1.23
 

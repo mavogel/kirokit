@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mavogel/kiro-cli-kit/internal/manifest"
+	"github.com/mavogel/kirokit/internal/manifest"
 )
 
 // Verify checks, offline, that a team's manifest entries, lock file and

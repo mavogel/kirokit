@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mavogel/kiro-cli-kit/internal/manifest"
-	"github.com/mavogel/kiro-cli-kit/internal/mcpversions"
+	"github.com/mavogel/kirokit/internal/manifest"
+	"github.com/mavogel/kirokit/internal/mcpversions"
 )
 
 // DefaultKiroHomeSentinel is the fixed, portable placeholder used for

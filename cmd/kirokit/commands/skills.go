@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/mavogel/kiro-cli-kit/internal/externalskills"
-	"github.com/mavogel/kiro-cli-kit/internal/manifest"
+	"github.com/mavogel/kirokit/internal/externalskills"
+	"github.com/mavogel/kirokit/internal/manifest"
 	"github.com/spf13/cobra"
 )
 

@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mavogel/kiro-cli-kit/internal/manifest"
+	"github.com/mavogel/kirokit/internal/manifest"
 )
 
 // Fetch is the only networked operation: it resolves every entry's ref to a

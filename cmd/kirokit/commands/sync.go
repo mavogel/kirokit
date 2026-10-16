@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/mavogel/kiro-cli-kit/internal/install"
+	"github.com/mavogel/kirokit/internal/install"
 	"github.com/spf13/cobra"
 )
 

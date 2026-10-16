@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mavogel/kiro-cli-kit/internal/scaffold"
+	"github.com/mavogel/kirokit/internal/scaffold"
 )
 
 // setupFixture builds a minimal team tree (one agent, one hook, one

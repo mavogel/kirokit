@@ -13,9 +13,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/mavogel/kiro-cli-kit/internal/backup"
-	"github.com/mavogel/kiro-cli-kit/internal/externalskills"
-	"github.com/mavogel/kiro-cli-kit/internal/kiroconfig"
+	"github.com/mavogel/kirokit/internal/backup"
+	"github.com/mavogel/kirokit/internal/externalskills"
+	"github.com/mavogel/kirokit/internal/kiroconfig"
 )
 
 // RenderTeam renders teamsRoot/team into outDir. globalRoot is the root of

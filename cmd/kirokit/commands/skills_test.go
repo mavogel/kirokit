@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mavogel/kiro-cli-kit/internal/install"
+	"github.com/mavogel/kirokit/internal/install"
 )
 
 func runRoot(t *testing.T, args ...string) (string, error) {

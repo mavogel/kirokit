@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/mavogel/kiro-cli-kit/internal/install"
+	"github.com/mavogel/kirokit/internal/install"
 	"github.com/spf13/cobra"
 )
 

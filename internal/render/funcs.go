@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/mavogel/kiro-cli-kit/internal/sopswrap"
+	"github.com/mavogel/kirokit/internal/sopswrap"
 )
 
 // FuncMap returns the text/template functions available to every team

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mavogel/kiro-cli-kit/internal/manifest"
+	"github.com/mavogel/kirokit/internal/manifest"
 )
 
 func writeFile(t *testing.T, path, content string, mode os.FileMode) {

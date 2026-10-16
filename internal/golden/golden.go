@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/mavogel/kiro-cli-kit/internal/render"
+	"github.com/mavogel/kirokit/internal/render"
 )
 
 // Inputs are the shared roots every render/golden operation needs.

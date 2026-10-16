@@ -20,9 +20,9 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X github.com/mavogel/kiro-cli-kit/cmd/kirokit/commands.version={{ .Version }}
-      - -X github.com/mavogel/kiro-cli-kit/cmd/kirokit/commands.commit={{ .Commit }}
-      - -X github.com/mavogel/kiro-cli-kit/cmd/kirokit/commands.date={{ .Date }}
+      - -X github.com/mavogel/kirokit/cmd/kirokit/commands.version={{ .Version }}
+      - -X github.com/mavogel/kirokit/cmd/kirokit/commands.commit={{ .Commit }}
+      - -X github.com/mavogel/kirokit/cmd/kirokit/commands.date={{ .Date }}
 
 archives:
   - id: default
@@ -59,7 +59,7 @@ homebrew_casks:
       owner: mavogel
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    homepage: https://github.com/mavogel/kiro-cli-kit
+    homepage: https://github.com/mavogel/kirokit
     description: Render, test, and install multi-team Kiro CLI v3 configs
     # The binaries are not notarized; without this macOS reports "kirokit is damaged".
     hooks:
@@ -73,5 +73,5 @@ homebrew_casks:
 release:
   github:
     owner: mavogel
-    name: kiro-cli-kit
+    name: kirokit
   mode: append

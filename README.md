@@ -1,6 +1,6 @@
 <p align="center"><img src="assets/logo.svg" width="120" alt="kirokit"></p>
 
-# kiro-cli-kit
+# kirokit
 
 A `kirokit` Go CLI plus repository layout that lets multiple teams own their own [Kiro CLI v3](https://kiro.dev) config sources as templates. Each team's agents, hooks, prompts, skills, and steering docs are rendered deterministically into Kiro's real config layout, MCP server versions are pinned centrally, secrets are injected via [SOPS](https://github.com/getsops/sops) at MCP-launch time (never baked into any committed or rendered file), and the rendering pipeline is locked down with golden-file tests that run in CI.
 

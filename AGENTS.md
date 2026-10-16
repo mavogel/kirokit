@@ -1,4 +1,4 @@
-# kiro-cli-kit repository instructions
+# kirokit repository instructions
 
 ## Project
 `kirokit` is a Go CLI (cobra, `go 1.23`) that renders per-team Kiro CLI v3 config templates into Kiro's real config layout. `README.md` is the detailed reference; `docs/prd/` and `docs/plans/` hold the product requirements and implementation plan.
