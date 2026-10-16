@@ -1,28 +1,41 @@
+<p align="center"><img src="assets/logo.svg" width="120" alt="kirokit"></p>
+
 # kiro-cli-kit
 
-A `kirokit` Go CLI plus repository layout that lets multiple teams own their own [Kiro CLI v3](https://kiro.dev) config sources as templates. Each team's agents, hooks, prompts, skills, and steering docs are rendered deterministically into Kiro's real config layout, MCP server versions are pinned centrally, secrets are injected via [SOPS](https://github.com/getsops/sops) at MCP-launch time (never baked into any committed or rendered file), and the whole rendering pipeline is locked down with golden-file tests that run in CI.
-
-See `docs/prd/2026-09-28-kiro-cli-kit-multi-team.md` for the full product requirements and `docs/plans/2026-09-28-kiro-cli-kit.md` for the implementation plan.
+A `kirokit` Go CLI plus repository layout that lets multiple teams own their own [Kiro CLI v3](https://kiro.dev) config sources as templates. Each team's agents, hooks, prompts, skills, and steering docs are rendered deterministically into Kiro's real config layout, MCP server versions are pinned centrally, secrets are injected via [SOPS](https://github.com/getsops/sops) at MCP-launch time (never baked into any committed or rendered file), and the rendering pipeline is locked down with golden-file tests that run in CI.
 
 ## Quickstart
 
 ```bash
-go build -o kirokit ./cmd/kirokit
+# install the binary via homebrew
+brew install --cask mavogel/tap/kirokit
+kirokit version
 
-# Render an existing team without touching anything committed:
-./kirokit render platform-team --out /tmp/platform-team-rendered
+# let's backup first, if you have used it
+export KIRO_HOME_BACKUP=$KIRO_HOME
+# create a temporary KIRO_HOME directory
+# which kiro respects. No worries it will not
+# break your existing setup
+export KIRO_HOME=$(mktemp -d)
+echo $KIRO_HOME
 
-# Verify every team's templates still match their committed golden fixtures
-# (this is exactly what CI runs):
-./kirokit test
+# install it in $KIRO_HOME
+kirokit install platform-team
 
-# Scaffold a brand-new team:
-./kirokit onboard my-new-team
+# now you have the devops agent from the platform-team
+kiro-cli chat --agent devops --v3
+
+# cleaup and verify KIRO_HOME is still set to the temporary directory
+echo $KIRO_HOME
+rm -rf $KIRO_HOME
+# reset to the old value
+export KIRO_HOME=$KIRO_HOME_BACKUP
+echo $KIRO_HOME
 ```
 
 ## Taskfile
 
-A [`Taskfile.yml`](https://taskfile.dev) wraps the common Go commands. Install `task` via Homebrew (`brew install go-task`), then:
+A [`Taskfile.yml`](https://taskfile.dev) wraps the common Go commands. Install `task` and `golang` via Homebrew (`brew install go go-task`), then:
 
 ```bash
 task build   # go build -o kirokit ./cmd/kirokit
@@ -139,12 +152,12 @@ Decrypting requires a SOPS-compatible key (age, PGP, or KMS) that is a recipient
 
 ```bash
 SOPS_AGE_KEY_FILE=~/.config/sops/age/platform-team.txt sops teams/platform-team/agents/devops/env/secrets.enc.yaml   # edit
-age-keygen -o ~/.config/sops/age/my-team.txt                                                                          # new team key
+age-keygen -o ~/.config/sops/age/my-team.txt                                                                         # new team key
 ```
 
 To add an engineer to a team, append their age public key (comma-separated) to that team's rule and run `sops updatekeys <file>` for each of the team's secrets files. The secret values committed here are placeholders; replace them with real tokens via `sops <file>`.
 
-## Golden Tests
+## Testing and verify by rendering upfront
 
 ```bash
 kirokit render [team] --out <dir>   # render only, never touches testdata/golden/
@@ -153,10 +166,6 @@ kirokit update [team]               # render + overwrite testdata/golden/<team>/
 ```
 
 Omitting `[team]` processes every directory under `teams/`. `test` exits non-zero and lists every mismatched file when a team's templates have drifted from its committed goldens. `update` regenerates a team's `testdata/golden/<team>/rendered/` tree and `context.json` snapshot after an intentional template change — review the diff before committing it.
-
-`go test ./internal/golden` also runs `kiro-cli agent validate` on every committed golden agent config, and on the installed `platform-team` agents with the committed `testdata/knowledgebase/` folder attached as `devops`'s knowledge base (the install-time rewrite no golden covers), so a config Kiro itself would reject fails the test even when the golden diff is clean. It skips when `kiro-cli` is not installed or not logged in (`validate` needs a login); set `KIROKIT_REQUIRE_KIRO_CLI=1` to make those skips failures. The complete agent config with that knowledge base attached is also compared to `testdata/golden/platform-team/installed-with-kb/agents/devops.json` (re-indented, with the scratch `KIRO_HOME` replaced by `/kiro-home`); regenerate it with `go test ./internal/golden -run KnowledgeBaseRenderedIntoAgentJSON -update-kb-golden` and review the diff. Note that `validate` exits 0 on error and reports on stderr, and it does not check permission rules, MCP server shape, or that `file://`/`skill://` resources exist.
-
-Rendering always uses the fixed `KiroHome` sentinel `/kiro-home` for `render`/`test`/`update`, so golden fixtures are identical on every machine and in CI regardless of the real `$KIRO_HOME`; only `install` bakes in the real resolved value.
 
 ## Onboarding a New Team
 
@@ -195,7 +204,7 @@ Before `kirokit render --out <dir>`, `install` or `sync` changes something that 
 brew install --cask mavogel/tap/kirokit
 ```
 
-Each release publishes a Homebrew cask to [mavogel/homebrew-tap](https://github.com/mavogel/homebrew-tap) (`brew upgrade --cask kirokit` picks up new versions). The cask covers macOS and Linux (arm64 and amd64). The binaries are not notarized, so on macOS it clears the quarantine attribute after install. The release workflow needs a `HOMEBREW_TAP_GITHUB_TOKEN` repository secret: a fine-grained PAT with `contents: write` on the tap repo.
+Each release publishes a Homebrew cask to [mavogel/homebrew-tap](https://github.com/mavogel/homebrew-tap) (`brew upgrade --cask kirokit` picks up new versions). The cask covers macOS and Linux (arm64 and amd64). The binaries are not notarized, so on macOS it clears the quarantine attribute after install.
 
 ## Sync (automatic updates)
 
@@ -228,15 +237,3 @@ lefthook install
 - **commit-msg:** `cz check` enforces Conventional Commits, which `svu` needs to compute versions. Use `cz commit` for an interactive prompt.
 
 Run everything on demand with `lefthook run pre-commit --all-files`.
-
-## Releases
-
-Releases follow Conventional Commits on `main`:
-
-1. `.github/workflows/release.yaml` runs on every push to `main`. [`svu`](https://github.com/caarlos0/svu) reads the Conventional Commits since the latest tag and computes the next version (`feat` bumps minor, `fix` patch, a breaking change major, held at `0.x` until a `v1` is cut deliberately). When no commit warrants a release, the job stops.
-2. Otherwise it pushes the new `vX.Y.Z` tag and runs `goreleaser release` (GoReleaser Pro, configured in `.goreleaser.yaml`), which builds the `kirokit` binary for **darwin and linux only** (amd64 + arm64), attaches the archives to a GitHub release with changelog notes grouped from the commits, and publishes the Homebrew cask. There is no committed `CHANGELOG.md`; the notes live on the GitHub release.
-3. `.github/workflows/ci.yaml` runs `go build`, `go vet`, `golangci-lint`, and `go test ./...` (which includes every team's golden-file comparisons) on every pull request and push to `main` — a template change that breaks a golden fixture fails CI.
-
-The release job needs two repository secrets besides the default `GITHUB_TOKEN`: `GORELEASER_KEY` (the GoReleaser Pro license key) and `HOMEBREW_TAP_GITHUB_TOKEN` (see *Installing the CLI*).
-
-The first live release requires this repository to be pushed to `github.com/mavogel/kiro-cli-kit` with a real git remote; until then, `goreleaser check` and a `goreleaser release --snapshot --clean` locally, plus `svu current` / `svu next --v0`, are how the release configuration is validated.
