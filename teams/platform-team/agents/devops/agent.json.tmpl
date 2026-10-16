@@ -1,0 +1,16 @@
+{
+  "name": "devops",
+  "description": "Triages and resolves Jira tickets for platform-team, following the team's shared security baseline steering.",
+  "prompt": "file://prompts/jira-triage.md",
+  "tools": ["read", "@jira-mcp"],
+  "resources": [
+    "skill://skills/jira-search/SKILL.md"
+  ],
+  "mcpServers": {
+    "jira-mcp": {
+      "command": {{ sopsCommand }},
+      "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/platform-team/devops/secrets.enc.yaml" .KiroHome) "jira-mcp-server" "--port" "8080" "--server-version" (mcpVersion "jira-mcp") }},
+      "timeout": 60000
+    }
+  }
+}

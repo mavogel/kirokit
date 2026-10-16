@@ -1,0 +1,127 @@
+# kiro-cli-kit
+
+A `kirokit` Go CLI plus repository layout that lets multiple teams own their own [Kiro CLI v3](https://kiro.dev) config sources as templates. Each team's agents, hooks, prompts, skills, and steering docs are rendered deterministically into Kiro's real config layout, MCP server versions are pinned centrally, secrets are injected via [SOPS](https://github.com/getsops/sops) at MCP-launch time (never baked into any committed or rendered file), and the whole rendering pipeline is locked down with golden-file tests that run in CI.
+
+See `docs/prd/2026-09-28-kiro-cli-kit-multi-team.md` for the full product requirements and `docs/plans/2026-09-28-kiro-cli-kit.md` for the implementation plan.
+
+## Quickstart
+
+```bash
+go build -o kirokit ./cmd/kirokit
+
+# Render an existing team without touching anything committed:
+./kirokit render platform-team --out /tmp/platform-team-rendered
+
+# Verify every team's templates still match their committed golden fixtures
+# (this is exactly what CI runs):
+./kirokit test
+
+# Scaffold a brand-new team:
+./kirokit onboard my-new-team
+```
+
+## Directory Layout
+
+```
+teams/<team>/manifest.yaml              # team identity + global steering opt-ins
+teams/<team>/agents/<agent>/agent.json.tmpl
+teams/<team>/agents/<agent>/env/secrets.enc.yaml   # optional, SOPS-encrypted
+teams/<team>/hooks/*.json.tmpl          # shared across the team's agents
+teams/<team>/prompts/*.md.tmpl
+teams/<team>/skills/<skill>/SKILL.md.tmpl
+teams/<team>/steerings/*.md.tmpl
+
+global/steerings/*.md                   # shared steering docs teams opt into
+env/mcp-versions.yaml                   # central MCP server version pins
+
+testdata/golden/<team>/rendered/...     # committed golden output tree
+testdata/golden/<team>/context.json     # committed golden template-context snapshot
+```
+
+Every templated source file uses a double extension, `<real-extension>.tmpl` (e.g. `agent.json.tmpl`, `steering.md.tmpl`) — the renderer discovers templates via a `**/*.tmpl` glob and strips the trailing `.tmpl` to produce the output filename. Kiro's own layout is flatter than the kit's source layout: an agent's source lives under `agents/<agent>/agent.json.tmpl` but renders to the flat `agents/<agent>.json`, matching Kiro CLI v3's real `.kiro/agents/*.json` schema.
+
+`kirokit` resolves `teams/`, `global/steerings/`, and `env/mcp-versions.yaml` relative to the current working directory — it has no repo-root auto-discovery, so always run it from the repository root.
+
+Two fully-worked example teams are included: `teams/platform-team/` (`devops` + `platformdev`, both with SOPS-secured MCP servers, opted into the shared `security-baseline` global steering) and `teams/data-team/` (`javadev` with a SOPS-secured Snowflake MCP server, `godev` with a plain non-secret MCP server, opted **out** of any global steering). Copy either as a starting point, or use `kirokit onboard` — duplication between teams is expected and fine.
+
+## manifest.yaml Reference
+
+```yaml
+team: my-team
+globalSteerings:
+  - security-baseline   # must match a file under global/steerings/<slug>.md
+```
+
+`globalSteerings` may be an empty list (`[]`) to explicitly opt out — see `teams/data-team/manifest.yaml`.
+
+## Central env/mcp-versions.yaml
+
+A flat map of MCP server name to pinned version/tag:
+
+```yaml
+jira-mcp: "1.4.2"
+confluence-mcp: "2.1.0"
+```
+
+An agent template looks up its own entry via the `mcpVersion` template function, e.g. `{{ mcpVersion "jira-mcp" }}`. A template referencing an undefined key fails the render with a clear error naming the missing key and the offending file. Bumping a shared entry here and re-running `kirokit test` shows exactly which teams' rendered output changes as a result — including teams whose own templates don't reference the changed key, since `context.json` snapshots the *entire* resolved `env/mcp-versions.yaml`.
+
+## Secrets via SOPS
+
+A secret an agent's MCP server needs (a personal Jira/Confluence token, a warehouse credential, ...) never appears as plaintext in any template, rendered file, or golden fixture. Instead:
+
+1. Each agent that needs a secret has its own encrypted `teams/<team>/agents/<agent>/env/secrets.enc.yaml`, a flat SOPS-encrypted YAML file (ciphertext, safe to commit).
+2. That agent's `agent.json.tmpl` renders its MCP server's `command`/`args` as a wrapper around `sops exec-env`, using the `sopsCommand` / `sopsArgsJSON` template functions:
+
+   ```
+   "command": {{ sopsCommand }},
+   "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/<team>/<agent>/secrets.enc.yaml" .KiroHome) "<real-mcp-command>" "<real-arg>" ... }}
+   ```
+
+   The secrets path passed to `sopsArgsJSON` must be `.KiroHome`-relative and absolute — never a bare repo-relative path — because it has to resolve wherever the MCP server actually launches, under the *installed* `$KIRO_HOME`, not the kit's source tree.
+3. `sops exec-env <file> "<command>"` decrypts the file and launches the real command with its keys set as env vars, entirely at MCP-server-launch time — never at template-render time, and never through Kiro CLI's own (currently unreliable) `${VAR}` substitution.
+4. `kirokit install` copies each agent's encrypted secrets file to `$KIRO_HOME/kirokit-secrets/<team>/<agent>/secrets.enc.yaml` so the baked-in path actually resolves at runtime.
+
+Decrypting requires a SOPS-compatible key (age, PGP, or KMS) that is a recipient in `.sops.yaml`. This repo's own `.sops.yaml` and `testdata/sops-test-key/age-test-key.txt` are **test-only fixtures** used solely by this kit's own tests/CI — their private key material is committed and public, and must never be reused to encrypt a real secret. A real team onboarding real secrets should add its own `creation_rules` entry to `.sops.yaml` scoped to its own team's path, naming its own engineers' age/PGP/KMS recipients, and never write real secret values into this test key's recipients.
+
+## Golden Tests
+
+```bash
+kirokit render [team] --out <dir>   # render only, never touches testdata/golden/
+kirokit test [team]                 # render + diff against testdata/golden/<team>/ (CI entry point)
+kirokit update [team]               # render + overwrite testdata/golden/<team>/
+```
+
+Omitting `[team]` processes every directory under `teams/`. `test` exits non-zero and lists every mismatched file when a team's templates have drifted from its committed goldens. `update` regenerates a team's `testdata/golden/<team>/rendered/` tree and `context.json` snapshot after an intentional template change — review the diff before committing it.
+
+Rendering always uses the fixed `KiroHome` sentinel `/kiro-home` for `render`/`test`/`update`, so golden fixtures are identical on every machine and in CI regardless of the real `$KIRO_HOME`; only `install` bakes in the real resolved value.
+
+## Onboarding a New Team
+
+```bash
+kirokit onboard <team>
+```
+
+Scaffolds `teams/<team>/` from an embedded starter layout: a `manifest.yaml` with the given team name, one example agent (`agents/example-agent/`), and empty `hooks/`, `prompts/`, `skills/`, `steerings/` directories. Fails with a clear error if `teams/<team>/` already exists. Hand-copying another team's directory (e.g. `teams/platform-team/`) instead is equally valid.
+
+## Install / Uninstall
+
+```bash
+kirokit install <team>
+kirokit install <team> --kb-agent <agent> --kb-source <folder> --kb-mount <path>
+kirokit uninstall <team>
+```
+
+`install` renders a team with its real `$KIRO_HOME` baked in (respecting the `KIRO_HOME` env var, falling back to Kiro CLI's own default `~/.kiro` when unset) and copies the rendered tree plus each agent's encrypted secrets file into that location — real, usable files where Kiro CLI actually reads them. `uninstall` removes exactly what the matching `install` wrote, tracked via an install manifest under `$KIRO_HOME/.kirokit-installed/<team>.json`, leaving every other team's installed files and anything Kiro CLI itself manages untouched.
+
+The three `--kb-*` flags (all-or-nothing) attach a local `knowledgeBase`-type resource to one installed agent: `--kb-source` is a local folder, `--kb-mount` is where it gets symlinked (never copied), and `--kb-agent` is which installed agent's `resources` array gets the new entry. `uninstall` removes the symlink but never touches the real source folder's content.
+
+## Releases
+
+Releases follow Conventional Commits on `main`:
+
+1. `semantic-release` (configured in `.releaserc.yml`) analyzes commits, computes the next version, generates a changelog, and creates the git tag.
+2. Its `@semantic-release/exec` plugin invokes `goreleaser release` (configured in `.goreleaser.yaml`), which builds and publishes the `kirokit` binary for **darwin and linux only** (amd64 + arm64) as GitHub release archives attached to the tag semantic-release just created.
+3. `.github/workflows/ci.yaml` runs `go build`, `go vet`, `golangci-lint`, and `go test ./...` (which includes every team's golden-file comparisons) on every pull request and push to `main` — a template change that breaks a golden fixture fails CI.
+4. `.github/workflows/release.yaml` runs the release step on every push to `main`.
+
+The first live release requires this repository to be pushed to `github.com/mavogel/kiro-cli-kit` with a real git remote; until then, `goreleaser check` and a `goreleaser release --snapshot --clean` locally, plus `npx semantic-release --dry-run`, are how the release configuration is validated.

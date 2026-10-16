@@ -1,0 +1,19 @@
+{
+  "name": "godev",
+  "description": "Go backend developer agent for data-team, with access to the build pipeline status via a local, non-secret MCP server.",
+  "prompt": "file://prompts/pipeline-status.md",
+  "tools": ["read", "write", "@pipeline-mcp"],
+  "resources": [
+    "skill://skills/sql-helper/SKILL.md"
+  ],
+  "mcpServers": {
+    "pipeline-mcp": {
+      "command": "pipeline-mcp-server",
+      "args": ["--mode", "readonly"],
+      "env": {
+        "PIPELINE_MCP_VERSION": {{ mcpVersion "pipeline-mcp" | jsonString }}
+      },
+      "timeout": 60000
+    }
+  }
+}

@@ -1,0 +1,10 @@
+# SOPS encryption rules for this kit.
+#
+# Every team's per-agent secrets file is encrypted against the shared
+# test-only age key in testdata/sops-test-key/age-test-key.txt (see that
+# file's header). Real teams onboarding real secrets should add their own
+# creation_rules entry with their own engineers' age recipients, scoped to
+# their own team's path, rather than reusing this test key.
+creation_rules:
+  - path_regex: teams/.*/env/secrets\.enc\.yaml$
+    age: age1g4xkjcd545f0geca7wvmqwjxxvw43w7ey9q9326e78deuqpe5sgsmnqw6k

@@ -1,0 +1,48 @@
+version: 2
+
+project_name: kirokit
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: kirokit
+    main: ./cmd/kirokit
+    binary: kirokit
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - id: default
+    ids:
+      - kirokit
+    formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+release:
+  github:
+    owner: mavogel
+    name: kiro-cli-kit
+  mode: append

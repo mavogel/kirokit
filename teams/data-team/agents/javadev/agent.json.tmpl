@@ -1,0 +1,16 @@
+{
+  "name": "javadev",
+  "description": "Java backend developer agent for data-team, with access to the analytics warehouse via Snowflake.",
+  "prompt": "file://prompts/warehouse-query.md",
+  "tools": ["read", "write", "@snowflake-mcp"],
+  "resources": [
+    "skill://skills/sql-helper/SKILL.md"
+  ],
+  "mcpServers": {
+    "snowflake-mcp": {
+      "command": {{ sopsCommand }},
+      "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/data-team/javadev/secrets.enc.yaml" .KiroHome) "snowflake-mcp-server" "--warehouse" "analytics" "--server-version" (mcpVersion "snowflake-mcp") }},
+      "timeout": 60000
+    }
+  }
+}

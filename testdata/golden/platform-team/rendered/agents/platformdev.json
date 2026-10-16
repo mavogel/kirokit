@@ -1,0 +1,16 @@
+{
+  "name": "platformdev",
+  "description": "Looks up Confluence documentation for platform-team, following the team's shared security baseline steering.",
+  "prompt": "file://prompts/confluence-search.md",
+  "tools": ["read", "@confluence-mcp"],
+  "resources": [
+    "skill://skills/confluence-lookup/SKILL.md"
+  ],
+  "mcpServers": {
+    "confluence-mcp": {
+      "command": "sops",
+      "args": ["exec-env","/kiro-home/kirokit-secrets/platform-team/platformdev/secrets.enc.yaml","confluence-mcp-server --port 8081 --server-version 2.1.0"],
+      "timeout": 60000
+    }
+  }
+}

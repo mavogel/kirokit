@@ -1,0 +1,7 @@
+# Central pin for every MCP server type used across teams.
+# Each agent's template looks up its own entry via {{ mcpVersion "<name>" }}.
+example-mcp: "1.0.0"
+jira-mcp: "1.4.2"
+confluence-mcp: "2.1.0"
+snowflake-mcp: "0.9.1"
+pipeline-mcp: "3.0.0"

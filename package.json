@@ -1,0 +1,13 @@
+{
+  "name": "kiro-cli-kit",
+  "private": true,
+  "description": "Release tooling (semantic-release) for the kirokit multi-team Kiro CLI v3 config kit.",
+  "devDependencies": {
+    "semantic-release": "^25.0.9",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^11.0.1",
+    "@semantic-release/release-notes-generator": "^14.1.1"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "example-agent",
+  "description": "Starter agent scaffolded by kirokit onboard. Replace this with a real agent config.",
+  "mcpServers": {
+    "example-mcp": {
+      "command": "example-mcp-server",
+      "args": ["--version", {{ mcpVersion "example-mcp" | jsonString }}]
+    }
+  }
+}

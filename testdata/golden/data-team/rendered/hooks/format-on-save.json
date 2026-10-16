@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Format on save",
+      "trigger": "FileSave",
+      "matcher": "\\.(go|java)$",
+      "action": {
+        "type": "command",
+        "command": "true"
+      }
+    }
+  ]
+}
