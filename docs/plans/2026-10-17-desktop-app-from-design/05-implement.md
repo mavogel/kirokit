@@ -60,12 +60,23 @@
 - slice 1 · 20c83fa · `go vet ./...` · exit 0 · 0.1s
 - slice 1 · 20c83fa · `go test ./...` · exit 0 · 3.2s
 - slice 1 · 20c83fa · `golangci-lint run` · exit 0 · 0.5s
+- [PASS] scenario 1 step 1 (QualityLayer) · 60fb185 · `rm -rf /tmp/ql-kk-s1 && mkdir -p /tmp/ql-kk-s1/home && go build -o /tmp/ql-kk-s1/kirokit ./cmd/kirokit` · exit 0 · as expected
+- [PASS] scenario 1 step 2 (QualityLayer) · 60fb185 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install platform-team` · exit 0 · printed `installed platform-team into /tmp/ql-kk-s1/home` as expected
+- [PASS] scenario 1 step 3 (QualityLayer) · 60fb185 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install data-team` · exit 0 · printed `uninstalled platform-team from /tmp/ql-kk-s1/home` as expected
+- [PASS] scenario 1 step 4 (QualityLayer) · 60fb185 · `ls /tmp/ql-kk-s1/home/.kirokit-installed` · exit 0 · printed `data-team.json` as expected
+- [PASS] scenario 1 step 5 (QualityLayer) · 60fb185 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install data-team` · exit 0 · printed `installed data-team into /tmp/ql-kk-s1/home` as expected
+- [PASS] scenario 1 step 6 (QualityLayer) · 60fb185 · `cd / && env KIROKIT_REPO=/Users/mavogel/Developer/projects/kiro-cli-kit /tmp/ql-kk-s1/kirokit render platform-team --out /tmp/ql-kk-s1/out` · exit 0 · printed `rendered platform-team -> /tmp/ql-kk-s1/out` as expected
+- [PASS] scenario 1 step 7 (QualityLayer) · 60fb185 · `git clone -q /Users/mavogel/Developer/projects/kiro-cli-kit /tmp/ql-kk-s1/clone` · exit 0 · as expected
+- [PASS] scenario 1 step 8 (QualityLayer) · 60fb185 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit sync --latest-tag --repo /tmp/ql-kk-s1/clone` · exit 0 · as expected
+- [PASS] scenario 1 step 9 (QualityLayer) · 60fb185 · `/tmp/ql-kk-s1/kirokit sync --kb-agent x` · exit 1 · as expected
+- [PASS] scenario 1 step 10 (QualityLayer) · 60fb185 · `go test ./...` · exit 0 · as expected
 
 ## Decided while building
 
 <!-- ql:decisions -->
 - Slice 1 · Git calls in tests and skills fetch now ignore the commit tool's repository variables, so two more files change; nothing you approved changes.
 - Slice 1 · Installing a mistyped team name removed the installed team first and then failed, so install now checks the new team renders before removing anything; nothing you approved changes.
+- Slice 1 · A mistyped team or a failed update in sync removed the installed team first, so sync now updates and checks the new team before removing anything; nothing you approved changes.
 - Slice 1 · The scheduled-sync setup script gets a header comment about one team per machine; nothing you approved changes.
 <!-- /ql:decisions -->
 
@@ -98,6 +109,16 @@ It failed in the program: failure 1 of the 4 after which the checkpoint stays op
 ### Checkpoint 1 · run 2 · counted toward the stop
 
 It failed in the program: failure 2 of the 4 after which the checkpoint stays open and the build goes on.
+
+### Checkpoint after slice 1 · run 3
+
+**Runner:** fresh helper
+
+- [PASS] scenario 1: steps 1-10 were run by QualityLayer and recorded PASS; not re-run. Extra probes below also passed — `evidence/cp-1-run-3-boundary.txt`
+- [MISSING] App picture: `desktop/` does not exist in this checkout (slice 1 is CLI-only), so no running App could be captured; scenario 1 has no App steps.
+- [PASS] boundary: with platform-team installed, `install nope-team` and `sync nope-team` both exited 1 with a missing-manifest error and left `platform-team.json` installed; `sync platform-team` with an unreachable remote (fetch fails) and with a diverged clone (`git pull --ff-only` fails) also exited 1 and left the team installed with its agents intact.
+
+**Result:** fail
 
 ## Deviations
 

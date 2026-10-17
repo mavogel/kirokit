@@ -1,0 +1,5 @@
+install platform-team -> installed platform-team into /tmp/ql-kk-p3/home (rc=0)
+install nope-team -> kirokit install: manifest: read teams/nope-team/manifest.yaml: ... no such file (rc=1); .kirokit-installed: platform-team.json
+sync nope-team (clone with upstream) -> kirokit sync: manifest: read teams/nope-team/manifest.yaml ... (rc=1); .kirokit-installed: platform-team.json
+sync platform-team, remote unreachable -> kirokit sync: git fetch ... exit status 128 (rc=1); platform-team.json kept
+sync platform-team, diverged clone (pull --ff-only fails) -> kirokit sync: git pull --ff-only ... Not possible to fast-forward (rc=1); platform-team.json kept, agents/ intact

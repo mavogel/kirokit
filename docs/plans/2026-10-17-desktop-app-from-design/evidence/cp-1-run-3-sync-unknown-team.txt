@@ -1,0 +1,11 @@
+kirokit sync: manifest: read teams/nonexistent-team/manifest.yaml: open teams/nonexistent-team/manifest.yaml: no such file or directory
+exit=1
+.kirokit-installed
+agents
+hooks
+kirokit-secrets
+kirokit-steerings
+prompts
+skills
+steering
+[31m[bat error][0m: '/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.OoSKfo0er4/.kirokit-installed' is a directory.
