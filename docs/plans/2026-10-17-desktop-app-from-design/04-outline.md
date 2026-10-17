@@ -226,10 +226,10 @@ Teams, Agents, Install and Skills and MCP versions read the app's own copy of th
  └── frontend/src/pages/                 + teams.js, agents.js, install.js, skills.js
 ```
 
-- [ ] T9 The login shell's environment decides the prerequisite checks
+- [x] T9 The login shell's environment decides the prerequisite checks
   - **Objective:** Capture the person's login environment once at start and answer the three checks from it.
   - **Design:** "Prerequisites come from the captured login environment"
-  - **Files:** `desktop/envcapture.go`, `desktop/envcapture_test.go`, `desktop/prereq.go`, `desktop/prereq_test.go`, `desktop/app.go`, `desktop/settings.go`, `desktop/frontend/src/pages/settings.js`, `desktop/frontend/src/api.js`
+  - **Files:** `desktop/envcapture.go`, `desktop/envcapture_test.go`, `desktop/prereq.go`, `desktop/prereq_test.go`, `desktop/app.go`, `desktop/settings.go`, `desktop/frontend/src/pages/settings.js`, `desktop/frontend/src/api.js`, `desktop/main.go`, `desktop/go.mod`, `desktop/go.sum`, `desktop/frontend/index.html`, `desktop/.gitignore`, `desktop/frontend/dist/.gitkeep`
   - **Test first:** `envcapture_test.go` runs `Capture` with a fake shell script that prints a marker then `env -0`; it fails because the package has no `Capture`.
   - **Definition of done:**
     - Only the output after the marker is read, so shell startup noise is ignored.
@@ -241,7 +241,7 @@ Teams, Agents, Install and Skills and MCP versions read the app's own copy of th
     - The window opens before the capture finishes; the default Kiro home becomes the captured `KIRO_HOME` once it arrives.
     - verify: `cd desktop && go test -run 'Capture|Prereq' ./...`
 
-- [ ] T10 The catalog reads teams, agents, skills and pins from the clone
+- [x] T10 The catalog reads teams, agents, skills and pins from the clone
   - **Objective:** Render each team into a temporary folder and read the result into `Catalog`.
   - **Design:** "Data shapes the pages render"
   - **Files:** `desktop/catalog.go`, `desktop/catalog_test.go`, `desktop/app.go`
@@ -254,7 +254,7 @@ Teams, Agents, Install and Skills and MCP versions read the app's own copy of th
     - `Catalog()` serves the cached result until a clone or sync ends.
     - verify: `cd desktop && go test -run Catalog ./...`
 
-- [ ] T11 Install records drive a polled event
+- [x] T11 Install records drive a polled event
   - **Objective:** Check the records every second and after each command, emitting `installs:changed` only when they differ.
   - **Design:** "The app's Go side binds one service and emits five events"
   - **Files:** `desktop/installs.go`, `desktop/installs_test.go`, `desktop/app.go`
@@ -265,10 +265,10 @@ Teams, Agents, Install and Skills and MCP versions read the app's own copy of th
     - Stopping the poller ends its goroutine.
     - verify: `cd desktop && go test -race -run Installs ./...`
 
-- [ ] T12 The four pages show real data
+- [x] T12 The four pages show real data
   - **Objective:** Replace the design's hard-coded teams, agents, installs and pins with bound calls and the event.
   - **Design:** "Data shapes the pages render"
-  - **Files:** `desktop/frontend/src/pages/teams.js`, `desktop/frontend/src/pages/agents.js`, `desktop/frontend/src/pages/install.js`, `desktop/frontend/src/pages/skills.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/api.js`, `desktop/frontend/src/pages/pages.test.js`
+  - **Files:** `desktop/frontend/src/pages/teams.js`, `desktop/frontend/src/pages/agents.js`, `desktop/frontend/src/pages/install.js`, `desktop/frontend/src/pages/skills.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/api.js`, `desktop/frontend/src/pages/pages.test.js`, `desktop/frontend/src/pages/html.js`
   - **Test first:** `pages.test.js` renders each page's view function from a sample `Catalog` and installs list; it fails because the view functions do not exist.
   - **Definition of done:**
     - Teams shows an "installed" badge from the records, with the time of the last change.
@@ -294,10 +294,10 @@ The dock opens, closes and resizes like VS Code's and holds two tabs: your login
  └── frontend/src/terminal.js, tabs.js, tabs.test.js   + xterm.js dock
 ```
 
-- [ ] T13 The dock renders xterm.js inside the webview
+- [x] T13 The dock renders xterm.js inside the webview
   - **Objective:** Port the design's dock with xterm.js 6 and a fit addon, with tab state in a testable module; this is the first proof that xterm.js works inside Wails.
   - **Design:** "The app's Go side binds one service and emits five events"
-  - **Files:** `desktop/frontend/src/terminal.js`, `desktop/frontend/src/tabs.js`, `desktop/frontend/src/tabs.test.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/style.css`, `desktop/frontend/package.json`, `desktop/frontend/package-lock.json`
+  - **Files:** `desktop/frontend/src/terminal.js`, `desktop/frontend/src/tabs.js`, `desktop/frontend/src/tabs.test.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/style.css`, `desktop/frontend/package.json`, `desktop/frontend/package-lock.json`, `desktop/frontend/vite.config.js`, `desktop/frontend/index.html`
   - **Test first:** `tabs.test.js` opens, closes and switches tabs and the dock height; it fails because `tabs.js` does not exist.
   - **Definition of done:**
     - The dock opens, closes and is resized by dragging, within a minimum and maximum height.
@@ -305,7 +305,7 @@ The dock opens, closes and resizes like VS Code's and holds two tabs: your login
     - The terminal refits when the window or dock resizes and reports its columns and rows.
     - verify: `cd desktop/frontend && node --test src/ && npm run build`
 
-- [ ] T14 A pseudo-terminal package streams a process
+- [x] T14 A pseudo-terminal package streams a process
   - **Objective:** Add `terminal.Session` over creack/pty with start, read, write, resize and a reaped exit.
   - **Design:** "The app's Go side binds one service and emits five events"
   - **Files:** `desktop/terminal/terminal.go`, `desktop/terminal/terminal_test.go`, `desktop/go.mod`, `desktop/go.sum`
@@ -317,7 +317,7 @@ The dock opens, closes and resizes like VS Code's and holds two tabs: your login
     - `Close` while running ends the process.
     - verify: `cd desktop && go test -race ./terminal/`
 
-- [ ] T15 The zsh tab runs your shell with the bundled kirokit first
+- [x] T15 The zsh tab runs your shell with the bundled kirokit first
   - **Objective:** Start `$SHELL -il` through the `ZDOTDIR` wrapper, stream it as `term:shell` and wire the tab to the dock.
   - **Design:** "The zsh tab starts through a wrapper that keeps the app's settings last", "The app finds its bundled kirokit in a fixed order"
   - **Files:** `desktop/shell.go`, `desktop/shell_test.go`, `desktop/app.go`, `desktop/frontend/src/terminal.js`, `desktop/frontend/src/api.js`
@@ -329,7 +329,7 @@ The dock opens, closes and resizes like VS Code's and holds two tabs: your login
     - Keystrokes typed in the tab reach the shell and the dock resize reaches `ShellResize`.
     - verify: `cd desktop && go test -race -run Shell ./...`
 
-- [ ] T16 Buttons run in their own kirokit tab, one command at a time
+- [x] T16 Buttons run in their own kirokit tab, one command at a time
   - **Objective:** `Run` starts the bundled CLI in a fresh pseudo-terminal, prints `▸ kirokit <args>`, streams `term:kirokit` and forwards `RunWrite`.
   - **Design:** "The app's Go side binds one service and emits five events"
   - **Files:** `desktop/runner.go`, `desktop/runner_test.go`, `desktop/app.go`, `desktop/frontend/src/terminal.js`
@@ -363,10 +363,10 @@ First launch asks for the repository's address and clones it, the setup dialog c
 +    └── dialogs.js, dialogs.test.js         + setup and replace dialogs
 ```
 
-- [ ] T17 Clone fetches the repository and the newest release tag
+- [x] T17 Clone fetches the repository and the newest release tag
   - **Objective:** Validate the address, keep any old clone, clone with `git`, then run `kirokit sync --latest-tag`.
   - **Design:** "An old clone is renamed, never deleted", "kirokit sync without a team updates the checkout only"
-  - **Files:** `desktop/clone.go`, `desktop/clone_test.go`, `desktop/app.go`, `desktop/runner.go`
+  - **Files:** `desktop/clone.go`, `desktop/clone_test.go`, `desktop/app.go`, `desktop/runner.go`, `desktop/settings.go`
   - **Test first:** `clone_test.go` clones a temp origin with a `v1.0.0` tag through `Clone`; it fails because `Clone` does not exist.
   - **Definition of done:**
     - A local path address clones into `<app folder>/repo` and checks out the newest `v*` tag; `clone:done` is `{ok:true}`.
@@ -376,10 +376,10 @@ First launch asks for the repository's address and clones it, the setup dialog c
     - The address reaches git as `git clone -- <address> <folder>`, never through a shell; it runs in the kirokit tab as `▸ git clone -- …`, then `kirokit sync --latest-tag` runs after it under the same lock.
     - verify: `cd desktop && go test -race -run Clone ./...`
 
-- [ ] T18 First launch asks for the address and shows the clone
+- [x] T18 First launch asks for the address and shows the clone
   - **Objective:** Show the welcome page until a clone exists, run `Clone` from it and load the catalog when `clone:done` arrives.
   - **Design:** "An old clone is renamed, never deleted", "The app's Go side binds one service and emits five events"
-  - **Files:** `desktop/frontend/src/pages/welcome.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/api.js`, `desktop/frontend/src/pages/pages.test.js`
+  - **Files:** `desktop/frontend/src/pages/welcome.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/api.js`, `desktop/frontend/src/pages/pages.test.js`, `desktop/frontend/src/api.test.js`, `desktop/frontend/src/pages/html.js`
   - **Test first:** `pages.test.js` renders the welcome state from a `State` without a clone and with a failed `clone:done`; it fails because `welcome.js` does not exist.
   - **Definition of done:**
     - The sidebar pages are hidden until a clone exists; the field is prefilled from Settings.
@@ -388,10 +388,10 @@ First launch asks for the repository's address and clones it, the setup dialog c
     - After success the Teams page shows.
     - verify: `cd desktop/frontend && node --test src/ && npm run build`
 
-- [ ] T19 Install runs after a real check and replaces the installed team
+- [x] T19 Install runs after a real check and replaces the installed team
   - **Objective:** The setup dialog shows the three checks with "Check again", Install runs `kirokit install <team>`, and the replace dialog appears when another team is installed.
   - **Design:** "Prerequisites come from the captured login environment"
-  - **Files:** `desktop/frontend/src/dialogs.js`, `desktop/frontend/src/dialogs.test.js`, `desktop/frontend/src/pages/teams.js`, `desktop/frontend/src/main.js`
+  - **Files:** `desktop/frontend/src/dialogs.js`, `desktop/frontend/src/dialogs.test.js`, `desktop/frontend/src/pages/teams.js`, `desktop/frontend/src/main.js`, `desktop/frontend/index.html`, `desktop/frontend/src/style.css`
   - **Test first:** `dialogs.test.js` builds the dialog state from checks with one missing; it fails because `dialogs.js` does not exist.
   - **Definition of done:**
     - Install stays disabled while a check fails, and the dialog's status names how many fail.
@@ -401,10 +401,10 @@ First launch asks for the repository's address and clones it, the setup dialog c
     - While a command runs, Install, Sync, Uninstall and Update are disabled, and a "still running" error shows beside the button.
     - verify: `cd desktop/frontend && node --test src/ && npm run build`
 
-- [ ] T20 Sync, Uninstall and Update run their commands and refresh
+- [x] T20 Sync, Uninstall and Update run their commands and refresh
   - **Objective:** Wire Sync, Uninstall and Settings' Update to `Run`, and refresh the catalog and install state when a command ends.
   - **Design:** "`kirokit sync` without a team updates the checkout only"
-  - **Files:** `desktop/frontend/src/pages/install.js`, `desktop/frontend/src/pages/settings.js`, `desktop/runner.go`, `desktop/runner_test.go`, `desktop/app.go`
+  - **Files:** `desktop/frontend/src/pages/install.js`, `desktop/frontend/src/pages/settings.js`, `desktop/runner.go`, `desktop/runner_test.go`, `desktop/app.go`, `README.md`, `AGENTS.md`
   - **Test first:** `runner_test.go` ends a fake `sync` run and checks the catalog cache; it fails because the cache is not invalidated.
   - **Definition of done:**
     - Sync runs `kirokit sync <team> --latest-tag` and Uninstall runs `kirokit uninstall <team>`.
@@ -559,11 +559,11 @@ A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_
 | 7 | Press Install in the dialog | the kirokit tab shows `▸ kirokit install platform-team` and `installed platform-team into /tmp/ql-kk-s4/kiro`; Teams marks `platform-team` installed |
 | 8 | Open Install and sync | it lists `platform-team` with its file count and Sync and Uninstall buttons |
 | 9 | In the zsh tab type `kirokit install data-team` and Enter | two lines `uninstalled platform-team from /tmp/ql-kk-s4/kiro` and `installed data-team into /tmp/ql-kk-s4/kiro`; both pages show only `data-team` installed |
-| 9a | Run `cp -R /tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/snapshot && env KIRO_HOME=/tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/kirokit uninstall data-team && env KIRO_HOME=/tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/kirokit install data-team && diff -r /tmp/ql-kk-s4/snapshot /tmp/ql-kk-s4/kiro` | exit code `0`: the oracle holds, the app's install and a plain command-line install write the same bytes |
+| 9a | Run `cp -R /tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/snapshot && env KIROKIT_REPO=/tmp/ql-kk-s4/origin KIRO_HOME=/tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/kirokit uninstall data-team && env KIROKIT_REPO=/tmp/ql-kk-s4/origin KIRO_HOME=/tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/kirokit install data-team && diff -r /tmp/ql-kk-s4/snapshot /tmp/ql-kk-s4/kiro` | exit code `0`: the oracle holds, the app's install and a plain command-line install write the same bytes |
 | 10 | On Teams press Install on `platform-team` | the replace dialog names `data-team` and `platform-team`; press Cancel and nothing runs |
 | 11 | Press Install again and confirm the replace dialog, then the setup dialog | the kirokit tab shows both `uninstalled data-team` and `installed platform-team` lines |
 | 12 | On Install and sync press Sync | the tab shows `▸ kirokit sync platform-team --latest-tag` and a line starting `synced platform-team into /tmp/ql-kk-s4/kiro at` |
-| 13 | Run `rm -rf /tmp/ql-kk-s4/snapshot && cp -R /tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/snapshot && env KIRO_HOME=/tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/kirokit uninstall platform-team && env KIRO_HOME=/tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/kirokit install platform-team && diff -r /tmp/ql-kk-s4/snapshot /tmp/ql-kk-s4/kiro` | exit code `0`: what the Sync button left is what a plain install writes |
+| 13 | Run `rm -rf /tmp/ql-kk-s4/snapshot && cp -R /tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/snapshot && env KIROKIT_REPO=/tmp/ql-kk-s4/origin KIRO_HOME=/tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/kirokit uninstall platform-team && env KIROKIT_REPO=/tmp/ql-kk-s4/origin KIRO_HOME=/tmp/ql-kk-s4/kiro /tmp/ql-kk-s4/kirokit install platform-team && diff -r /tmp/ql-kk-s4/snapshot /tmp/ql-kk-s4/kiro` | exit code `0`: what the Sync button left is what a plain install writes |
 | 14 | On Install and sync press Uninstall for `platform-team` | the tab shows `uninstalled platform-team from /tmp/ql-kk-s4/kiro`; no team is marked installed |
 | 15 | Run `git -C /tmp/ql-kk-s4/origin commit -q --allow-empty -m "feat: release" && git -C /tmp/ql-kk-s4/origin tag v99.1.0 && cp -R /tmp/ql-kk-s4/origin/teams/data-team /tmp/ql-kk-s4/origin/teams/qa-team && git -C /tmp/ql-kk-s4/origin add -A && git -C /tmp/ql-kk-s4/origin commit -q -m "feat: qa team" && git -C /tmp/ql-kk-s4/origin tag v99.2.0` and press Update in Settings | the tab shows `▸ kirokit sync --latest-tag` and `checked out v99.2.0 at`; Teams now lists `qa-team` |
 
