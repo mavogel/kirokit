@@ -202,6 +202,30 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 
 **Result:** pass
 
+### Checkpoint after slice 4 · run 1
+
+**Runner:** fresh helper
+
+- [PASS] scenario 3: all steps showed their Expected. Teams listed data-team and platform-team, none installed; Agents listed 4 agents with tools; Install and sync empty; Skills and MCP versions pins equal env/mcp-versions.yaml. The dock opened (220), a drag grew it to 420 and main shrank 580 to 380 (synthetic pointer events on the resize handle). `command -v kirokit` printed the CLI given by KIROKIT_DESKTOP_CLI (dev build in scratch). After a drag to a new height, `stty size` printed `11 130`, equal to xterm's rendered 11 rows and about 130 columns. `kirokit install data-team` printed `installed data-team into /tmp/ql-kk-s3/kiro` and Teams and Install and sync showed it installed within 2 s; `kirokit uninstall data-team` printed `uninstalled data-team from /tmp/ql-kk-s3/kiro` and both pages showed none; hide and show kept the zsh output. xterm.js rendered inside the webview. — `evidence/cp-4-run-1-s3-install-teams.png`, `evidence/cp-4-run-1-s3-install-page.png`, `evidence/cp-4-run-1-s3-reopened-dock.png`
+- [PASS] boundary: via the bound API, `Run(["sync","--help"])` then immediately `Run(["render","data-team"])` rejected the second with "kirokit is still running a command"; a later `Run(["test"])` was accepted after the first ended.
+
+**Observation (not a scenario failure):** on the first typing attempt through the automation tool the zsh tab received keystrokes out of order (`commadn -v kiirok`); a retry was correct. Possible per-keystroke `ShellWrite` reordering under fast input; seen once, not reproduced, may be a dev-server or harness artefact.
+
+**Verdict:** The running desktop app showed the clone's real teams, agents, skills and MCP pins. The embedded zsh terminal reported the same size as the dock after a resize, and typed `kirokit install` and `uninstall` commands updated the Teams and Install and sync pages within two seconds.
+
+**Pictures:**
+
+- `evidence/cp-4-run-1-s3-install-teams.png` — dock open with zsh output ending `installed data-team into /tmp/ql-kk-s3/kiro` and the data-team card marked installed.
+- `evidence/cp-4-run-1-s3-install-page.png` — Install and sync listing data-team as installed.
+- `evidence/cp-4-run-1-s3-reopened-dock.png` — dock reopened after closing, earlier zsh output still there.
+
+**Try it:**
+
+1. Start the app with a temporary HOME and KIRO_HOME, open the terminal dock, and type in the zsh tab: `kirokit install data-team`
+2. Look for the Teams card for data-team switching to installed within two seconds, then run `kirokit uninstall data-team` and see it revert.
+
+**Result:** pass
+
 ## Deviations
 
 - T4 (amended): Git calls in tests and skills fetch now ignore the commit tool's repository variables, so two more files change; nothing you approved changes.
