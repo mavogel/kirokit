@@ -39,12 +39,10 @@ tasks:
   desktop:dev:
     desc: Open the desktop app in Wails dev mode (Wails v2.14.0)
     cmds:
+      - go build -o desktop/build/dev-bin/kirokit ./cmd/kirokit
       - cd desktop && go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 dev
 
   desktop:build:
-    desc: Build desktop/build/bin/kirokit.app (universal, macOS 13 or later)
-    env:
-      CGO_CFLAGS: -mmacosx-version-min=13.0
-      CGO_LDFLAGS: -mmacosx-version-min=13.0
+    desc: Build desktop/build/bin/kirokit.app (universal, macOS 13 or later, CLI bundled; VERSION overrides git describe)
     cmds:
-      - cd desktop && go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 build -platform darwin/universal -clean
+      - scripts/desktop-build.sh

@@ -1,0 +1,44 @@
+name: Desktop
+
+on:
+  pull_request:
+    paths:
+      - "desktop/**"
+      - "cmd/**"
+      - "internal/**"
+      - "go.mod"
+      - "go.sum"
+      - "Taskfile.yml"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: stable
+
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: lts/*
+
+      - name: Install Task
+        run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
+
+      - name: Test
+        run: task desktop:test
+
+      - name: Build
+        run: task desktop:build

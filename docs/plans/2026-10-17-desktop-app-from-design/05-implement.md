@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-20 of 24 tasks done · 5 of 7 slices finished · started 18 Oct, 00:00 · 1 h 5 min so far.
+22 of 24 tasks done · 6 of 7 slices finished · started 18 Oct, 00:00 · 1 h 8 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -16,8 +16,8 @@
 | 3 | The pages show the repository's real data | Teams, Agents, Install and Skills and MCP versions read the app's own copy of the repository, and the screens redraw when install records change. | done |
 | 4 | A real terminal docks at the bottom | The dock opens, closes and resizes like VS Code's and holds two tabs: your login shell and the kirokit tab for button commands. | done |
 | 5 | A person installs a team with buttons only | First launch asks for the repository's address and clones it, the setup dialog checks the prerequisites, and Install, Sync, Uninstall and Update run their `kirokit` commands in the terminal. | done |
-| 6 | One command builds the macOS app and CI builds it too | `task desktop:build` produces a universal `kirokit.app` with the CLI inside, and a new workflow runs the app's tests and build on macOS. | next |
-| 7 | Each release attaches the app and a Homebrew cask | A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_darwin_universal.zip` and pushes the `kirokit-desktop` cask. | after 6 |
+| 6 | One command builds the macOS app and CI builds it too | `task desktop:build` produces a universal `kirokit.app` with the CLI inside, and a new workflow runs the app's tests and build on macOS. | done |
+| 7 | Each release attaches the app and a Homebrew cask | A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_darwin_universal.zip` and pushes the `kirokit-desktop` cask. | next |
 <!-- /ql:slices -->
 
 ## Checks
@@ -103,6 +103,11 @@
 - T20 · e10d117 · `task desktop:test` · exit 0 · 8.8s
 - slice 5 · e10d117 · `task desktop:test` · exit 0 · 3.4s
 - slice 5 · e10d117 · `go test ./...` · exit 0 · 3.6s
+- T21 · fd79636 · `task desktop:build` · exit 0 · 5.6s
+- T22 · fd79636 · `ruby -ryaml -e 'YAML.load_file(".github/workflows/desktop.yaml")'` · exit 0 · 0.1s
+- slice 6 · fd79636 · `task desktop:build` · reused: nothing changed since they passed
+- slice 6 · fd79636 · `go test ./...` · exit 0 · 3.6s
+- slice 6 · fd79636 · `ruby -ryaml -e 'YAML.load_file(".github/workflows/desktop.yaml")'` · reused: nothing changed since they passed
 
 ## Decided while building
 

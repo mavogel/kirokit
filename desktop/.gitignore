@@ -1,4 +1,5 @@
 build/bin
+build/dev-bin
 node_modules
 # main.go embeds frontend/dist; the placeholder keeps a clean checkout compiling
 frontend/dist/*
