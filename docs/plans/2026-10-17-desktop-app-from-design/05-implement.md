@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 28 min so far.
+8 of 24 tasks done · 2 of 7 slices finished · started 18 Oct, 00:00 · 29 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -12,8 +12,8 @@
 | # | Slice | In plain words | Now |
 |---|---|---|---|
 | 1 | One team stays installed and kirokit runs from any folder | `KIROKIT_REPO` roots every repository path, `install` and `sync` uninstall any other installed team first, and `sync` without a team only updates the checkout. | done |
-| 2 | The app opens with the design's shell and remembers its settings | A Wails window shows the logo, the sidebar with five sections in light and dark mode, the collapsing icon rail, and a Settings page that saves. | next |
-| 3 | The pages show the repository's real data | Teams, Agents, Install and Skills and MCP versions read the app's own copy of the repository, and the screens redraw when install records change. | after 2 |
+| 2 | The app opens with the design's shell and remembers its settings | A Wails window shows the logo, the sidebar with five sections in light and dark mode, the collapsing icon rail, and a Settings page that saves. | done |
+| 3 | The pages show the repository's real data | Teams, Agents, Install and Skills and MCP versions read the app's own copy of the repository, and the screens redraw when install records change. | next |
 | 4 | A real terminal docks at the bottom | The dock opens, closes and resizes like VS Code's and holds two tabs: your login shell and the kirokit tab for button commands. | after 3 |
 | 5 | A person installs a team with buttons only | First launch asks for the repository's address and clones it, the setup dialog checks the prerequisites, and Install, Sync, Uninstall and Update run their `kirokit` commands in the terminal. | after 4 |
 | 6 | One command builds the macOS app and CI builds it too | `task desktop:build` produces a universal `kirokit.app` with the CLI inside, and a new workflow runs the app's tests and build on macOS. | after 5 |
@@ -93,6 +93,7 @@
 - Slice 1 · Installing a mistyped team name removed the installed team first and then failed, so install now checks the new team renders before removing anything; nothing you approved changes.
 - Slice 1 · A mistyped team or a failed update in sync removed the installed team first, so sync now updates and checks the new team before removing anything; nothing you approved changes.
 - Slice 1 · The scheduled-sync setup script gets a header comment about one team per machine; nothing you approved changes.
+- The Plan · App bundle id and macOS 13 minimum live in two plist files, and the dev server serves the logo; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checkpoints
@@ -167,6 +168,7 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 - T2 (found by checkpoint 1): installing a mistyped team name removed the installed team first and then failed, so install now checks the new team renders before removing anything; nothing you approved changes.
 - T3 (found by checkpoint 1): a mistyped team or a failed update in sync removed the installed team first, so sync now updates and checks the new team before removing anything; nothing you approved changes.
 - T5 (amended): The scheduled-sync setup script gets a header comment about one team per machine; nothing you approved changes.
+- T6, T8 (amended): App bundle id and macOS 13 minimum live in two plist files, and the dev server serves the logo; nothing you approved changes.
 
 ## Plan amended
 
@@ -179,6 +181,12 @@ Amended by the agent on 2026-10-17; changed 04-outline.md.
 ### T5 · amended
 
 The scheduled-sync setup script gets a header comment about one team per machine; nothing you approved changes.
+
+Amended by the agent on 2026-10-17; changed 04-outline.md.
+
+### T6, T8 · amended
+
+App bundle id and macOS 13 minimum live in two plist files, and the dev server serves the logo; nothing you approved changes.
 
 Amended by the agent on 2026-10-17; changed 04-outline.md.
 
