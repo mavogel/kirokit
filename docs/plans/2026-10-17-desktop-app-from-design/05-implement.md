@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-22 of 24 tasks done · 6 of 7 slices finished · started 18 Oct, 00:00 · 1 h 8 min so far.
+24 of 24 tasks done · 7 of 7 slices finished · started 18 Oct, 00:00 · 1 h 10 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -17,7 +17,7 @@
 | 4 | A real terminal docks at the bottom | The dock opens, closes and resizes like VS Code's and holds two tabs: your login shell and the kirokit tab for button commands. | done |
 | 5 | A person installs a team with buttons only | First launch asks for the repository's address and clones it, the setup dialog checks the prerequisites, and Install, Sync, Uninstall and Update run their `kirokit` commands in the terminal. | done |
 | 6 | One command builds the macOS app and CI builds it too | `task desktop:build` produces a universal `kirokit.app` with the CLI inside, and a new workflow runs the app's tests and build on macOS. | done |
-| 7 | Each release attaches the app and a Homebrew cask | A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_darwin_universal.zip` and pushes the `kirokit-desktop` cask. | next |
+| 7 | Each release attaches the app and a Homebrew cask | A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_darwin_universal.zip` and pushes the `kirokit-desktop` cask. | done |
 <!-- /ql:slices -->
 
 ## Checks
@@ -108,6 +108,12 @@
 - slice 6 · fd79636 · `task desktop:build` · reused: nothing changed since they passed
 - slice 6 · fd79636 · `go test ./...` · exit 0 · 3.6s
 - slice 6 · fd79636 · `ruby -ryaml -e 'YAML.load_file(".github/workflows/desktop.yaml")'` · reused: nothing changed since they passed
+- T23 · f541fc8 · `bash scripts/desktop-release_test.sh` · exit 1 · 0.1s
+- T23 · f541fc8 · `bash scripts/desktop-release_test.sh` · exit 0 · 0.2s
+- T24 · f541fc8 · `ruby -ryaml -e 'YAML.load_file(".github/workflows/release.yaml")' && bash scripts/desktop-release_test.sh` · exit 0 · 0.2s
+- slice 7 · f541fc8 · `ruby -ryaml -e 'YAML.load_file(".github/workflows/release.yaml")'` · exit 0 · 0.1s
+- slice 7 · f541fc8 · `bash scripts/desktop-release_test.sh` · exit 0 · 0.1s
+- slice 7 · f541fc8 · `go test ./...` · exit 0 · 3.7s
 
 ## Decided while building
 

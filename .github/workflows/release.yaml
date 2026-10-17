@@ -3,6 +3,14 @@ name: Release
 on:
   push:
     branches: [main]
+  # Manual dry run of the desktop job: builds the app, zips it and prints the
+  # cask, without uploading or pushing anything.
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build the desktop zip and print the cask; never upload or push
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -14,7 +22,11 @@ concurrency:
 
 jobs:
   release:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.version.outputs.release }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -65,3 +77,50 @@ jobs:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           # Fine-grained PAT with contents:write on mavogel/homebrew-tap.
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+
+  # Builds the universal macOS app, attaches its zip to the release and pushes
+  # the kirokit-desktop cask. A manual dispatch builds HEAD and only prints.
+  desktop:
+    needs: release
+    if: always() && (needs.release.outputs.release == 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          # The new tag on a release; HEAD of the dispatched ref on a dry run.
+          ref: ${{ github.event_name == 'push' && needs.release.outputs.tag || github.sha }}
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: stable
+
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: lts/*
+
+      - name: Install Task
+        run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
+
+      - name: Build
+        env:
+          VERSION: ${{ github.event_name == 'push' && needs.release.outputs.tag || '0.0.0-dryrun' }}
+        run: task desktop:build
+
+      - name: Zip the app and print the cask (dry run)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          bash scripts/desktop-release.sh --version 0.0.0-dryrun --app desktop/build/bin/kirokit.app --out "$RUNNER_TEMP/desktop-release"
+          cat "$RUNNER_TEMP/desktop-release/Casks/kirokit-desktop.rb"
+
+      - name: Upload the zip and push the cask
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Fine-grained PAT with contents:write on mavogel/homebrew-tap.
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          TAG: ${{ needs.release.outputs.tag }}
+        run: bash scripts/desktop-release.sh --version "$TAG" --app desktop/build/bin/kirokit.app --out "$RUNNER_TEMP/desktop-release" --publish
