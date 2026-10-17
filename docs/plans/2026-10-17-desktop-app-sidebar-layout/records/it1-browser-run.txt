@@ -1,0 +1,16 @@
+Browser run of design/sidebar-layout.html (Chrome DevTools, 1440 wide), iteration 1
+
+Scenario 1: each of 5 nav buttons shows only its own page, aria-current=page on the current one.
+  Collapse toggle: sidebar 60px; Command-B: sidebar 232px. Every nav button keeps title and text name.
+  Agents and MCP rows compared with teams/*/agents/*/agent.json.tmpl:3-5 and env/mcp-versions.yaml:3-13: identical.
+Scenario 2: after typed `kirokit uninstall data-team`, Install on platform-team opens the setup dialog:
+  SOPS found, key Missing, Kiro CLI found; Install disabled, "1 prerequisite missing".
+  Check again, Install: button reads "Installing…", terminal prints
+  `kirokit install platform-team` / `installed platform-team into /Users/you/.kiro`; both pages show platform-team Installed.
+Scenario 3: reload -> data-team Installed. Install platform-team asks "Replace data-team with platform-team?";
+  Cancel leaves badges unchanged and returns focus to the Install button.
+  Replace -> prerequisites -> Install prints uninstall data-team, install platform-team; only platform-team Installed.
+  Typed `kirokit install data-team` prints uninstalled platform-team, installed data-team; only data-team Installed.
+  Typed uninstall -> both Not installed; `kirokit install nope` -> Error: kirokit install: team nope not found.
+  `kirokit version` -> kirokit v0.4.0 / commit: 9a919bf…; unknown word -> zsh: command not found.
+  Resize with arrow keys stops at 480 and 120; Control-backtick hides and shows the terminal.

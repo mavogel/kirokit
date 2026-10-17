@@ -1,0 +1,16 @@
+$ test -z "$(git status --porcelain -- cmd internal teams global env testdata assets)"
+exit 0
+$ go test ./...
+?   	github.com/mavogel/kirokit/cmd/kirokit	[no test files]
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	(cached)
+ok  	github.com/mavogel/kirokit/internal/backup	(cached)
+ok  	github.com/mavogel/kirokit/internal/externalskills	(cached)
+ok  	github.com/mavogel/kirokit/internal/golden	(cached)
+ok  	github.com/mavogel/kirokit/internal/install	(cached)
+ok  	github.com/mavogel/kirokit/internal/kiroconfig	(cached)
+ok  	github.com/mavogel/kirokit/internal/manifest	(cached)
+ok  	github.com/mavogel/kirokit/internal/mcpversions	(cached)
+ok  	github.com/mavogel/kirokit/internal/render	(cached)
+ok  	github.com/mavogel/kirokit/internal/scaffold	(cached)
+ok  	github.com/mavogel/kirokit/internal/sopswrap	(cached)
+exit

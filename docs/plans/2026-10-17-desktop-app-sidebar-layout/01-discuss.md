@@ -6,8 +6,8 @@ depth: product
 level: engineering
 ui: true
 overrides: []
-stage: implement
-iterations: 0
+stage: review
+iterations: 1
 verification_failures: 0
 gate: null
 created: 1792265605679
@@ -20,6 +20,7 @@ review_basis: 3da1a020dda2ace7cc0f935a971ddf6e0602d0beb7bac8d73eaac5b47bed79bf
 branch: ql/desktop-app-sidebar-layout
 base: 9a919bfb8f018ce028906f5ab1e6a2677bf588b3
 base_ref: main
+judge_runs: 0
 ---
 
 # Desktop app sidebar layout

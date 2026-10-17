@@ -32,7 +32,7 @@ After this slice a person opens one page, moves through all five sections, colla
                             terminal contract, one-team install state, replace dialog
 ```
 
-- [ ] T1 Five pages show repository data, and the sidebar collapses to a rail
+- [x] T1 Five pages show repository data, and the sidebar collapses to a rail
   - **Objective:** Check every name, description, tool, skill and version on the five pages against the repository and fix differences. Make the rail, its tooltips and Command-B match the Plan.
   - **Design:** none
   - **Files:** `docs/plans/2026-10-17-desktop-app-sidebar-layout/design/sidebar-layout.html`
@@ -43,7 +43,7 @@ After this slice a person opens one page, moves through all five sections, colla
     - Teams, Agents, Skills and MCP counts equal the repository counts.
     - verify: `qualitylayer design check sidebar-layout`
 
-- [ ] T2 The terminal prints kirokit's exact lines and resizes within limits
+- [x] T2 The terminal prints kirokit's exact lines and resizes within limits
   - **Objective:** Make typed commands follow the Plan's output table, and keep the terminal's open, close and resize behaviour.
   - **Design:** "The terminal echoes each command and prints kirokit's exact output format"
   - **Files:** `docs/plans/2026-10-17-desktop-app-sidebar-layout/design/sidebar-layout.html`
@@ -55,7 +55,7 @@ After this slice a person opens one page, moves through all five sections, colla
     - The resize handle stops at 120 and 480 pixels, by drag and by arrow keys.
     - verify: `qualitylayer design check sidebar-layout`
 
-- [ ] T3 Only one team is ever installed, and setup checks prerequisites first
+- [x] T3 Only one team is ever installed, and setup checks prerequisites first
   - **Objective:** Route every install, uninstall and sync through one `setInstalled` that keeps at most one team `true`. Add the replace question and the prerequisites dialog with focus return.
   - **Design:** "Install state is one map that both pages render", "The setup dialog is a native modal with focus return"
   - **Files:** `docs/plans/2026-10-17-desktop-app-sidebar-layout/design/sidebar-layout.html`
