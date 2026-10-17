@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "entry": "index.html",
+  "draftOn": {
+    "design": "desktop-app",
+    "project": "kiro-cli-kit-a365619120de",
+    "base": {
+      "index.html": "84b0917895d7da5aaf71fd9d68af75ca89f246de"
+    }
+  }
+}

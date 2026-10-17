@@ -5,3 +5,7 @@
 !.claude/rules/
 !.claude/skills/
 demo-runbook-*
+
+# QualityLayer designs are tracked so the design evolution is reviewable
+# (overrides the local .git/info/exclude entry QualityLayer writes)
+!/docs/plans/*/design/
