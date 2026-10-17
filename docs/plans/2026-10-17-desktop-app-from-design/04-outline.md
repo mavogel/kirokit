@@ -426,7 +426,7 @@ First launch asks for the repository's address and clones it, the setup dialog c
  .github/workflows/desktop.yaml         + macOS tests and build
 ```
 
-- [ ] T21 `task desktop:build` makes a universal app with the CLI inside
+- [x] T21 `task desktop:build` makes a universal app with the CLI inside
   - **Objective:** Build the CLI for both architectures with the release ldflags, join them with `lipo`, build the app and copy the CLI to `Contents/Resources/bin/kirokit`.
   - **Design:** "The app bundle and release artifacts"
   - **Files:** `scripts/desktop-build.sh`, `Taskfile.yml`, `desktop/.gitignore`
@@ -437,7 +437,7 @@ First launch asks for the repository's address and clones it, the setup dialog c
     - `task desktop:dev` builds the dev CLI into the app's dev-bin folder first.
     - verify: `task desktop:build`
 
-- [ ] T22 CI builds the app on macOS
+- [x] T22 CI builds the app on macOS
   - **Objective:** Add `desktop.yaml`, limited to pushes to `main` and pull requests touching the app or what it imports.
   - **Design:** "The app bundle and release artifacts"
   - **Files:** `.github/workflows/desktop.yaml`
