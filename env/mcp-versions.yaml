@@ -8,6 +8,6 @@ pipeline-mcp: "3.0.0"
 # npm packages launched via npx; the Atlassian server itself is remote-hosted
 # (https://mcp.atlassian.com/v2/mcp) and reached through the mcp-remote proxy.
 # renovate: npm=mcp-remote
-mcp-remote: "0.14.3"
+mcp-remote: "0.15.1"
 # renovate: npm=@upstash/context7-mcp
-context7-mcp: "4.3.0"
+context7-mcp: "4.4.2"
