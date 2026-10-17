@@ -159,6 +159,58 @@ func TestSync_WithATeamRemovesOtherInstalledTeamsFirst(t *testing.T) {
 	}
 }
 
+func TestSync_FailureLeavesTheInstalledTeamInPlace(t *testing.T) {
+	origin := t.TempDir()
+	git(t, origin, "init", "-q", "-b", "main")
+	writeTree(t, origin, map[string]string{
+		"env/mcp-versions.yaml":                "x: \"1\"\n",
+		"global/steerings/.keep":               "",
+		"teams/demo/manifest.yaml":             "team: demo\nglobalSteerings: []\n",
+		"teams/demo/agents/a1/agent.json.tmpl": `{"name": "a1"}`,
+	})
+	git(t, origin, "add", "-A")
+	git(t, origin, "commit", "-q", "-m", "teams")
+
+	cases := map[string]struct {
+		team    string
+		prepare func(t *testing.T, clone string)
+	}{
+		"unknown team": {team: "nonexistent-team", prepare: func(*testing.T, string) {}},
+		"failing git pull": {team: "demo", prepare: func(t *testing.T, clone string) {
+			// Diverge clone and origin so pull --ff-only fails.
+			commitFile(t, clone, "local")
+			commitFile(t, origin, "remote")
+		}},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			home := t.TempDir()
+			t.Setenv("KIRO_HOME", home)
+			t.Setenv("KIROKIT_REPO", thisRepo(t))
+			chdir(t, t.TempDir())
+			if _, err := runRoot(t, "install", "platform-team"); err != nil {
+				t.Fatal(err)
+			}
+			want := installedRecords(t, home)
+
+			clone := t.TempDir()
+			git(t, clone, "clone", "-q", origin, ".")
+			tc.prepare(t, clone)
+
+			got, err := runRoot(t, "sync", tc.team, "--repo", clone)
+			if err == nil {
+				t.Fatalf("sync %s succeeded:\n%s", tc.team, got)
+			}
+			if strings.Contains(got, "uninstalled") {
+				t.Errorf("output = %q, must not uninstall anything", got)
+			}
+			if recs := installedRecords(t, home); !reflect.DeepEqual(recs, want) {
+				t.Errorf("records = %v, want %v left in place", recs, want)
+			}
+		})
+	}
+}
+
 func TestUpdateCheckout_LatestTagWithoutTagsFails(t *testing.T) {
 	origin := t.TempDir()
 	git(t, origin, "init", "-q", "-b", "main")

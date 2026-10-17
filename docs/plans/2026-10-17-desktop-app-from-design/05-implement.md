@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 17 min so far.
+5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 19 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -56,6 +56,10 @@
 - [PASS] scenario 1 step 8 (QualityLayer) · ee57a68 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit sync --latest-tag --repo /tmp/ql-kk-s1/clone` · exit 0 · as expected
 - [PASS] scenario 1 step 9 (QualityLayer) · ee57a68 · `/tmp/ql-kk-s1/kirokit sync --kb-agent x` · exit 1 · as expected
 - [PASS] scenario 1 step 10 (QualityLayer) · ee57a68 · `go test ./...` · exit 0 · as expected
+- slice 1 · 20c83fa · `go build ./...` · exit 0 · 0.3s
+- slice 1 · 20c83fa · `go vet ./...` · exit 0 · 0.1s
+- slice 1 · 20c83fa · `go test ./...` · exit 0 · 3.2s
+- slice 1 · 20c83fa · `golangci-lint run` · exit 0 · 0.5s
 
 ## Decided while building
 
@@ -84,16 +88,22 @@ It failed in the program: failure 1 of the 4 after which the checkpoint stays op
 ### Checkpoint after slice 1 · run 2
 
 **Runner:** fresh helper
+**Revision:** ba2b64db88b601e8d236dc46e5a3063fe7eb702799fd20209ed03ff58af5afe0
 
 - [PASS] scenario 1: steps 1-10 were already run by QualityLayer and recorded PASS (cited, not rerun) — `evidence/cp-1-run-2-sync-unknown-team.txt` covers only the boundary
 - [FAIL] boundary: with data-team installed, `kirokit sync nonexistent-team --repo <clone>` printed `uninstalled data-team from <home>`, then failed with `manifest: read teams/nonexistent-team/manifest.yaml: no such file`, exit 1; `.kirokit-installed` was left empty. A failed sync destroys the working install (`uninstallOthers` runs in `cmd/kirokit/commands/sync.go` before the team or the checkout is validated, and before a failing `git pull`). — `evidence/cp-1-run-2-sync-unknown-team.txt`
 
 **Result:** fail
 
+### Checkpoint 1 · run 2 · counted toward the stop
+
+It failed in the program: failure 2 of the 4 after which the checkpoint stays open and the build goes on.
+
 ## Deviations
 
 - T4 (amended): Git calls in tests and skills fetch now ignore the commit tool's repository variables, so two more files change; nothing you approved changes.
 - T2 (found by checkpoint 1): installing a mistyped team name removed the installed team first and then failed, so install now checks the new team renders before removing anything; nothing you approved changes.
+- T3 (found by checkpoint 1): a mistyped team or a failed update in sync removed the installed team first, so sync now updates and checks the new team before removing anything; nothing you approved changes.
 - T5 (amended): The scheduled-sync setup script gets a header comment about one team per machine; nothing you approved changes.
 
 ## Plan amended

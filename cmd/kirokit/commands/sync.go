@@ -18,7 +18,9 @@ func newSyncCmd() *cobra.Command {
 		Use:   "sync [team]",
 		Short: "Update a config checkout from git and reinstall a team, pruning files it no longer ships",
 		Long: `Update the kirokit config checkout at --repo, then install <team> from it.
-Any other installed team is uninstalled first, so a Kiro home holds one team.
+Once the checkout is updated and <team> renders, any other installed team is
+uninstalled, so a Kiro home holds one team. A failed update or an unknown team
+leaves the installed team untouched.
 
 By default the checked-out branch is fast-forwarded from its upstream. With
 --latest-tag the newest v* tag is checked out instead (detached HEAD), so only
@@ -51,9 +53,6 @@ Run it from a scheduler (see scripts/kirokit-sync-setup.sh).`,
 					return fmt.Errorf("kirokit sync: %w", err)
 				}
 				if kiroHome, err = install.ResolveKiroHome(); err != nil {
-					return fmt.Errorf("kirokit sync: %w", err)
-				}
-				if err := uninstallOthers(out, kiroHome, team); err != nil {
 					return fmt.Errorf("kirokit sync: %w", err)
 				}
 			}
@@ -94,6 +93,14 @@ Run it from a scheduler (see scripts/kirokit-sync-setup.sh).`,
 				TeamsRoot:       teamsRoot,
 				GlobalRoot:      globalRoot,
 				EnvVersionsPath: envVersionsPath,
+			}
+			// Update and validate before removing anything: a failed pull or an
+			// unknown team must leave the installed team in place.
+			if err := install.Check(roots, team, kiroHome); err != nil {
+				return fmt.Errorf("kirokit sync: %w", err)
+			}
+			if err := uninstallOthers(out, kiroHome, team); err != nil {
+				return fmt.Errorf("kirokit sync: %w", err)
 			}
 			pruned, err := install.Sync(roots, team, kiroHome, kb)
 			if err != nil {

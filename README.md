@@ -231,7 +231,7 @@ kirokit sync --repo ~/.kirokit-config --latest-tag      # no team: update the ch
 
 - `sync` runs `git fetch --tags`, then a fast-forward `git pull` of the checked-out branch (with `--latest-tag`: checkout of the newest `v*` tag, so only releases reach the machine), then the same install as `kirokit install`.
 - Unlike `install`, it removes files the previous install wrote that the new version no longer ships, plus directories left empty.
-- Like `install`, `sync <team>` first uninstalls every other installed team (one `uninstalled <other> from <home>` line each).
+- Like `install`, `sync <team>` uninstalls every other installed team (one `uninstalled <other> from <home>` line each), but only after the checkout updated and `<team>` rendered; a failed pull or an unknown team leaves the installed team in place.
 - Without a team, `sync` only updates the checkout and installs nothing: it prints `updated <before> -> <after>` when HEAD moved, then `checked out <tag or branch> at <commit>`. It needs no Kiro home, and the `--kb-*` flags are an error (`kirokit sync: --kb-agent needs a team`).
 - `--repo` defaults to `$KIROKIT_REPO`, else the cwd; an explicit `--repo` wins over `KIROKIT_REPO`. `--kb-*` flags behave as for `install`; without them a previously attached knowledge base is dropped, so pass them on every run.
 
