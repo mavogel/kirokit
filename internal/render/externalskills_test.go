@@ -12,7 +12,7 @@ import (
 
 const (
 	externalSkillURI = "skill:///kh/skills/pdf/SKILL.md"
-	manifestWithPDF  = "team: fixture-team\nglobalSteerings:\n  - security-baseline\nexternalSkills:\n  - source: https://h/r.git\n    ref: v1\n    path: skills/pdf\n"
+	manifestWithPDF  = "team: fixture-team\nglobalSteerings:\n  - security-baseline\nexternalSkills:\n  - source: https://h/r.git\n    ref: v1\n    paths: [skills/pdf]\n"
 )
 
 // vendorPDF declares skills/pdf in the fixture team's manifest and vendors it
@@ -183,7 +183,7 @@ func vendorCollection(t *testing.T, teamsRoot string, names ...string) {
 	t.Helper()
 	teamDir := filepath.Join(teamsRoot, "fixture-team")
 	manifestYAML := "team: fixture-team\nglobalSteerings:\n  - security-baseline\nexternalSkills:\n" +
-		"  - source: https://h/r.git\n    ref: v1\n    path: skills\n    all: true\n    exclude: [b]\n"
+		"  - source: https://h/r.git\n    ref: v1\n    paths: [skills]\n    all: true\n    exclude: [b]\n"
 	if err := os.WriteFile(filepath.Join(teamDir, "manifest.yaml"), []byte(manifestYAML), 0o600); err != nil {
 		t.Fatal(err)
 	}

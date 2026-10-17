@@ -19,21 +19,27 @@ type Manifest struct {
 	ExternalSkills  []ExternalSkill `yaml:"externalSkills" json:",omitempty"`
 }
 
-// ExternalSkill declares one skill directory of a git repository that the
-// team vendors: Source is a git URL, Ref a tag, branch or commit, and Path
-// the skill's directory inside the repository. Name overrides the default
-// name (the last element of Path).
+// ExternalSkill declares skill directories of a git repository that the team
+// vendors: Source is a git URL, Ref a tag, branch or commit, and Paths the
+// skills' directories inside the repository.
 //
-// With All set the entry is a collection: Path is a directory of skills, and
-// every immediate subdirectory holding a SKILL.md is vendored, except those
-// named in Exclude.
+// Load expands an entry into one entry per path, each sharing Source and Ref,
+// so code past Load sees only Path (and never Paths). Name overrides the
+// default name (the last element of Path) and needs a single path.
+//
+// With All set an expanded entry is a collection: Path is a directory of
+// skills, and every immediate subdirectory holding a SKILL.md is vendored,
+// except those named in Exclude (which needs a single path).
 type ExternalSkill struct {
 	Name    string   `yaml:"name"`
 	Source  string   `yaml:"source"`
 	Ref     string   `yaml:"ref"`
-	Path    string   `yaml:"path"`
+	Paths   []string `yaml:"paths" json:",omitempty"`
 	All     bool     `yaml:"all" json:",omitempty"`
 	Exclude []string `yaml:"exclude" json:",omitempty"`
+
+	// Path is set by Expand, never read from the YAML.
+	Path string `yaml:"-"`
 }
 
 // IsCollection reports whether the entry vendors every skill under Path.
@@ -62,31 +68,52 @@ func Load(path string) (*Manifest, error) {
 	if m.Team == "" {
 		return nil, fmt.Errorf("manifest: %s: missing required field %q", path, "team")
 	}
-	if err := validateExternalSkills(m.ExternalSkills); err != nil {
+	expanded, err := expandExternalSkills(m.ExternalSkills)
+	if err != nil {
 		return nil, fmt.Errorf("manifest: %s: %w", path, err)
 	}
+	m.ExternalSkills = expanded
 	return &m, nil
 }
 
-func validateExternalSkills(skills []ExternalSkill) error {
+// Expand returns the entries a Paths entry stands for, one per path, or the
+// entry itself when it has no paths.
+func (s ExternalSkill) Expand() []ExternalSkill {
+	if len(s.Paths) == 0 {
+		return []ExternalSkill{s}
+	}
+	out := make([]ExternalSkill, 0, len(s.Paths))
+	for _, p := range s.Paths {
+		out = append(out, ExternalSkill{Name: s.Name, Source: s.Source, Ref: s.Ref, Path: p, All: s.All, Exclude: s.Exclude})
+	}
+	return out
+}
+
+// expandExternalSkills validates every entry, expands paths entries, and
+// rejects two single skills sharing a name.
+func expandExternalSkills(skills []ExternalSkill) ([]ExternalSkill, error) {
 	seen := make(map[string]bool, len(skills))
+	var out []ExternalSkill
 	for i, s := range skills {
 		label := fmt.Sprintf("externalSkills[%d]", i)
 		if err := s.Validate(); err != nil {
-			return fmt.Errorf("%s: %w", label, err)
+			return nil, fmt.Errorf("%s: %w", label, err)
 		}
-		if s.IsCollection() {
-			// A collection's skill names are known only after a fetch; the
-			// lock check reports clashes between them.
-			continue
+		for _, e := range s.Expand() {
+			out = append(out, e)
+			if e.IsCollection() {
+				// A collection's skill names are known only after a fetch; the
+				// lock check reports clashes between them.
+				continue
+			}
+			name := e.EffectiveName()
+			if seen[name] {
+				return nil, fmt.Errorf("%s: duplicate skill name %q", label, name)
+			}
+			seen[name] = true
 		}
-		name := s.EffectiveName()
-		if seen[name] {
-			return fmt.Errorf("%s: duplicate skill name %q", label, name)
-		}
-		seen[name] = true
 	}
-	return nil
+	return out, nil
 }
 
 // Validate checks one entry on its own: required fields, a safe path and
@@ -94,7 +121,21 @@ func validateExternalSkills(skills []ExternalSkill) error {
 // the source URL. Load calls it for every entry; code that acts on an entry
 // (such as a fetch) calls it again rather than trusting its caller.
 func (s ExternalSkill) Validate() error {
-	for field, value := range map[string]string{"source": s.Source, "ref": s.Ref, "path": s.Path} {
+	if len(s.Paths) > 0 {
+		if len(s.Paths) > 1 && s.Name != "" {
+			return fmt.Errorf("name needs a single path (each skill keeps its directory name)")
+		}
+		if len(s.Paths) > 1 && len(s.Exclude) > 0 {
+			return fmt.Errorf("exclude needs a single path")
+		}
+		for _, e := range s.Expand() {
+			if err := e.Validate(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	for field, value := range map[string]string{"source": s.Source, "ref": s.Ref, "paths": s.Path} {
 		if strings.TrimSpace(value) == "" {
 			return fmt.Errorf("missing required field %q", field)
 		}
