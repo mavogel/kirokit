@@ -1,0 +1,6 @@
+{
+  "v": 1,
+  "title": "desktop-app",
+  "purpose": "Design for the desktop app with a sidebar layout",
+  "entry": "index.html"
+}

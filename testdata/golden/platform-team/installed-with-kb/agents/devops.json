@@ -6,7 +6,7 @@
       "args": [
         "exec-env",
         "/kiro-home/kirokit-secrets/platform-team/devops/secrets.enc.yaml",
-        "npx -y mcp-remote@0.14.3 https://mcp.atlassian.com/v2/mcp --header 'Authorization: ${ATLASSIAN_AUTH}'"
+        "npx -y mcp-remote@0.15.1 https://mcp.atlassian.com/v2/mcp --header 'Authorization: ${ATLASSIAN_AUTH}'"
       ],
       "timeout": 60000
     },
@@ -14,7 +14,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@upstash/context7-mcp@4.3.0"
+        "@upstash/context7-mcp@4.4.2"
       ],
       "timeout": 60000
     }

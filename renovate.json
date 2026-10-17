@@ -30,7 +30,7 @@
     {
       "description": "Auto-merge minor/patch Go modules and Actions once CI passes",
       "matchManagers": ["gomod", "github-actions"],
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
       "automerge": true
     },
     {
