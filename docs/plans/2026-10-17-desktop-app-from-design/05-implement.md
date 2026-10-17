@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-16 of 24 tasks done · 4 of 7 slices finished · started 18 Oct, 00:00 · 50 min so far.
+20 of 24 tasks done · 5 of 7 slices finished · started 18 Oct, 00:00 · 1 h 5 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -15,8 +15,8 @@
 | 2 | The app opens with the design's shell and remembers its settings | A Wails window shows the logo, the sidebar with five sections in light and dark mode, the collapsing icon rail, and a Settings page that saves. | done |
 | 3 | The pages show the repository's real data | Teams, Agents, Install and Skills and MCP versions read the app's own copy of the repository, and the screens redraw when install records change. | done |
 | 4 | A real terminal docks at the bottom | The dock opens, closes and resizes like VS Code's and holds two tabs: your login shell and the kirokit tab for button commands. | done |
-| 5 | A person installs a team with buttons only | First launch asks for the repository's address and clones it, the setup dialog checks the prerequisites, and Install, Sync, Uninstall and Update run their `kirokit` commands in the terminal. | next |
-| 6 | One command builds the macOS app and CI builds it too | `task desktop:build` produces a universal `kirokit.app` with the CLI inside, and a new workflow runs the app's tests and build on macOS. | after 5 |
+| 5 | A person installs a team with buttons only | First launch asks for the repository's address and clones it, the setup dialog checks the prerequisites, and Install, Sync, Uninstall and Update run their `kirokit` commands in the terminal. | done |
+| 6 | One command builds the macOS app and CI builds it too | `task desktop:build` produces a universal `kirokit.app` with the CLI inside, and a new workflow runs the app's tests and build on macOS. | next |
 | 7 | Each release attaches the app and a Homebrew cask | A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_darwin_universal.zip` and pushes the `kirokit-desktop` cask. | after 6 |
 <!-- /ql:slices -->
 
@@ -97,6 +97,12 @@
 - T16 · 421cad0 · `cd desktop && go test -race -run Runner ./...` · exit 0 · 2.6s
 - T13 · 421cad0 · `cd desktop/frontend && node --test src/ && npm run build` · exit 0 · 0.9s
 - slice 4 · 421cad0 · `task desktop:test` · exit 0 · 5.4s
+- T17 · e10d117 · `cd desktop && go test -race -run Clone ./...` · exit 0 · 4.3s
+- T18 · e10d117 · `cd desktop/frontend && node --test src/ && npm run build` · exit 0 · 1s
+- T19 · e10d117 · `cd desktop/frontend && node --test src/ && npm run build` · reused: nothing changed since they passed
+- T20 · e10d117 · `task desktop:test` · exit 0 · 8.8s
+- slice 5 · e10d117 · `task desktop:test` · exit 0 · 3.4s
+- slice 5 · e10d117 · `go test ./...` · exit 0 · 3.6s
 
 ## Decided while building
 
@@ -109,6 +115,7 @@
 - The Plan · Startup hooks, the module requirements, a Settings note, shared page helpers and ignored generated files are needed by the data slice; nothing you approved changes.
 - Slice 3 · A placeholder file in the ignored build folder lets a clean checkout compile the app; nothing you approved changes.
 - Slice 4 · The build keeps the dist placeholder and the dock markup lives in the page; nothing you approved changes.
+- The Plan · Clone logic, first-launch page, dialogs, docs and a keystroke queue need files no card named; oracle commands now set the repository folder.
 <!-- /ql:decisions -->
 
 ## Checkpoints
@@ -205,6 +212,7 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 ### Checkpoint after slice 4 · run 1
 
 **Runner:** fresh helper
+**Revision:** 0ad2ad0722dfa9b47ff1d2f9ed675bd9d8718f3d61625d180be2f1b638272933
 
 - [PASS] scenario 3: all steps showed their Expected. Teams listed data-team and platform-team, none installed; Agents listed 4 agents with tools; Install and sync empty; Skills and MCP versions pins equal env/mcp-versions.yaml. The dock opened (220), a drag grew it to 420 and main shrank 580 to 380 (synthetic pointer events on the resize handle). `command -v kirokit` printed the CLI given by KIROKIT_DESKTOP_CLI (dev build in scratch). After a drag to a new height, `stty size` printed `11 130`, equal to xterm's rendered 11 rows and about 130 columns. `kirokit install data-team` printed `installed data-team into /tmp/ql-kk-s3/kiro` and Teams and Install and sync showed it installed within 2 s; `kirokit uninstall data-team` printed `uninstalled data-team from /tmp/ql-kk-s3/kiro` and both pages showed none; hide and show kept the zsh output. xterm.js rendered inside the webview. — `evidence/cp-4-run-1-s3-install-teams.png`, `evidence/cp-4-run-1-s3-install-page.png`, `evidence/cp-4-run-1-s3-reopened-dock.png`
 - [PASS] boundary: via the bound API, `Run(["sync","--help"])` then immediately `Run(["render","data-team"])` rejected the second with "kirokit is still running a command"; a later `Run(["test"])` was accepted after the first ended.
@@ -236,6 +244,7 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 - T9, T12 (amended): Startup hooks, the module requirements, a Settings note, shared page helpers and ignored generated files are needed by the data slice; nothing you approved changes.
 - T9 (amended): A placeholder file in the ignored build folder lets a clean checkout compile the app; nothing you approved changes.
 - T13 (amended): The build keeps the dist placeholder and the dock markup lives in the page; nothing you approved changes.
+- T17, T18, T19, T20 (amended): Clone logic, first-launch page, dialogs, docs and a keystroke queue need files no card named; oracle commands now set the repository folder.
 
 ## Plan amended
 
@@ -272,6 +281,12 @@ Amended by the agent on 2026-10-17; changed 04-outline.md.
 ### T13 · amended
 
 The build keeps the dist placeholder and the dock markup lives in the page; nothing you approved changes.
+
+Amended by the agent on 2026-10-17; changed 04-outline.md.
+
+### T17, T18, T19, T20 · amended
+
+Clone logic, first-launch page, dialogs, docs and a keystroke queue need files no card named; oracle commands now set the repository folder.
 
 Amended by the agent on 2026-10-17; changed 04-outline.md.
 

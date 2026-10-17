@@ -12,7 +12,20 @@ export function parseFieldErrors(message) {
   return found;
 }
 
-export function initSettings() {
+// Update fetches the newest release: for the installed team when there is one,
+// else only the checkout.
+export const updateArgs = (installs) => {
+  const team = (installs || [])[0]?.Team;
+  return team ? ['sync', team, '--latest-tag'] : ['sync', '--latest-tag'];
+};
+
+// onUpdate() runs Update. The returned paint(view) keeps the button disabled
+// while a command runs and shows a refusal beside it.
+export function initSettings(onUpdate) {
+  const updateBtn = document.getElementById('update');
+  const updateErr = document.getElementById('update-error');
+  updateBtn.addEventListener('click', () => onUpdate());
+
   const home = document.getElementById('kirohome');
   const repo = document.getElementById('repo');
   const homeErr = document.getElementById('kirohome-error');
@@ -62,5 +75,11 @@ export function initSettings() {
     }
   });
 
-  return { load };
+  const paint = (view) => {
+    updateBtn.disabled = Boolean(view.running);
+    const e = view.actionError;
+    updateErr.textContent = e && e.where === 'update' ? e.message : '';
+  };
+
+  return { load, paint };
 }

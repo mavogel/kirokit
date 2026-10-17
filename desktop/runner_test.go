@@ -18,6 +18,13 @@ type eventLog struct {
 	out    strings.Builder // term:kirokit output
 	exits  []termExit
 	last   []install.Record
+	clone  *cloneResult // the last clone:done
+}
+
+func (l *eventLog) clearClone() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.clone = nil
 }
 
 func (l *eventLog) emit(event string, data any) {
@@ -25,6 +32,9 @@ func (l *eventLog) emit(event string, data any) {
 	defer l.mu.Unlock()
 	l.events = append(l.events, event)
 	switch event {
+	case "clone:done":
+		res := data.(cloneResult)
+		l.clone = &res
 	case "term:kirokit":
 		raw, _ := base64.StdEncoding.DecodeString(data.(termChunk).B64)
 		l.out.Write(raw)
@@ -166,6 +176,39 @@ func TestRunner_AnyProgramShowsItsOwnName(t *testing.T) {
 	log.waitExit(t)
 	if out := log.output(); !strings.HasPrefix(out, "▸ git clone x\r\n") || !strings.Contains(out, "from-git") {
 		t.Errorf("output = %q, want the git header then its output", out)
+	}
+}
+
+// A sync can bring a new team or pin, so the cached catalog is rendered again
+// when it ends; any other command leaves the cache alone.
+func TestRunner_SyncEndRendersTheCatalogAgain(t *testing.T) {
+	a, log, _ := runnerApp(t, `d="$KIROKIT_REPO/teams/new-$1"; mkdir -p "$d"; printf 'team: new-%s\nglobalSteerings: []\n' "$1" > "$d/manifest.yaml"`)
+	repo := a.repoDir()
+	write(t, filepath.Join(repo, "teams", "t1", "manifest.yaml"), "team: t1\nglobalSteerings: []\n")
+	write(t, filepath.Join(repo, "env", "mcp-versions.yaml"), "x-mcp: \"1\"\n")
+	if cat, err := a.Catalog(); err != nil || len(cat.Teams) != 1 {
+		t.Fatalf("first Catalog = %+v, %v", cat, err)
+	}
+
+	if _, err := a.Run([]string{"install"}); err != nil {
+		t.Fatal(err)
+	}
+	log.waitExit(t)
+	if cat, _ := a.Catalog(); len(cat.Teams) != 1 {
+		t.Fatalf("an install must not render again, got %d teams", len(cat.Teams))
+	}
+
+	if _, err := a.Run([]string{"sync", "--latest-tag"}); err != nil {
+		t.Fatal(err)
+	}
+	log.wait(t, "the second exit", func() bool {
+		log.mu.Lock()
+		defer log.mu.Unlock()
+		return len(log.exits) == 2
+	})
+	cat, err := a.Catalog()
+	if err != nil || len(cat.Teams) != 3 || cat.Teams[1].Name != "new-sync" {
+		t.Fatalf("Catalog after the sync = %+v, %v; want t1, new-install and new-sync", cat, err)
 	}
 }
 

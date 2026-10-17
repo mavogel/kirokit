@@ -111,6 +111,22 @@ td.num { font-variant-numeric: tabular-nums; }
 .field input[aria-invalid="true"] { border-color: var(--warn); }
 .field .hint { color: var(--muted); font-size: 13px; }
 .field .error { color: var(--warn); font-size: 13px; }
+.actions .error, .row-actions .error { color: var(--warn); font-size: 13px; align-self: center; }
+.actions { align-items: center; flex-wrap: wrap; }
+.row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.welcome { max-width: 520px; }
+.app.setup { grid-template-columns: 1fr; }
+.app.setup .sidebar { display: none; }
+
+/* Dialogs */
+dialog { width: min(480px, calc(100vw - 32px)); padding: 20px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--window); color: var(--text); }
+dialog::backdrop { background: rgb(13 11 19 / .5); }
+dialog h2 { margin: 0 0 8px; font-size: 16px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.checks { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 4px 8px; }
+.checks .detail { grid-column: 2 / -1; color: var(--muted); font-size: 12px; word-break: break-all; }
+.notice { margin: 0 0 16px; padding: 10px 12px; border-radius: 6px; background: var(--warn-soft); color: var(--warn); }
 .status-line { margin-right: auto; align-self: center; color: var(--muted); font-size: 13px; }
 .actions .status-line { margin-right: 0; }
 

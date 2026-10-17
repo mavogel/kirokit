@@ -22,10 +22,21 @@ const (
 
 // runHost holds the kirokit tab's one command at a time.
 type runHost struct {
-	mu   sync.Mutex
-	sess *terminal.Session // nil when no command runs
-	id   int               // the last run id handed out
+	mu       sync.Mutex
+	sess     *terminal.Session // nil when no command runs
+	id       int               // the last run id handed out
+	reserved bool              // a multi-step job (the clone) owns the tab between its commands
 }
+
+// runResult is how a command ended: its exit code and the last of its output.
+type runResult struct {
+	Code int
+	Tail string
+}
+
+// tailSize is how much of a command's output is kept for the job that waits
+// on it.
+const tailSize = 4096
 
 // Run starts the bundled kirokit with args in the kirokit tab and returns the
 // run id. The tab prints "▸ kirokit <args>" first and streams the output as
@@ -46,8 +57,51 @@ func (a *App) runProgram(name, program string, args []string) (int, error) {
 	h := &a.runner
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if h.sess != nil {
+	if h.sess != nil || h.reserved {
 		return 0, errRunning
+	}
+	id, _, err := a.launchLocked(name, program, args)
+	return id, err
+}
+
+// reserve takes the kirokit tab for a job of several commands, so no button
+// command starts between them. release gives it back.
+func (a *App) reserve() error {
+	h := &a.runner
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.sess != nil || h.reserved {
+		return errRunning
+	}
+	h.reserved = true
+	return nil
+}
+
+func (a *App) release() {
+	h := &a.runner
+	h.mu.Lock()
+	h.reserved = false
+	h.mu.Unlock()
+}
+
+// runStep runs one command of a reserved job and waits for it to end.
+func (a *App) runStep(name, program string, args []string) (runResult, error) {
+	h := &a.runner
+	h.mu.Lock()
+	_, done, err := a.launchLocked(name, program, args)
+	h.mu.Unlock()
+	if err != nil {
+		return runResult{}, err
+	}
+	return <-done, nil
+}
+
+// launchLocked starts a command with h.mu held and returns its run id and the
+// channel its result arrives on.
+func (a *App) launchLocked(name, program string, args []string) (int, <-chan runResult, error) {
+	h := &a.runner
+	if h.sess != nil {
+		return 0, nil, errRunning
 	}
 
 	cmd := exec.Command(program, args...)
@@ -59,7 +113,7 @@ func (a *App) runProgram(name, program string, args []string) (int, error) {
 	}
 	sess, err := terminal.Start(cmd, runCols, runRows)
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 	h.id++
 	id := h.id
@@ -67,14 +121,25 @@ func (a *App) runProgram(name, program string, args []string) (int, error) {
 
 	header := "▸ " + strings.Join(append([]string{name}, args...), " ") + "\r\n"
 	a.emit("term:kirokit", chunkOf(id, []byte(header)))
-	go a.finishRun(id, sess)
-	return id, nil
+	done := make(chan runResult, 1)
+	// A kirokit sync can bring a new team or pin to the checkout.
+	isSync := name == "kirokit" && len(args) > 0 && args[0] == "sync"
+	go a.finishRun(id, sess, isSync, done)
+	return id, done, nil
 }
 
 // finishRun streams a command's output and, once it ends, frees the lock,
-// reads the install records and announces the exit.
-func (a *App) finishRun(id int, sess *terminal.Session) {
-	stream(sess, func(b []byte) { a.emit("term:kirokit", chunkOf(id, b)) })
+// renders the catalog again after a sync, reads the install records and
+// announces the exit.
+func (a *App) finishRun(id int, sess *terminal.Session, isSync bool, done chan<- runResult) {
+	var tail []byte
+	stream(sess, func(b []byte) {
+		tail = append(tail, b...)
+		if len(tail) > tailSize {
+			tail = tail[len(tail)-tailSize:]
+		}
+		a.emit("term:kirokit", chunkOf(id, b))
+	})
 	code, _ := sess.Wait() //nolint:errcheck // a wait error is shown as the exit code
 	_ = sess.Close()       //nolint:errcheck // the process has ended
 
@@ -82,6 +147,10 @@ func (a *App) finishRun(id int, sess *terminal.Session) {
 	h.mu.Lock()
 	h.sess = nil
 	h.mu.Unlock()
+
+	if isSync {
+		a.refreshCatalog()
+	}
 
 	// The command may have installed or removed a team; show it now rather
 	// than at the next poll.
@@ -92,6 +161,7 @@ func (a *App) finishRun(id int, sess *terminal.Session) {
 		p.Check()
 	}
 	a.emit("term:kirokit:exit", termExit{ID: id, Code: code})
+	done <- runResult{Code: code, Tail: string(tail)}
 }
 
 // RunWrite sends keystrokes to the running command, such as a git sign-in

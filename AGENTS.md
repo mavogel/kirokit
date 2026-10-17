@@ -5,6 +5,7 @@
 
 - `cmd/kirokit/` — cobra commands (`render`, `test`, `update`, `install`, `uninstall`, `sync`, `skills`, `onboard`)
 - `internal/` — `externalskills` (vendored git skills: lock, verify, fetch), `render` (templates + funcs), `golden` (golden-file harness), `install`/`manifest` (install + uninstall tracking), `sopswrap`, `mcpversions`, `kiroconfig` (agent config validation), `scaffold` (`onboard` starter layout)
+- `desktop/` — the Wails desktop app: its own Go module (`desktop/go.mod`), `desktop/frontend/` (vite + xterm.js, tested with `node --test`); `task desktop:test` runs it
 - `teams/<team>/` — template sources (`*.tmpl`, double extension); `global/steerings/` — shared steerings; `env/mcp-versions.yaml` — central MCP version pins
 - `testdata/golden/<team>/` — committed expected output; compared byte-for-byte
 

@@ -1,4 +1,4 @@
-import { esc, timeTag, problem } from './html.js';
+import { esc, timeTag, problem, busyAttr, actionError } from './html.js';
 
 // The rows of the install table: one per team with an install record. The
 // records are on this computer, so a catalog error or a missing clone does
@@ -17,17 +17,26 @@ export function installView(view) {
   <td><span class="badge ok">installed</span>${gone ? ' <span class="badge warn">not in the repository</span>' : ''}</td>
   <td class="num">${r.Files}</td>
   <td>${timeTag(r.Modified)}</td>
-  <td></td>
+  <td><div class="row-actions"><button class="btn" data-action="sync" data-team="${esc(r.Team)}"${busyAttr(view)}>Sync</button><button class="btn" data-action="uninstall" data-team="${esc(r.Team)}"${busyAttr(view)}>Uninstall</button>${actionError(view, 'sync:' + r.Team)}${actionError(view, 'uninstall:' + r.Team)}</div></td>
 </tr>`;
   });
   return { blocked: false, html: rows.join('\n') };
 }
 
-export function initInstall(section) {
+export const syncArgs = (team) => ['sync', team, '--latest-tag'];
+export const uninstallArgs = (team) => ['uninstall', team];
+
+// onAction(action, team) runs the button's command; action is "sync" or
+// "uninstall".
+export function initInstall(section, onAction) {
   const body = section.querySelector('tbody');
   const table = section.querySelector('table');
   const message = document.createElement('div');
   table.after(message);
+  body.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-action]');
+    if (b && !b.disabled) onAction(b.dataset.action, b.dataset.team);
+  });
   return (view) => {
     const out = installView(view);
     table.hidden = out.blocked;

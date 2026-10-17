@@ -27,8 +27,11 @@
 
   <div class="work">
     <main id="main">
+      <section id="page-welcome" data-screen-label="Set up kirokit" hidden></section>
+
       <section id="page-teams" data-screen-label="Teams">
         <div class="page-head"><div><h1>Teams</h1><p class="lede">Pick your team and install its agents into Kiro. No terminal needed.</p></div></div>
+        <p class="notice" id="notice" role="status" hidden></p>
         <div class="grid" id="teams-grid"></div>
       </section>
 
@@ -69,6 +72,9 @@
         <div class="field"><label for="repo">Repository address</label><input id="repo" placeholder="https://github.com/your-org/kiro-configs.git" spellcheck="false" autocomplete="off" aria-describedby="repo-hint repo-error"><span class="hint" id="repo-hint">Where your team keeps its templates.</span><span class="error" id="repo-error" role="alert"></span></div>
         <p class="note" id="env-note" role="status"></p>
         <div class="actions"><button class="btn primary" id="save">Save</button><span class="status-line" id="save-status" role="status"></span></div>
+        <h2>Templates</h2>
+        <p class="note">Update fetches the newest release of your team's repository, and re-installs the installed team from it.</p>
+        <div class="actions"><button class="btn" id="update">Update</button><span class="error" id="update-error" role="alert"></span></div>
       </section>
     </main>
 
@@ -91,6 +97,24 @@
     </section>
   </div>
 </div>
+
+<dialog id="replace-dialog" aria-labelledby="replace-title">
+  <form method="dialog">
+    <h2 id="replace-title">Replace the installed team?</h2>
+    <p id="replace-text"></p>
+    <div class="dialog-actions"><button class="btn" value="cancel">Cancel</button><button class="btn primary" value="ok">Replace</button></div>
+  </form>
+</dialog>
+
+<dialog id="setup-dialog" aria-labelledby="setup-title">
+  <form method="dialog">
+    <h2 id="setup-title">Install</h2>
+    <p class="note">kirokit needs these on this computer before it can install a team.</p>
+    <ul class="checks" id="setup-checks"></ul>
+    <p class="status-line" id="setup-status" role="status"></p>
+    <div class="dialog-actions"><button class="btn" value="cancel">Cancel</button><button class="btn" id="setup-again" type="button">Check again</button><button class="btn primary" id="setup-install" value="ok" disabled>Install</button></div>
+  </form>
+</dialog>
 <script src="./src/main.js" type="module"></script>
 </body>
 </html>

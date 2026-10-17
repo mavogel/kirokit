@@ -247,6 +247,18 @@ scripts/kirokit-sync-setup.sh --team platform-team --remove        # unregister 
 
 Options: `--dir` (checkout, default `~/.kirokit-config`), `--interval` (hours, default 4). Needs `git` and `kirokit` on `PATH`; logs to `~/.kirokit-sync.log`; each user needs their own SOPS age key. Keep the checkout dedicated: a fast-forward pull fails on local commits and `--latest-tag` leaves a detached HEAD.
 
+## Desktop app
+
+`desktop/` holds a macOS app (Wails) for people who would rather press buttons than type commands. It bundles `kirokit` and runs the same commands, so what it writes is byte for byte what the command line writes. Build it with `task desktop:build`, or run it from source with `task desktop:dev` (`task desktop:test` runs its checks).
+
+- **First launch** asks for your team's repository address (https, ssh, `file://`, `git@host:path` or an absolute path; an address starting with `-` is refused), runs `git clone -- <address> <app folder>/repo`, then `kirokit sync --latest-tag`, so the clone sits on the newest `v*` tag. A repository with no `v*` tag is kept and the app says it has no release yet. A second address renames the old clone to `repo.old-<unix time>`; a failed clone puts it back.
+- **Teams** has an Install button per team. It first shows the checks it needs (SOPS, the decryption key, Kiro CLI, read from your login shell), then runs `kirokit install <team>`. A Kiro home holds one team, so installing another team asks before it replaces the installed one.
+- **Install and sync** has Sync (`kirokit sync <team> --latest-tag`) and Uninstall (`kirokit uninstall <team>`) per installed team; **Settings** has Update (`kirokit sync --latest-tag` for the installed team, or without a team when none is installed).
+- Every button command runs in the dock's **kirokit** tab, where a git sign-in prompt can be answered; the **zsh** tab is your own login shell with the bundled `kirokit` first on `PATH`. The app sets `KIROKIT_REPO` to its clone and `KIRO_HOME` to the Kiro home folder saved in Settings.
+- `KIROKIT_REPO` also works on the command line: with it set, `kirokit sync --latest-tag` (no team) updates a checkout from any folder.
+
+**Migration:** one machine now holds one team, in the app and on the command line alike. A second scheduled sync from `scripts/kirokit-sync-setup.sh` for another team replaces the first team on every run.
+
 ## Git Hooks
 
 [Lefthook](https://lefthook.dev) runs checks on every commit (`brew install lefthook gitleaks commitizen uv`, then once per clone):

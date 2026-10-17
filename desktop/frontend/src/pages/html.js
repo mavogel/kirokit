@@ -35,6 +35,16 @@ export function problem({ error, cloned }) {
   return '';
 }
 
+// While a command runs every button that starts one is disabled.
+export const busyAttr = (view) => (view.running ? ' disabled' : '');
+
+// The refusal of a command, shown beside the button that started it. where is
+// "<action>:<team>", or "update" for Settings' Update.
+export function actionError(view, where) {
+  const e = view.actionError;
+  return e && e.where === where ? `<span class="error" role="alert">${esc(e.message)}</span>` : '';
+}
+
 export function installedBy(installs) {
   return new Map((installs || []).map((r) => [r.Team, r]));
 }

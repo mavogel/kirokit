@@ -49,12 +49,19 @@ func (a *App) SaveSettings(s Settings) error {
 		s.KiroHome = filepath.Clean(s.KiroHome)
 	}
 	if s.RepoURL != "" && !repoURLPattern.MatchString(s.RepoURL) {
-		problems = append(problems, errors.New("RepoURL: Use an https, ssh or file address, git@host:path, or an absolute path"))
+		problems = append(problems, errors.New("RepoURL: "+repoURLMessage))
 	}
 	if len(problems) > 0 {
 		return errors.Join(problems...)
 	}
+	return a.writeSettings(s)
+}
 
+// repoURLMessage is shown beside an address field that holds a bad address.
+const repoURLMessage = "Use an https, ssh or file address, git@host:path, or an absolute path"
+
+// writeSettings stores s as it is, replacing settings.json atomically.
+func (a *App) writeSettings(s Settings) error {
 	data, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return err
