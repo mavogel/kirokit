@@ -59,7 +59,8 @@ Passed after 1 judge run.
 ### Polish
 
 **Result:** done · 0 simplifications · 0 tests added · docs: no doc impact · UI: 1 screen captured in light and dark
-- sidebar-layout: matches the Plan and Discuss description (five sections with counts, collapse toggle, Teams cards with Install/Sync, docked terminal, violet accent, readable in light and dark); the built page is the mockup, so there is no separate mockup to compare against
+- sidebar-layout (1440, light): matches the Plan and Discuss description (five sections with counts, collapse toggle, Teams cards with Install/Sync, docked terminal, violet accent); the built page is the mockup itself
+- sidebar-layout (1440, dark): same layout, dark surfaces, violet accent visible and text legible
 **Pictures:**
 - `evidence/screen-3decee0f3e9494573da4a3f4.png` — Teams page with docked terminal, 1440 wide, light theme
 - `evidence/screen-78eda45e414b09249fccad67.png` — same page, 1440 wide, dark theme

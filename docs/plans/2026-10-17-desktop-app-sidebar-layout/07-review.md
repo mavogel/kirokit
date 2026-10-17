@@ -39,7 +39,7 @@ sidebar-layout.html
 ## Built, slice by slice
 
 <!-- ql:slices -->
-1 slice · 3 tasks · 1 commit · 0 files · +0 −0
+1 slice · 3 tasks · 2 commits · 0 files · +0 −0
 
 **Slice 1 · A complete clickable kirokit window with sidebar, terminal and one-team setup** · T1, T2, T3 · no files
 <!-- /ql:slices -->
