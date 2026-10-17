@@ -37,7 +37,7 @@ sidebar-layout.html
 ## Built, slice by slice
 
 <!-- ql:slices -->
-1 slice · 3 tasks · 3 commits · 0 files · +0 −0
+1 slice · 3 tasks · 4 commits · 0 files · +0 −0
 
 **Slice 1 · A complete clickable kirokit window with sidebar, terminal and one-team setup** · T1, T2, T3 · no files
 <!-- /ql:slices -->
@@ -64,6 +64,7 @@ sidebar-layout.html
 - **No change to kirokit to enforce one team.** The real CLI still allows several installed teams; the mockup's terminal applies the app's rule.
 - **No editing of templates or manifests in the mockup.** This is your Discuss decision, and it holds for every page.
 - **No phone layout.** The mockup is a desktop window only.
+- Committed by another session on this branch, not part of this change: `.cz.toml`
 <!-- /ql:not-doing -->
 
 ## How it was verified

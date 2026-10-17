@@ -6,14 +6,14 @@ depth: product
 level: engineering
 ui: true
 overrides: []
-stage: review
+stage: shipped
 iterations: 1
 verification_failures: 0
 gate: null
 created: 1792265605679
 startup_owner: 773705b5c336001d
 layout: seven
-status: approved
+status: verified
 approved: true
 review_digest: d90f60444b2bec7d376b250bc7f370ce4136bde51cfbd0cbf03ab60783f8339f
 review_basis: 3da1a020dda2ace7cc0f935a971ddf6e0602d0beb7bac8d73eaac5b47bed79bf
@@ -21,10 +21,10 @@ branch: ql/desktop-app-sidebar-layout
 base: 9a919bfb8f018ce028906f5ab1e6a2677bf588b3
 base_ref: main
 judge_runs: 0
-shipped: null
-commits: null
-touched: null
-slices: null
+shipped: 2026-10-17
+commits: ["1382052","08a59eb","b2e48fd","f183c46"]
+touched: [".cz.toml"]
+slices: 1
 ---
 
 # Desktop app sidebar layout
