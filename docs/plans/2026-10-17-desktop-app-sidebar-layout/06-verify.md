@@ -42,7 +42,7 @@ Passed after 1 judge run.
 | 4. A non-engineer can click through setting up a team | Prerequisites check blocks Install until Check again, then the team shows Installed. | passed |
 | 5. Engineers get a full terminal docked at the bottom | Terminal docks at the bottom, hides, resizes between 120 and 480, and shows the command for each button and typed commands update the screens. | passed |
 | 6. The mockup shows kirokit's real teams, agents and versions | Agents, tools, skills and MCP versions equal the repository files. | passed |
-| 7. The mockup reads well in light and dark mode | Look fits kirokit; both themes render readably in the captured pictures, only you can judge the look. | yours to confirm |
+| 7. The mockup reads well in light and dark mode | Look fits kirokit; both themes render readably in the captured pictures, only you can judge the look. | confirmed by you |
 | 8. kirokit's code and behaviour stay unchanged | No change under cmd, internal, teams, global, env, testdata or assets — `go test ./...` and `git status` check recorded. | passed |
 | 9. Only one team is installed at a time | No button or typed sequence showed two teams Installed. | passed |
 <!-- /ql:proof -->
@@ -51,7 +51,7 @@ Passed after 1 judge run.
 
 <!-- ql:open-items -->
 - **Found while checking:** The 390 pixel width was not checked, and the page is desktop only by the Plan.
-- **Only you can confirm:** The look fits kirokit.
+- **Only you can confirm:** The look fits kirokit. · confirmed · 17 Oct, 22:40
 <!-- /ql:open-items -->
 
 ## Quality pass

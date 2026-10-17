@@ -21,6 +21,10 @@ branch: ql/desktop-app-sidebar-layout
 base: 9a919bfb8f018ce028906f5ab1e6a2677bf588b3
 base_ref: main
 judge_runs: 0
+shipped: null
+commits: null
+touched: null
+slices: null
 ---
 
 # Desktop app sidebar layout

@@ -39,7 +39,7 @@ sidebar-layout.html
 ## Built, slice by slice
 
 <!-- ql:slices -->
-1 slice · 3 tasks · 2 commits · 0 files · +0 −0
+1 slice · 3 tasks · 3 commits · 0 files · +0 −0
 
 **Slice 1 · A complete clickable kirokit window with sidebar, terminal and one-team setup** · T1, T2, T3 · no files
 <!-- /ql:slices -->
@@ -53,7 +53,7 @@ sidebar-layout.html
 - **4. A non-engineer can click through setting up a team.** Scenario 2: Set up a team through the prerequisites check, after slice 1 · passed
 - **5. Engineers get a full terminal docked at the bottom.** Scenario 2: Set up a team through the prerequisites check, after slice 1 · Scenario 3: Only one team is installed at a time, after slice 1 · passed
 - **6. The mockup shows kirokit's real teams, agents and versions.** Scenario 1: Open the window, visit all five pages and collapse the sidebar, after slice 1 · passed
-- **7. The mockup reads well in light and dark mode.** Only you can confirm: the look fits kirokit · waits for your confirmation
+- **7. The mockup reads well in light and dark mode.** Only you can confirm: the look fits kirokit · confirmed by you: Confirmed in the App
 - **8. kirokit's code and behaviour stay unchanged.** Scenario 5: Nothing outside this task changes, after slice 1 · passed
 - **9. Only one team is installed at a time.** Scenario 3: Only one team is installed at a time, after slice 1 · passed
 <!-- /ql:proof -->
@@ -124,11 +124,11 @@ None: the build passed its checks.
 ## Settled with you
 
 <!-- ql:review-items -->
-Nothing was left for you to settle.
+- The look fits kirokit: confirmed · 17 Oct, 22:40
 <!-- /ql:review-items -->
 
 ## Ship
 
 <!-- ql:ship -->
-Not shipped yet. Branch `ql/desktop-app-sidebar-layout`.
+Approved · 17 Oct, 22:40. Branch `ql/desktop-app-sidebar-layout`.
 <!-- /ql:ship -->
