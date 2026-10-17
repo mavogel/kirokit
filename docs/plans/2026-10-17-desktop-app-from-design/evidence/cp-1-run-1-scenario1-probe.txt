@@ -1,0 +1,17 @@
+$ KIROKIT_REPO unset, from / : render platform-team
+kirokit render: platform-team: manifest: read teams/platform-team/manifest.yaml: open teams/platform-team/manifest.yaml: no such file or directory
+exit=1
+$ KIROKIT_REPO set, from /: render platform-team
+rendered platform-team -> /tmp/ql-kk-s1/out3
+exit=0
+$ boundary: install nonexistent team
+uninstalled data-team from /tmp/ql-kk-s1/home
+kirokit install: manifest: read /Users/mavogel/Developer/projects/kiro-cli-kit/teams/no-such-team/manifest.yaml: open /Users/mavogel/Developer/projects/kiro-cli-kit/teams/no-such-team/manifest.yaml: no such file or directory
+exit=1
+$ boundary: install empty team name
+kirokit install: manifest: read /Users/mavogel/Developer/projects/kiro-cli-kit/teams/manifest.yaml: open /Users/mavogel/Developer/projects/kiro-cli-kit/teams/manifest.yaml: no such file or directory
+exit=1
+$ installed after boundary
+$ KIROKIT_REPO bogus
+kirokit render: platform-team: manifest: read /nonexistent/teams/platform-team/manifest.yaml: open /nonexistent/teams/platform-team/manifest.yaml: no such file or directory
+exit=1
