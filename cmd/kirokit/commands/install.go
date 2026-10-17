@@ -27,14 +27,18 @@ func newInstallCmd() *cobra.Command {
 				return fmt.Errorf("kirokit install: %w", err)
 			}
 
-			if err := uninstallOthers(cmd.OutOrStdout(), kiroHome, team); err != nil {
-				return fmt.Errorf("kirokit install: %w", err)
-			}
-
 			roots := install.Roots{
 				TeamsRoot:       repoPath(teamsRoot),
 				GlobalRoot:      repoPath(globalRoot),
 				EnvVersionsPath: repoPath(envVersionsPath),
+			}
+			// A team that cannot render must not cost the machine its installed team.
+			if err := install.Check(roots, team, kiroHome); err != nil {
+				return fmt.Errorf("kirokit install: %w", err)
+			}
+
+			if err := uninstallOthers(cmd.OutOrStdout(), kiroHome, team); err != nil {
+				return fmt.Errorf("kirokit install: %w", err)
 			}
 			if err := install.Install(roots, team, kiroHome, kb); err != nil {
 				return fmt.Errorf("kirokit install: %w", err)

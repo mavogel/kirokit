@@ -90,6 +90,27 @@ func TestInstall_ReplacesTheInstalledTeamAndSaysSo(t *testing.T) {
 	}
 }
 
+func TestInstall_UnknownTeamKeepsTheInstalledTeam(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("KIRO_HOME", home)
+	t.Setenv("KIROKIT_REPO", thisRepo(t))
+	chdir(t, t.TempDir())
+	if _, err := runRoot(t, "install", "data-team"); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := runRoot(t, "install", "no-such-team")
+	if err == nil {
+		t.Fatal("install of an unknown team succeeded")
+	}
+	if strings.Contains(got, "uninstalled") {
+		t.Errorf("output = %q, want no uninstall line", got)
+	}
+	if recs := installedRecords(t, home); !reflect.DeepEqual(recs, []string{"data-team.json"}) {
+		t.Errorf("records = %v, want data-team.json kept", recs)
+	}
+}
+
 func TestInstall_FailingUninstallPrintsNoInstalledLine(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("KIRO_HOME", home)

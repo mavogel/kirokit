@@ -54,6 +54,18 @@ func ResolveKiroHome() (string, error) {
 	return filepath.Join(home, ".kiro"), nil
 }
 
+// Check renders team into a scratch folder and writes nothing to kiroHome, so
+// a caller can learn that the team cannot be installed (unknown team, broken
+// template) before it removes the team currently installed.
+func Check(roots Roots, team, kiroHome string) error {
+	scratch, err := os.MkdirTemp("", "kirokit-check-*")
+	if err != nil {
+		return fmt.Errorf("install: %w", err)
+	}
+	defer func() { _ = os.RemoveAll(scratch) }()
+	return render.RenderTeam(roots.TeamsRoot, team, roots.GlobalRoot, roots.EnvVersionsPath, filepath.Join(scratch, "rendered"), kiroHome)
+}
+
 // Install renders team with KiroHome=kiroHome and copies the rendered
 // output plus each agent's SOPS secrets file into kiroHome, then writes an
 // install manifest recording every path it wrote. When kb is non-nil, it

@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 14 min so far.
+5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 16 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -42,6 +42,10 @@
 - [PASS] scenario 1 step 8 (QualityLayer) · 445c884 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit sync --latest-tag --repo /tmp/ql-kk-s1/clone` · exit 0 · as expected
 - [PASS] scenario 1 step 9 (QualityLayer) · 445c884 · `/tmp/ql-kk-s1/kirokit sync --kb-agent x` · exit 1 · as expected
 - [PASS] scenario 1 step 10 (QualityLayer) · 445c884 · `go test ./...` · exit 0 · as expected
+- slice 1 · 2357174 · `go build ./...` · exit 0 · 0.4s
+- slice 1 · 2357174 · `go vet ./...` · exit 0 · 0.2s
+- slice 1 · 2357174 · `go test ./...` · exit 0 · 8.6s
+- slice 1 · 2357174 · `golangci-lint run` · exit 0 · 0.6s
 
 ## Decided while building
 
@@ -55,15 +59,21 @@
 ### Checkpoint after slice 1 · run 1
 
 **Runner:** fresh helper
+**Revision:** 22d8da6b26dc7eb0792ca5cc2267da3a7a6e0dca1f88467fa7494a51e4ff7b6d
 
 - [PASS] scenario 1: steps 1-10 were run by QualityLayer and recorded PASS (cited, not rerun); I additionally confirmed the built binary carries the new code: `render` from `/` fails without `KIROKIT_REPO` and succeeds with it — `evidence/cp-1-run-1-scenario1-probe.txt`
 - [FAIL] boundary: `install no-such-team` while `data-team` was installed printed `uninstalled data-team from /tmp/ql-kk-s1/home`, then failed with `kirokit install: manifest: read .../teams/no-such-team/manifest.yaml: ... no such file or directory` (exit 1); `.kirokit-installed` was left empty, so a mistyped team name leaves the machine with no team installed — `evidence/cp-1-run-1-scenario1-probe.txt`
 
 **Result:** fail
 
+### Checkpoint 1 · run 1 · counted toward the stop
+
+It failed in the program: failure 1 of the 4 after which the checkpoint stays open and the build goes on.
+
 ## Deviations
 
 - T4 (amended): Git calls in tests and skills fetch now ignore the commit tool's repository variables, so two more files change; nothing you approved changes.
+- T2 (found by checkpoint 1): installing a mistyped team name removed the installed team first and then failed, so install now checks the new team renders before removing anything; nothing you approved changes.
 - T5 (amended): The scheduled-sync setup script gets a header comment about one team per machine; nothing you approved changes.
 
 ## Plan amended
