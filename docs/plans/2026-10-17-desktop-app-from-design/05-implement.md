@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 19 min so far.
+5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 20 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -70,6 +70,16 @@
 - [PASS] scenario 1 step 8 (QualityLayer) · 60fb185 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit sync --latest-tag --repo /tmp/ql-kk-s1/clone` · exit 0 · as expected
 - [PASS] scenario 1 step 9 (QualityLayer) · 60fb185 · `/tmp/ql-kk-s1/kirokit sync --kb-agent x` · exit 1 · as expected
 - [PASS] scenario 1 step 10 (QualityLayer) · 60fb185 · `go test ./...` · exit 0 · as expected
+- [PASS] scenario 1 step 1 (QualityLayer) · f2ee3d4 · `rm -rf /tmp/ql-kk-s1 && mkdir -p /tmp/ql-kk-s1/home && go build -o /tmp/ql-kk-s1/kirokit ./cmd/kirokit` · exit 0 · as expected
+- [PASS] scenario 1 step 2 (QualityLayer) · f2ee3d4 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install platform-team` · exit 0 · printed `installed platform-team into /tmp/ql-kk-s1/home` as expected
+- [PASS] scenario 1 step 3 (QualityLayer) · f2ee3d4 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install data-team` · exit 0 · printed `uninstalled platform-team from /tmp/ql-kk-s1/home` as expected
+- [PASS] scenario 1 step 4 (QualityLayer) · f2ee3d4 · `ls /tmp/ql-kk-s1/home/.kirokit-installed` · exit 0 · printed `data-team.json` as expected
+- [PASS] scenario 1 step 5 (QualityLayer) · f2ee3d4 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install data-team` · exit 0 · printed `installed data-team into /tmp/ql-kk-s1/home` as expected
+- [PASS] scenario 1 step 6 (QualityLayer) · f2ee3d4 · `cd / && env KIROKIT_REPO=/Users/mavogel/Developer/projects/kiro-cli-kit /tmp/ql-kk-s1/kirokit render platform-team --out /tmp/ql-kk-s1/out` · exit 0 · printed `rendered platform-team -> /tmp/ql-kk-s1/out` as expected
+- [PASS] scenario 1 step 7 (QualityLayer) · f2ee3d4 · `git clone -q /Users/mavogel/Developer/projects/kiro-cli-kit /tmp/ql-kk-s1/clone` · exit 0 · as expected
+- [PASS] scenario 1 step 8 (QualityLayer) · f2ee3d4 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit sync --latest-tag --repo /tmp/ql-kk-s1/clone` · exit 0 · as expected
+- [PASS] scenario 1 step 9 (QualityLayer) · f2ee3d4 · `/tmp/ql-kk-s1/kirokit sync --kb-agent x` · exit 1 · as expected
+- [PASS] scenario 1 step 10 (QualityLayer) · f2ee3d4 · `go test ./...` · exit 0 · as expected
 
 ## Decided while building
 
@@ -113,12 +123,37 @@ It failed in the program: failure 2 of the 4 after which the checkpoint stays op
 ### Checkpoint after slice 1 · run 3
 
 **Runner:** fresh helper
+**Revision:** 723e600bb3543944a72cc02279a955bc157cd859d35148320b1deae7c4f82ac9
 
 - [PASS] scenario 1: steps 1-10 were run by QualityLayer and recorded PASS; not re-run. Extra probes below also passed — `evidence/cp-1-run-3-boundary.txt`
 - [MISSING] App picture: `desktop/` does not exist in this checkout (slice 1 is CLI-only), so no running App could be captured; scenario 1 has no App steps.
 - [PASS] boundary: with platform-team installed, `install nope-team` and `sync nope-team` both exited 1 with a missing-manifest error and left `platform-team.json` installed; `sync platform-team` with an unreachable remote (fetch fails) and with a diverged clone (`git pull --ff-only` fails) also exited 1 and left the team installed with its agents intact.
 
 **Result:** fail
+
+### Checkpoint 1 · run 3 · counted toward the stop
+
+It failed in the program: failure 3 of the 4 after which the checkpoint stays open and the build goes on.
+
+### Checkpoint after slice 1 · run 4
+
+**Runner:** fresh helper
+
+- [PASS] scenario 1: QualityLayer's recorded PASS for steps 1-10 stands (not rerun). I re-ran the key steps 2, 3, 4 and 5 against a freshly built binary and saw `installed platform-team`, then `uninstalled platform-team` plus `installed data-team`, only `data-team.json` listed, and a repeat install of data-team succeeding — `evidence/cp-1-run-4-terminal-install-replace.txt`
+- [PASS] boundary: `install no-such-team` exited 1 with `kirokit install: manifest: read teams/no-such-team/manifest.yaml: ... no such file or directory`, and `.kirokit-installed` still held only `data-team.json`.
+
+**Verdict:** The CLI keeps exactly one team installed: installing a second team removes the first, an unknown team fails with an error and leaves the installed team untouched, and re-installing the same team works. Slice 1 is CLI-only and has no App screens, so no App was seen or run.
+
+**Pictures:**
+
+- `evidence/cp-1-run-4-terminal-install-replace.png` — Terminal output of the CLI (not the App), rendered to PNG from the captured output of the commands (text copy in `evidence/cp-1-run-4-terminal-install-replace.txt`): platform-team replaced by data-team, the unknown-team error with exit 1, and data-team still the only installed team.
+
+**Try it:**
+
+1. Install one team, then another, in a scratch Kiro home, then list the installed marker; from the repository root: `env KIRO_HOME=/tmp/kk-try go run ./cmd/kirokit install platform-team && env KIRO_HOME=/tmp/kk-try go run ./cmd/kirokit install data-team && ls /tmp/kk-try/.kirokit-installed`
+2. Look for the `uninstalled platform-team` line and a single `data-team.json`; then run `env KIRO_HOME=/tmp/kk-try go run ./cmd/kirokit install no-such-team` and check it errors and `data-team.json` is still there.
+
+**Result:** pass
 
 ## Deviations
 
