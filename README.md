@@ -72,7 +72,7 @@ testdata/golden/<team>/context.json     # committed golden template-context snap
 
 - Template sources use a double extension `<ext>.tmpl`; the renderer globs `**/*.tmpl` and strips `.tmpl`.
 - Agent source `agents/<agent>/agent.json.tmpl` renders to flat `agents/<agent>.json` (Kiro CLI v3 layout).
-- Paths `teams/`, `global/steerings/`, `env/mcp-versions.yaml` resolve against the cwd; no repo-root discovery. Run from the repository root.
+- Paths `teams/`, `global/steerings/`, `env/mcp-versions.yaml` and `testdata/golden/` resolve against the cwd, or against `KIROKIT_REPO` when that environment variable is set (a relative value is made absolute once at start; empty means unset). With `KIROKIT_REPO=<checkout>` every command (`render`, `test`, `update`, `install`, `sync`, `onboard`, `skills fetch`) runs from any folder. There is no repo-root discovery.
 - Example teams: `platform-team` (`devops`, `platformdev`; SOPS MCP servers; opted into `security-baseline`) and `data-team` (`javadev` with SOPS Snowflake MCP, `godev` with plain MCP; no global steerings). Copy one or use `kirokit onboard`; duplication between teams is expected.
 - Prompts are slash commands: Kiro v3 lists every file in `$KIRO_HOME/prompts/` (`@name` on other engines) even if no agent uses it as `prompt`; `$ARGUMENTS` / `${1}` are filled from user input. Example: `teams/platform-team/prompts/create-steering.md.tmpl` becomes `/create-steering [focus]`.
 
@@ -198,6 +198,7 @@ kirokit uninstall <team>
 ```
 
 - `install` renders with the real `$KIRO_HOME` baked in (`KIRO_HOME` env var, else Kiro's default `~/.kiro`) and copies the rendered tree plus each agent's encrypted secrets file there.
+- A Kiro home holds one team. `install <team>` first uninstalls every other installed team and prints `uninstalled <other> from <home>` for each, then `installed <team> into <home>`. Reinstalling the installed team removes nothing. If an uninstall fails, nothing is installed.
 - `uninstall` removes exactly what the matching `install` wrote, tracked in `$KIRO_HOME/.kirokit-installed/<team>.json`; other teams' files and Kiro-managed files are untouched.
 - `--kb-*` flags (all or none) attach a local `knowledgeBase` resource to one installed agent: `--kb-source` local folder, `--kb-mount` symlink location (never copied), `--kb-agent` agent whose `resources` gets the entry. Entry: name `<agent>-kb`, `indexType: "best"`, `include: ["**/*.md"]`, `autoUpdate: true`. `include` works in `kiro-cli` but is not yet in Kiro's agent-config docs, and Kiro issues report agent-config knowledge bases are not always indexed automatically; check `/knowledge show`. `uninstall` removes the symlink, never the source folder.
 
@@ -225,11 +226,16 @@ Each release publishes a Homebrew cask to [mavogel/homebrew-tap](https://github.
 ```bash
 kirokit sync <team> --repo ~/.kirokit-config
 kirokit sync <team> --repo ~/.kirokit-config --latest-tag
+kirokit sync --repo ~/.kirokit-config --latest-tag      # no team: update the checkout only
 ```
 
 - `sync` runs `git fetch --tags`, then a fast-forward `git pull` of the checked-out branch (with `--latest-tag`: checkout of the newest `v*` tag, so only releases reach the machine), then the same install as `kirokit install`.
 - Unlike `install`, it removes files the previous install wrote that the new version no longer ships, plus directories left empty.
-- `--repo` defaults to the cwd. `--kb-*` flags behave as for `install`; without them a previously attached knowledge base is dropped, so pass them on every run.
+- Like `install`, `sync <team>` first uninstalls every other installed team (one `uninstalled <other> from <home>` line each).
+- Without a team, `sync` only updates the checkout and installs nothing: it prints `updated <before> -> <after>` when HEAD moved, then `checked out <tag or branch> at <commit>`. It needs no Kiro home, and the `--kb-*` flags are an error (`kirokit sync: --kb-agent needs a team`).
+- `--repo` defaults to `$KIROKIT_REPO`, else the cwd; an explicit `--repo` wins over `KIROKIT_REPO`. `--kb-*` flags behave as for `install`; without them a previously attached knowledge base is dropped, so pass them on every run.
+
+**Migration:** one machine now holds one team. A second scheduled sync of a different team (a second run of `scripts/kirokit-sync-setup.sh --team <other>`) replaces the first team on every run instead of installing beside it, so keep one scheduled sync per machine.
 
 `scripts/kirokit-sync-setup.sh` clones the config repo, runs a first sync and registers a launchd agent (macOS) or systemd user timer (Linux):
 

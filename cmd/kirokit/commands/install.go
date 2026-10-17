@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/mavogel/kirokit/internal/install"
 	"github.com/spf13/cobra"
@@ -26,10 +27,14 @@ func newInstallCmd() *cobra.Command {
 				return fmt.Errorf("kirokit install: %w", err)
 			}
 
+			if err := uninstallOthers(cmd.OutOrStdout(), kiroHome, team); err != nil {
+				return fmt.Errorf("kirokit install: %w", err)
+			}
+
 			roots := install.Roots{
-				TeamsRoot:       teamsRoot,
-				GlobalRoot:      globalRoot,
-				EnvVersionsPath: envVersionsPath,
+				TeamsRoot:       repoPath(teamsRoot),
+				GlobalRoot:      repoPath(globalRoot),
+				EnvVersionsPath: repoPath(envVersionsPath),
 			}
 			if err := install.Install(roots, team, kiroHome, kb); err != nil {
 				return fmt.Errorf("kirokit install: %w", err)
@@ -42,6 +47,16 @@ func newInstallCmd() *cobra.Command {
 	cmd.Flags().StringVar(&kbSource, "kb-source", "", "local folder to expose as a knowledgeBase resource")
 	cmd.Flags().StringVar(&kbMount, "kb-mount", "", "path where --kb-source is symlinked for the agent to reference")
 	return cmd
+}
+
+// uninstallOthers removes every installed team except keep, printing one
+// line per removal, so a Kiro home holds one team.
+func uninstallOthers(out io.Writer, kiroHome, keep string) error {
+	removed, err := install.UninstallOthers(kiroHome, keep)
+	for _, other := range removed {
+		_, _ = fmt.Fprintf(out, "uninstalled %s from %s\n", other, kiroHome)
+	}
+	return err
 }
 
 // parseKnowledgeBaseFlags validates that --kb-agent/--kb-source/--kb-mount
