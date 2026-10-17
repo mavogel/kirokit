@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -24,6 +25,8 @@ type App struct {
 	emitter func(event string, data any)
 	cat     catalogCache
 	poller  *installPoller
+	shell   shellHost
+	runner  runHost
 }
 
 // EnvStatus describes the environment the app runs commands in.
@@ -80,6 +83,8 @@ func (a *App) shutdown(context.Context) {
 	if p != nil {
 		p.Stop()
 	}
+	a.shell.close()
+	a.runner.close()
 }
 
 func (a *App) emit(event string, data any) {
@@ -107,10 +112,11 @@ func (a *App) State() AppState {
 	a.mu.Lock()
 	env, ready := a.env, a.envReady
 	a.mu.Unlock()
+	note := strings.TrimSpace(env.Note + " " + shellNote(a.shellPath()))
 	return AppState{
 		Settings: a.loadSettings(),
 		Cloned:   err == nil,
-		Env:      EnvStatus{DefaultKiroHome: defaultKiroHome(env, ready), Ready: ready, Note: env.Note},
+		Env:      EnvStatus{DefaultKiroHome: defaultKiroHome(env, ready), Ready: ready, Note: note},
 	}
 }
 

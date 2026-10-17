@@ -19,6 +19,17 @@ export const installs = () => app().Installs();
 // Captures the login environment afresh each time it is called.
 export const prerequisites = (team) => app().Prerequisites(team);
 
+// Runs kirokit with args in the kirokit tab and resolves to the run id.
+export const run = (args) => app().Run(args);
+
+// Keystrokes for the command running in the kirokit tab.
+export const runWrite = (id, data) => app().RunWrite(id, data);
+
+// Keystrokes and the dock size for the zsh tab.
+export const shellWrite = (data) => app().ShellWrite(data);
+
+export const shellResize = (cols, rows) => app().ShellResize(cols, rows);
+
 // Subscribes to a Go event; returns the function that unsubscribes.
 export function on(event, handler) {
   const rt = window.runtime;

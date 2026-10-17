@@ -19,6 +19,10 @@
   --warn: #854d0e;
   --warn-soft: #fef3c7;
   --focus: #6d28d9;
+  --term-bg: #15111f;
+  --term-text: #e6e1f5;
+  --term-muted: #a59dbd;
+  --term-prompt: #b9a4fb;
   --radius: 8px;
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -28,6 +32,7 @@
     color-scheme: dark;
     --bg: #0d0b13; --window: #17131f; --sidebar: #120f1a; --surface: #1d1828; --surface-2: #221c30;
     --text: #ece9f6; --muted: #aaa3c2; --border: #2e2843; --border-strong: #463e60; --control-border: #776e98;
+    --term-bg: #0b0911;
     --accent: #a78bfa; --accent-text: #14101f; --accent-soft: #2b2247; --accent-ink: #c4b5fd;
     --ok: #4ade80; --ok-soft: #12301f; --warn: #fbbf24; --warn-soft: #33280c; --focus: #c4b5fd;
   }
@@ -108,5 +113,22 @@ td.num { font-variant-numeric: tabular-nums; }
 .field .error { color: var(--warn); font-size: 13px; }
 .status-line { margin-right: auto; align-self: center; color: var(--muted); font-size: 13px; }
 .actions .status-line { margin-right: 0; }
+
+/* Terminal dock */
+.terminal { display: grid; grid-template-rows: 6px 34px minmax(0, 1fr); min-height: 0; background: var(--term-bg); color: var(--term-text); border-top: 1px solid var(--control-border); }
+.resize { cursor: row-resize; background: transparent; }
+.resize:hover, .resize:focus-visible { background: var(--accent); outline: none; }
+.term-bar { display: flex; align-items: center; gap: 4px; padding: 0 8px 0 14px; font: 600 11px/1 var(--font); letter-spacing: .06em; color: var(--term-muted); }
+.term-tabs { display: flex; gap: 16px; }
+.term-tabs [role="tab"] { padding: 6px 0; border: 0; border-bottom: 1px solid transparent; background: transparent; color: var(--term-muted); cursor: pointer; font: inherit; letter-spacing: inherit; }
+.term-tabs [role="tab"][aria-selected="true"] { color: var(--term-text); border-bottom-color: var(--term-prompt); }
+.term-bar .grow { flex: 1; }
+.icon-btn { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--term-muted); cursor: pointer; }
+.icon-btn:hover { background: rgb(255 255 255 / .08); color: var(--term-text); }
+.icon-btn svg { width: 16px; height: 16px; }
+.term-bodies { position: relative; min-height: 0; overflow: hidden; }
+.term-body { position: absolute; inset: 4px 0 6px 14px; }
+.term-toggle { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 14px; border: 0; border-top: 1px solid var(--border); background: var(--sidebar); color: var(--muted); cursor: pointer; font-size: 12px; text-align: left; }
+.term-toggle kbd { font: 12px var(--mono); }
 
 @media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } }

@@ -3,6 +3,7 @@ module github.com/mavogel/kirokit/desktop
 go 1.27
 
 require (
+	github.com/creack/pty v1.1.24
 	github.com/mavogel/kirokit v0.0.0-00010101000000-000000000000
 	github.com/wailsapp/wails/v2 v2.14.0
 )

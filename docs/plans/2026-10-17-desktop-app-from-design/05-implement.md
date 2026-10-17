@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-12 of 24 tasks done · 3 of 7 slices finished · started 18 Oct, 00:00 · 40 min so far.
+16 of 24 tasks done · 4 of 7 slices finished · started 18 Oct, 00:00 · 50 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -14,8 +14,8 @@
 | 1 | One team stays installed and kirokit runs from any folder | `KIROKIT_REPO` roots every repository path, `install` and `sync` uninstall any other installed team first, and `sync` without a team only updates the checkout. | done |
 | 2 | The app opens with the design's shell and remembers its settings | A Wails window shows the logo, the sidebar with five sections in light and dark mode, the collapsing icon rail, and a Settings page that saves. | done |
 | 3 | The pages show the repository's real data | Teams, Agents, Install and Skills and MCP versions read the app's own copy of the repository, and the screens redraw when install records change. | done |
-| 4 | A real terminal docks at the bottom | The dock opens, closes and resizes like VS Code's and holds two tabs: your login shell and the kirokit tab for button commands. | next |
-| 5 | A person installs a team with buttons only | First launch asks for the repository's address and clones it, the setup dialog checks the prerequisites, and Install, Sync, Uninstall and Update run their `kirokit` commands in the terminal. | after 4 |
+| 4 | A real terminal docks at the bottom | The dock opens, closes and resizes like VS Code's and holds two tabs: your login shell and the kirokit tab for button commands. | done |
+| 5 | A person installs a team with buttons only | First launch asks for the repository's address and clones it, the setup dialog checks the prerequisites, and Install, Sync, Uninstall and Update run their `kirokit` commands in the terminal. | next |
 | 6 | One command builds the macOS app and CI builds it too | `task desktop:build` produces a universal `kirokit.app` with the CLI inside, and a new workflow runs the app's tests and build on macOS. | after 5 |
 | 7 | Each release attaches the app and a Homebrew cask | A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_darwin_universal.zip` and pushes the `kirokit-desktop` cask. | after 6 |
 <!-- /ql:slices -->
@@ -91,6 +91,12 @@
 - T9 · 492219a · `cd desktop && go test -run 'Capture|Prereq' ./...` · exit 0 · 0.4s
 - T12 · 492219a · `cd desktop/frontend && node --test src/ && npm run build` · exit 0 · 0.5s
 - slice 3 · 492219a · `task desktop:test` · exit 0 · 3.5s
+- T13 · 421cad0 · `cd desktop/frontend && node --test src/ && npm run build` · exit 0 · 0.9s
+- T14 · 421cad0 · `cd desktop && go test -race ./terminal/` · exit 0 · 1.5s
+- T15 · 421cad0 · `cd desktop && go test -race -run Shell ./...` · exit 0 · 1.9s
+- T16 · 421cad0 · `cd desktop && go test -race -run Runner ./...` · exit 0 · 2.6s
+- T13 · 421cad0 · `cd desktop/frontend && node --test src/ && npm run build` · exit 0 · 0.9s
+- slice 4 · 421cad0 · `task desktop:test` · exit 0 · 5.4s
 
 ## Decided while building
 
@@ -102,6 +108,7 @@
 - The Plan · App bundle id and macOS 13 minimum live in two plist files, and the dev server serves the logo; nothing you approved changes.
 - The Plan · Startup hooks, the module requirements, a Settings note, shared page helpers and ignored generated files are needed by the data slice; nothing you approved changes.
 - Slice 3 · A placeholder file in the ignored build folder lets a clean checkout compile the app; nothing you approved changes.
+- Slice 4 · The build keeps the dist placeholder and the dock markup lives in the page; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checkpoints
@@ -204,6 +211,7 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 - T6, T8 (amended): App bundle id and macOS 13 minimum live in two plist files, and the dev server serves the logo; nothing you approved changes.
 - T9, T12 (amended): Startup hooks, the module requirements, a Settings note, shared page helpers and ignored generated files are needed by the data slice; nothing you approved changes.
 - T9 (amended): A placeholder file in the ignored build folder lets a clean checkout compile the app; nothing you approved changes.
+- T13 (amended): The build keeps the dist placeholder and the dock markup lives in the page; nothing you approved changes.
 
 ## Plan amended
 
@@ -234,6 +242,12 @@ Amended by the agent on 2026-10-17; changed 04-outline.md.
 ### T9 · amended
 
 A placeholder file in the ignored build folder lets a clean checkout compile the app; nothing you approved changes.
+
+Amended by the agent on 2026-10-17; changed 04-outline.md.
+
+### T13 · amended
+
+The build keeps the dist placeholder and the dock markup lives in the page; nothing you approved changes.
 
 Amended by the agent on 2026-10-17; changed 04-outline.md.
 

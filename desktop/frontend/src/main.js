@@ -7,6 +7,8 @@ import { initTeams } from './pages/teams.js';
 import { initAgents } from './pages/agents.js';
 import { initInstall } from './pages/install.js';
 import { initSkills } from './pages/skills.js';
+import { createDock } from './tabs.js';
+import { initDock } from './terminal.js';
 
 document.getElementById('logo').src = logoUrl;
 
@@ -74,6 +76,7 @@ async function loadInstalls() {
   draw();
 }
 
+initDock(createDock());
 initSettings().load();
 loadCatalog().then(loadInstalls);
 api.on('installs:changed', (records) => {

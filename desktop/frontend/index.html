@@ -71,6 +71,24 @@
         <div class="actions"><button class="btn primary" id="save">Save</button><span class="status-line" id="save-status" role="status"></span></div>
       </section>
     </main>
+
+    <button class="term-toggle" id="term-open" aria-controls="terminal">Show terminal <kbd>⌃`</kbd></button>
+    <section class="terminal" id="terminal" aria-label="Terminal" hidden>
+      <div class="resize" id="resize" role="separator" aria-orientation="horizontal" aria-label="Resize terminal" aria-valuenow="220" aria-valuemin="120" aria-valuemax="480" tabindex="0"></div>
+      <div class="term-bar">
+        <div class="term-tabs" role="tablist" aria-label="Terminals" id="term-tabs">
+          <button role="tab" id="tab-kirokit" aria-selected="true" aria-controls="term-kirokit" tabindex="0">kirokit</button>
+          <button role="tab" id="tab-shell" aria-selected="false" aria-controls="term-shell" tabindex="-1">zsh</button>
+        </div>
+        <span class="grow"></span>
+        <button class="icon-btn" id="term-clear" aria-label="Clear terminal" title="Clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M10 11v6M14 11v6M7 7l1 12h8l1-12M10 7V4h4v3"/></svg></button>
+        <button class="icon-btn" id="term-close" aria-label="Hide terminal" title="Hide (⌃`)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
+      <div class="term-bodies" id="term-bodies">
+        <div class="term-body" id="term-kirokit" role="tabpanel" aria-labelledby="tab-kirokit"></div>
+        <div class="term-body" id="term-shell" role="tabpanel" aria-labelledby="tab-shell" hidden></div>
+      </div>
+    </section>
   </div>
 </div>
 <script src="./src/main.js" type="module"></script>
