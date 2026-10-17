@@ -90,7 +90,7 @@ Clone(address):
  README.md                 ~ KIROKIT_REPO, team-less sync, one-team rule, migration note
 ```
 
-- [ ] T1 Every command reads its folders from `KIROKIT_REPO`
+- [x] T1 Every command reads its folders from `KIROKIT_REPO`
   - **Objective:** Add `repoPath` and use it everywhere the four root constants are read, so a command works from any folder.
   - **Design:** "Repository root resolution", "`KIROKIT_REPO` roots every repository path"
   - **Files:** `cmd/kirokit/commands/root.go`, `cmd/kirokit/commands/install.go`, `cmd/kirokit/commands/sync.go`, `cmd/kirokit/commands/test.go`, `cmd/kirokit/commands/update.go`, `cmd/kirokit/commands/render.go`, `cmd/kirokit/commands/onboard.go`, `cmd/kirokit/commands/skills.go`, `cmd/kirokit/commands/root_test.go`
@@ -102,7 +102,7 @@ Clone(address):
     - `sync` with an explicit `--repo` roots every path at it, even when `KIROKIT_REPO` is set.
     - verify: `go test ./cmd/kirokit/commands/ ./internal/golden/`
 
-- [ ] T2 The install library lists installed teams and removes the others
+- [x] T2 The install library lists installed teams and removes the others
   - **Objective:** Add `Installed` and `UninstallOthers` beside the install library without changing `Install` or `Uninstall`.
   - **Design:** "kirokit keeps one team installed and prints each removal"
   - **Files:** `internal/install/installed.go`, `internal/install/installed_test.go`
@@ -114,7 +114,7 @@ Clone(address):
     - A failed uninstall returns its error and stops.
     - verify: `go test ./internal/install/`
 
-- [ ] T3 `kirokit install` replaces the installed team and says so
+- [x] T3 `kirokit install` replaces the installed team and says so
   - **Objective:** Before installing, remove every other installed team and print one `uninstalled` line each, then the existing `installed` line.
   - **Design:** "kirokit keeps one team installed and prints each removal"
   - **Files:** `cmd/kirokit/commands/install.go`, `cmd/kirokit/commands/install_test.go`
@@ -125,10 +125,10 @@ Clone(address):
     - A failing uninstall prints no `installed` line and returns `kirokit install: …`.
     - verify: `go test ./cmd/kirokit/commands/ -run Install`
 
-- [ ] T4 `kirokit sync` removes other teams and works without a team
+- [x] T4 `kirokit sync` removes other teams and works without a team
   - **Objective:** `sync <team>` applies the same removals first; `sync` without a team only updates the checkout.
   - **Design:** "kirokit sync without a team updates the checkout only"
-  - **Files:** `cmd/kirokit/commands/sync.go`, `cmd/kirokit/commands/sync_test.go`
+  - **Files:** `cmd/kirokit/commands/sync.go`, `cmd/kirokit/commands/sync_test.go`, `internal/externalskills/fetch.go`, `internal/externalskills/fetch_test.go`
   - **Test first:** In `sync_test.go`, build a temp origin repository with a `v*` tag and run team-less sync in a clone; it fails because `sync` demands exactly one argument.
   - **Definition of done:**
     - Without a team and with `--latest-tag`, it prints `updated <before> -> <after>` when HEAD moved, then `checked out <tag> at <after>`, and installs nothing.
@@ -137,10 +137,10 @@ Clone(address):
     - `Use`, `Long` and the `--latest-tag` help describe the team-less form.
     - verify: `go test ./cmd/kirokit/commands/ -run Sync`
 
-- [ ] T5 The README describes the new CLI behaviour
+- [x] T5 The README describes the new CLI behaviour
   - **Objective:** Document `KIROKIT_REPO`, team-less sync and the one-team rule, with a migration note.
   - **Design:** none
-  - **Files:** `README.md`, `scripts/kirokit-sync-setup.sh:1`
+  - **Files:** `README.md`, `scripts/kirokit-sync-setup.sh:1`, `scripts/kirokit-sync-setup.sh`
   - **Test first:** **Trivial:** documentation only; `go test ./...` and a read of the rendered sections cover it.
   - **Definition of done:**
     - The Install / Uninstall section states that installing a team replaces the installed one.
@@ -167,21 +167,21 @@ A Wails window shows the logo, the sidebar with five sections in light and dark 
 +    └── src/ api.js, main.js, sidebar.js, sidebar.test.js, style.css, pages/settings.js
 ```
 
-- [ ] T6 A nested Wails module opens an empty window
-  - **Objective:** Create `desktop/` as its own Go module with a `replace` to the repository, a bound `App`, and the two Taskfile entries.
+- [x] T6 A nested Wails module opens an empty window
+  - **Objective:** Create the desktop folder as its own Go module with a `replace` to the repository, a bound `App`, and the two Taskfile entries.
   - **Design:** "The app's Go side binds one service and emits five events"
-  - **Files:** `desktop/go.mod`, `desktop/go.sum`, `desktop/main.go`, `desktop/app.go`, `desktop/app_test.go`, `desktop/wails.json`, `desktop/.gitignore`, `desktop/build/appicon.png`, `desktop/frontend/package.json`, `desktop/frontend/package-lock.json`, `desktop/frontend/index.html`, `desktop/frontend/vite.config.js`, `Taskfile.yml`
+  - **Files:** `desktop/go.mod`, `desktop/go.sum`, `desktop/main.go`, `desktop/app.go`, `desktop/app_test.go`, `desktop/wails.json`, `desktop/.gitignore`, `desktop/build/appicon.png`, `desktop/frontend/package.json`, `desktop/frontend/package-lock.json`, `desktop/frontend/index.html`, `desktop/frontend/vite.config.js`, `Taskfile.yml`, `desktop/build/darwin/Info.plist`, `desktop/build/darwin/Info.dev.plist`
   - **Test first:** In `app_test.go`, `TestState_Defaults` calls `NewApp().State()`; it fails because the module does not exist.
   - **Definition of done:**
     - `State()` returns empty settings, no clone and an env status field.
-    - Root `go build ./...` and `go test ./...` still ignore `desktop/`.
+    - Root `go build ./...` and `go test ./...` still ignore the desktop folder.
     - The module path is `github.com/mavogel/kirokit/desktop` with a `replace` to the repository root, so kirokit's internal packages import.
     - `wails.json` names the app `kirokit` with bundle id `io.github.mavogel.kirokit`; `build/appicon.png` is made from the project logo.
     - `task desktop:test` builds the frontend, runs `node --test src/`, then vets and tests the module, so CI runs the frontend tests too; `task desktop:dev` runs `wails dev` at the pinned v2.14.0.
     - `main.go` embeds `all:frontend/dist` and sets the minimum macOS to 13.
     - verify: `task desktop:test`
 
-- [ ] T7 The sidebar, rail and pages match the design
+- [x] T7 The sidebar, rail and pages match the design
   - **Objective:** Port the design's tokens, layout, five pages and shortcut handler into the Vite frontend, with light and dark themes.
   - **Design:** "The frontend reaches Go through one module"
   - **Files:** `assets/logo.svg`, `desktop/frontend/src/main.js`, `desktop/frontend/src/style.css`, `desktop/frontend/src/sidebar.js`, `desktop/frontend/src/sidebar.test.js`, `desktop/frontend/src/api.js`, `desktop/frontend/index.html`, `desktop/frontend/package.json`
@@ -194,7 +194,7 @@ A Wails window shows the logo, the sidebar with five sections in light and dark 
     - The logo in the sidebar is the project's logo asset.
     - verify: `cd desktop/frontend && node --test src/ && npm run build`
 
-- [ ] T8 Settings validates and remembers both values
+- [x] T8 Settings validates and remembers both values
   - **Objective:** Store `RepoURL` and `KiroHome` in `settings.json` and show them on the Settings page.
   - **Design:** "Data shapes the pages render"
   - **Files:** `desktop/settings.go`, `desktop/settings_test.go`, `desktop/app.go`, `desktop/frontend/src/pages/settings.js`, `desktop/frontend/src/main.js`
@@ -432,9 +432,9 @@ First launch asks for the repository's address and clones it, the setup dialog c
   - **Files:** `scripts/desktop-build.sh`, `Taskfile.yml`, `desktop/.gitignore`
   - **Test first:** **Trivial:** a build script has no unit seam; `task desktop:build` followed by `lipo -archs` on both binaries is the check.
   - **Definition of done:**
-    - `desktop/build/bin/kirokit.app/Contents/MacOS/kirokit` and `Contents/Resources/bin/kirokit` both report `x86_64 arm64`.
+    - The built app's main binary and its bundled CLI under Resources both report `x86_64 arm64`.
     - The bundled `kirokit version` prints the version, commit and date set by ldflags; the script takes `VERSION` from its environment, defaulting to `git describe`, and the release job passes the new tag.
-    - `task desktop:dev` builds the dev CLI at `desktop/build/dev-bin/kirokit` first.
+    - `task desktop:dev` builds the dev CLI into the app's dev-bin folder first.
     - verify: `task desktop:build`
 
 - [ ] T22 CI builds the app on macOS
@@ -484,7 +484,7 @@ A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_
   - **Definition of done:**
     - `release` runs on push only and exposes `release` and `tag` outputs; `desktop` needs it and runs on a released push or a manual dispatch.
     - On a push it builds at the new tag, runs `gh release upload`, and pushes the cask with the tap token and the message `kirokit-desktop <version>`; on a dispatch it only prints the cask.
-    - The README describes the desktop app, `brew install --cask mavogel/tap/kirokit-desktop` and the unsigned-app note; `AGENTS.md` names `desktop/` in its layout.
+    - The README describes the desktop app, `brew install --cask mavogel/tap/kirokit-desktop` and the unsigned-app note; `AGENTS.md` names the desktop folder in its layout.
     - verify: `ruby -ryaml -e 'YAML.load_file(".github/workflows/release.yaml")' && bash scripts/desktop-release_test.sh`
 
 **Validation:** automated: `ruby -ryaml -e 'YAML.load_file(".github/workflows/release.yaml")'` · `bash scripts/desktop-release_test.sh` · `go test ./...` · manual: the first real tagged release publishes the zip and the cask
