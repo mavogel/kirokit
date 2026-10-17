@@ -1,0 +1,8 @@
+# Spike: nested Go module imports kirokit-style internal packages (2026-10-17)
+layout: root/go.mod (example.com/root) + root/internal/x + root/desktop/go.mod (example.com/root/desktop, replace example.com/root => ../)
+$ cd desktop && go run .
+hi from internal
+nested exit=0
+$ cd root && go build ./... && go list ./...
+root build ok (nested excluded)
+example.com/root/internal/x
