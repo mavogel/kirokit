@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-24 of 24 tasks done · 7 of 7 slices finished · started 18 Oct, 00:00 · 1 h 10 min so far.
+24 of 24 tasks done · 7 of 7 slices finished · started 18 Oct, 00:00.
 <!-- /ql:summary -->
 
 ## Slices
@@ -114,6 +114,22 @@
 - slice 7 · f541fc8 · `ruby -ryaml -e 'YAML.load_file(".github/workflows/release.yaml")'` · exit 0 · 0.1s
 - slice 7 · f541fc8 · `bash scripts/desktop-release_test.sh` · exit 0 · 0.1s
 - slice 7 · f541fc8 · `go test ./...` · exit 0 · 3.7s
+- all · 72e379a · `go test ./...` · exit 0 · 0.5s
+- all · 72e379a · `go vet ./...` · exit 0 · 0.1s
+- all · 72e379a · `golangci-lint run` · exit 0 · 0.6s
+- all · 72e379a · `go build ./...` · exit 0 · 0.6s
+- all · 72e379a · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
+- all · 72e379a · `cd desktop/frontend && npm ci && npm run build` · exit 0 · 1.9s
+- all · 72e379a · `cd desktop && go vet ./... && go test ./...` · exit 0 · 6.4s
+- all · 72e379a · `task desktop:build` · exit 0 · 5.5s
+- all · 72e379a · `go test ./...` · reused: nothing changed since they passed
+- all · 72e379a · `go vet ./...` · reused: nothing changed since they passed
+- all · 72e379a · `golangci-lint run` · reused: nothing changed since they passed
+- all · 72e379a · `go build ./...` · reused: nothing changed since they passed
+- all · 72e379a · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since they passed
+- all · 72e379a · `cd desktop/frontend && npm ci && npm run build` · reused: nothing changed since they passed
+- all · 72e379a · `cd desktop && go vet ./... && go test ./...` · reused: nothing changed since they passed
+- all · 72e379a · `task desktop:build` · reused: nothing changed since they passed
 
 ## Decided while building
 

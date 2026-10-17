@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -59,6 +60,31 @@ func TestInstalled_MissingRecordsFolderIsEmpty(t *testing.T) {
 	}
 	if len(got) != 0 {
 		t.Errorf("Installed = %+v, want none", got)
+	}
+}
+
+func TestInstalled_CorruptRecordIsAnErrorNamingTheFile(t *testing.T) {
+	kiroHome := t.TempDir()
+	dir := filepath.Join(kiroHome, ".kirokit-installed")
+	mustWrite(t, filepath.Join(dir, "broken.json"), "{not json")
+
+	_, err := Installed(kiroHome)
+	if err == nil || !strings.Contains(err.Error(), "broken.json") {
+		t.Fatalf("Installed error = %v, want one naming broken.json", err)
+	}
+}
+
+func TestInstalled_IgnoresEntriesThatAreNotRecords(t *testing.T) {
+	kiroHome := t.TempDir()
+	dir := filepath.Join(kiroHome, ".kirokit-installed")
+	mustWrite(t, filepath.Join(dir, "notes.txt"), "not a record")
+	if err := os.MkdirAll(filepath.Join(dir, "folder.json"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := Installed(kiroHome)
+	if err != nil || len(got) != 0 {
+		t.Errorf("Installed = %+v, %v; want none and no error", got, err)
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/mavogel/kirokit/internal/externalskills"
 	"github.com/mavogel/kirokit/internal/install"
 	"github.com/spf13/cobra"
 )
@@ -143,29 +144,11 @@ func updateCheckout(latestTag bool) error {
 
 func gitOutput(args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
-	cmd.Env = withoutRepoGitEnv()
+	cmd.Env = externalskills.WithoutRepoGitEnv()
 	out, err := cmd.CombinedOutput()
 	text := strings.TrimSpace(string(out))
 	if err != nil {
 		return text, fmt.Errorf("git %s: %w: %s", strings.Join(args, " "), err, text)
 	}
 	return text, nil
-}
-
-// withoutRepoGitEnv drops the variables that redirect git to another repository
-// (GIT_DIR, GIT_WORK_TREE, GIT_INDEX_FILE, ...) so git operates on the working
-// directory's own repository. Other GIT_* settings are kept.
-func withoutRepoGitEnv() []string {
-	drop := []string{"GIT_DIR=", "GIT_WORK_TREE=", "GIT_INDEX_FILE=", "GIT_OBJECT_DIRECTORY=", "GIT_ALTERNATE_OBJECT_DIRECTORIES=", "GIT_COMMON_DIR=", "GIT_NAMESPACE=", "GIT_PREFIX="}
-	var env []string
-next:
-	for _, kv := range os.Environ() {
-		for _, d := range drop {
-			if strings.HasPrefix(kv, d) {
-				continue next
-			}
-		}
-		env = append(env, kv)
-	}
-	return env
 }

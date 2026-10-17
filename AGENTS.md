@@ -16,7 +16,7 @@ go test ./...    # includes every team's golden comparison
 ./kirokit test   # golden diff only (build first: task build)
 ./kirokit update [team]   # regenerate goldens after an intentional template change
 ```
-Run `kirokit` from the repository root: it resolves `teams/`, `global/`, `env/` relative to the working directory.
+Run `kirokit` from the repository root: it resolves `teams/`, `global/`, `env/` relative to the working directory, or relative to `KIROKIT_REPO` when that is set.
 
 ## Repository rules
 - Template change → run `./kirokit update <team>` and review the golden diff; CI fails on drift. Never hand-edit `testdata/golden/**` or `*.enc.yaml` (SOPS MAC covers exact content).

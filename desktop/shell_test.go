@@ -126,6 +126,26 @@ func TestShell_ResizeReachesTheShell(t *testing.T) {
 	rec.waitFor(t, "20 90\r\n")
 }
 
+// A size outside 1..1000 is dropped: it neither starts the shell nor reaches it.
+func TestShell_ResizeOutsideTheLimitsStartsNothing(t *testing.T) {
+	a, rec, _, _ := shellApp(t, "/bin/sh")
+
+	for _, size := range [][2]int{{0, 24}, {80, 0}, {-1, 24}, {1001, 24}, {80, 1001}} {
+		a.ShellResize(size[0], size[1])
+		a.ShellWrite("echo should-not-run\r")
+	}
+
+	a.shell.mu.Lock()
+	started := a.shell.sess != nil
+	a.shell.mu.Unlock()
+	if started {
+		t.Error("an out-of-range size started the shell")
+	}
+	if got := rec.String(); got != "" {
+		t.Errorf("the shell tab received output: %q", got)
+	}
+}
+
 func TestShell_OtherShellGetsTheVariablesAndANote(t *testing.T) {
 	a, rec, home, cli := shellApp(t, "/bin/sh")
 	if err := a.SaveSettings(Settings{KiroHome: filepath.Join(home, "kh")}); err != nil {

@@ -462,7 +462,7 @@ A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_
  README.md, AGENTS.md                   ~ desktop app, layout
 ```
 
-- [ ] T23 A release script zips the app and renders the cask
+- [x] T23 A release script zips the app and renders the cask
   - **Objective:** Create the zip with `ditto`, compute its checksum and print the cask; upload and push only when told to.
   - **Design:** "The app bundle and release artifacts"
   - **Files:** `scripts/desktop-release.sh`, `scripts/desktop-release_test.sh`
@@ -476,7 +476,7 @@ A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_
     - A missing app folder or version exits non-zero with a message.
     - verify: `bash scripts/desktop-release_test.sh`
 
-- [ ] T24 The release workflow gains a macOS desktop job, and the docs follow
+- [x] T24 The release workflow gains a macOS desktop job, and the docs follow
   - **Objective:** Add the `desktop` job after `release`, a manual dry run, and document the app in `README.md` and `AGENTS.md`.
   - **Design:** "The app bundle and release artifacts"
   - **Files:** `.github/workflows/release.yaml`, `README.md`, `AGENTS.md`

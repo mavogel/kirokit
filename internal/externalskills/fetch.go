@@ -258,7 +258,7 @@ func resolve(work string, e manifest.ExternalSkill) (string, error) {
 func runGit(dir string, args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
-	cmd.Env = withoutRepoGitEnv()
+	cmd.Env = WithoutRepoGitEnv()
 	cmd.Stdin = os.Stdin
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -269,10 +269,10 @@ func runGit(dir string, args ...string) (string, error) {
 	return strings.TrimSpace(stdout.String()), nil
 }
 
-// withoutRepoGitEnv drops the variables that redirect git to another repository
+// WithoutRepoGitEnv drops the variables that redirect git to another repository
 // (GIT_DIR, GIT_WORK_TREE, GIT_INDEX_FILE, ...) so git operates on the working
 // directory's own repository. Other GIT_* settings are kept.
-func withoutRepoGitEnv() []string {
+func WithoutRepoGitEnv() []string {
 	drop := []string{"GIT_DIR=", "GIT_WORK_TREE=", "GIT_INDEX_FILE=", "GIT_OBJECT_DIRECTORY=", "GIT_ALTERNATE_OBJECT_DIRECTORIES=", "GIT_COMMON_DIR=", "GIT_NAMESPACE=", "GIT_PREFIX="}
 	var env []string
 next:
