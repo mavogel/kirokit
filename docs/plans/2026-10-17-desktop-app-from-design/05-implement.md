@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 20 min so far.
+5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 28 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -80,6 +80,11 @@
 - [PASS] scenario 1 step 8 (QualityLayer) · f2ee3d4 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit sync --latest-tag --repo /tmp/ql-kk-s1/clone` · exit 0 · as expected
 - [PASS] scenario 1 step 9 (QualityLayer) · f2ee3d4 · `/tmp/ql-kk-s1/kirokit sync --kb-agent x` · exit 1 · as expected
 - [PASS] scenario 1 step 10 (QualityLayer) · f2ee3d4 · `go test ./...` · exit 0 · as expected
+- T6 · 48002f1 · `task desktop:test` · exit 0 · 2s
+- T7 · 48002f1 · `cd desktop/frontend && node --test src/ && npm run build` · exit 0 · 0.5s
+- T8 · 48002f1 · `task desktop:test` · reused: nothing changed since they passed
+- slice 2 · 48002f1 · `task desktop:test` · reused: nothing changed since they passed
+- slice 2 · 48002f1 · `go build ./...` · exit 0 · 0.4s
 
 ## Decided while building
 
@@ -138,6 +143,7 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 ### Checkpoint after slice 1 · run 4
 
 **Runner:** fresh helper
+**Revision:** 723e600bb3543944a72cc02279a955bc157cd859d35148320b1deae7c4f82ac9
 
 - [PASS] scenario 1: QualityLayer's recorded PASS for steps 1-10 stands (not rerun). I re-ran the key steps 2, 3, 4 and 5 against a freshly built binary and saw `installed platform-team`, then `uninstalled platform-team` plus `installed data-team`, only `data-team.json` listed, and a repeat install of data-team succeeding — `evidence/cp-1-run-4-terminal-install-replace.txt`
 - [PASS] boundary: `install no-such-team` exited 1 with `kirokit install: manifest: read teams/no-such-team/manifest.yaml: ... no such file or directory`, and `.kirokit-installed` still held only `data-team.json`.

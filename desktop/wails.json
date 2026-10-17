@@ -1,0 +1,20 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "kirokit",
+  "outputfilename": "kirokit",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "info": {
+    "companyName": "mavogel",
+    "productName": "kirokit",
+    "productVersion": "0.0.0",
+    "copyright": "Copyright mavogel",
+    "comments": "Install your team's Kiro agents."
+  },
+  "author": {
+    "name": "Manuel Vogel",
+    "email": "8409778+mavogel@users.noreply.github.com"
+  }
+}
