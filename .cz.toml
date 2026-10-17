@@ -1,2 +1,6 @@
 [tool.commitizen]
-name = "cz_conventional_commits"
+name = "cz_customize"
+
+# Conventional Commits plus the `plan` and `ship` types QualityLayer uses for its task records.
+[tool.commitizen.customize]
+schema_pattern = '(?s)(build|bump|chore|ci|docs|feat|fix|perf|plan|refactor|revert|ship|style|test)(\(\S+\))?!?: ([^\n\r]+)((\n\n.*)|(\s*))?$'

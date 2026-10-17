@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>kirokit desktop: sidebar layout</title>
+<meta name="ql:changed" content="Focus returns to the team's new action after install; version prints the contract's lines">
+<meta name="description" content="Sidebar layout of the kirokit desktop app: five sections, icon rail, docked terminal, team setup with prerequisites">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f2fa;
+    --window: #ffffff;
+    --sidebar: #f1eff9;
+    --surface: #ffffff;
+    --surface-2: #f8f7fc;
+    --text: #1d1730;
+    --muted: #574f6e;
+    --border: #e1ddef;
+    --border-strong: #c9c2e0;
+    --accent: #6d28d9;
+    --accent-text: #ffffff;
+    --accent-soft: #ede9fe;
+    --accent-ink: #5b21b6;
+    --ok: #15803d;
+    --ok-soft: #dcfce7;
+    --warn: #854d0e;
+    --warn-soft: #fef3c7;
+    --focus: #6d28d9;
+    --term-bg: #15111f;
+    --term-text: #e6e1f5;
+    --term-muted: #a59dbd;
+    --term-prompt: #b9a4fb;
+    --term-ok: #6ee7a0;
+    --term-err: #fca5a5;
+    --radius: 8px;
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0d0b13; --window: #17131f; --sidebar: #120f1a; --surface: #1d1828; --surface-2: #221c30;
+      --text: #ece9f6; --muted: #aaa3c2; --border: #2e2843; --border-strong: #463e60;
+      --accent: #a78bfa; --accent-text: #14101f; --accent-soft: #2b2247; --accent-ink: #c4b5fd;
+      --ok: #4ade80; --ok-soft: #12301f; --warn: #fbbf24; --warn-soft: #33280c; --focus: #c4b5fd;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d0b13; --window: #17131f; --sidebar: #120f1a; --surface: #1d1828; --surface-2: #221c30;
+    --text: #ece9f6; --muted: #aaa3c2; --border: #2e2843; --border-strong: #463e60;
+    --accent: #a78bfa; --accent-text: #14101f; --accent-soft: #2b2247; --accent-ink: #c4b5fd;
+    --ok: #4ade80; --ok-soft: #12301f; --warn: #fbbf24; --warn-soft: #33280c; --focus: #c4b5fd;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px; background: var(--bg); color: var(--text); font: 14px/1.5 var(--font); }
+  .scroll-x { overflow-x: auto; padding-bottom: 8px; }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  /* Window */
+  .window { width: 1180px; height: 760px; margin: 0 auto; display: grid; grid-template-rows: 36px 1fr;
+    background: var(--window); border: 1px solid var(--border-strong); border-radius: 12px; overflow: hidden;
+    box-shadow: 0 20px 50px -20px rgb(20 10 50 / .35); }
+  .titlebar { display: flex; align-items: center; gap: 8px; padding: 0 14px; background: var(--sidebar); border-bottom: 1px solid var(--border); }
+  .lights { display: flex; gap: 8px; }
+  .lights span { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+  .lights span:nth-child(2) { background: #febc2e; } .lights span:nth-child(3) { background: #28c840; }
+  .titlebar .title { flex: 1; text-align: center; font-size: 13px; color: var(--muted); margin-right: 52px; }
+  .app { display: grid; grid-template-columns: auto 1fr; min-height: 0; }
+
+  /* Sidebar */
+  .sidebar { width: 232px; display: flex; flex-direction: column; gap: 4px; padding: 14px 10px 12px;
+    background: var(--sidebar); border-right: 1px solid var(--border); transition: width .16s ease; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 14px; font-weight: 650; font-size: 15px; }
+  .brand svg { flex: none; width: 28px; height: 28px; }
+  .nav { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+  .nav button { width: 100%; display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 10px;
+    border: 0; border-radius: 6px; background: transparent; cursor: pointer; text-align: left; color: var(--muted); }
+  .nav button:hover { background: var(--accent-soft); color: var(--text); }
+  .nav button[aria-current="page"] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+  .nav svg, .collapse svg { flex: none; width: 18px; height: 18px; }
+  .nav .count { margin-left: auto; font-size: 12px; color: var(--muted); }
+  .spacer { flex: 1; }
+  .collapse { display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 10px; border: 0; border-radius: 6px;
+    background: transparent; color: var(--muted); cursor: pointer; text-align: left; }
+  .collapse:hover { background: var(--accent-soft); color: var(--text); }
+  .collapse kbd { margin-left: auto; font: 11px var(--mono); color: var(--muted); }
+  .rail .sidebar { width: 60px; }
+  .rail .count, .rail .brand-name, .rail .collapse kbd { display: none; }
+  .rail .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .rail .nav button, .rail .collapse { justify-content: center; padding: 0; }
+  .rail .collapse svg { transform: rotate(180deg); }
+
+  /* Main + terminal */
+  .work { display: grid; grid-template-rows: 1fr auto; min-width: 0; min-height: 0; }
+  main { overflow: auto; padding: 24px 28px; min-height: 0; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  h1 { margin: 0; font-size: 20px; line-height: 1.3; font-weight: 650; }
+  .lede { margin: 2px 0 0; color: var(--muted); max-width: 70ch; }
+  h2 { margin: 22px 0 10px; font-size: 14px; font-weight: 650; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .card { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .card h3 { margin: 0; font-size: 15px; font: 600 15px/1.3 var(--mono); }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: 13px; }
+  .facts b { color: var(--text); font-weight: 600; }
+  .actions { display: flex; gap: 8px; margin-top: auto; }
+  .btn { height: 32px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--surface); cursor: pointer; font-weight: 550; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; filter: none; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.off { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip { display: inline-block; padding: 1px 7px; margin: 0 4px 4px 0; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); font: 12px/1.6 var(--mono); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  th, td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+  th { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--surface-2); }
+  tr:last-child td { border-bottom: 0; }
+  td.mono, .mono { font-family: var(--mono); font-size: 13px; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .desc { color: var(--muted); max-width: 46ch; }
+  .note { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+  .field { display: grid; gap: 6px; max-width: 520px; margin-bottom: 16px; }
+  .field label { font-weight: 600; }
+  .field input { height: 36px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface); font-family: var(--mono); font-size: 13px; }
+  .field .hint { color: var(--muted); font-size: 13px; }
+
+  .terminal { display: grid; grid-template-rows: 6px 34px 1fr; height: 220px; background: var(--term-bg); color: var(--term-text); border-top: 1px solid var(--border-strong); }
+  .terminal[hidden] { display: none; }
+  .resize { cursor: row-resize; background: transparent; }
+  .resize:hover, .resize:focus-visible { background: var(--accent); outline: none; }
+  .term-bar { display: flex; align-items: center; gap: 4px; padding: 0 8px 0 14px; font: 600 11px/1 var(--font); letter-spacing: .06em; color: var(--term-muted); }
+  .term-bar .tab { color: var(--term-text); padding: 6px 0; border-bottom: 1px solid var(--term-prompt); }
+  .term-bar .grow { flex: 1; }
+  .icon-btn { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--term-muted); cursor: pointer; }
+  .icon-btn:hover { background: rgb(255 255 255 / .08); color: var(--term-text); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .term-body { overflow: auto; padding: 4px 14px 10px; font: 13px/1.55 var(--mono); }
+  .term-body .line { white-space: pre-wrap; }
+  .term-body .p { color: var(--term-prompt); }
+  .term-body .ok { color: var(--term-ok); }
+  .term-body .err { color: var(--term-err); }
+  .term-body .dim { color: var(--term-muted); }
+  .term-input { display: flex; gap: 8px; align-items: baseline; }
+  .term-input input { flex: 1; border: 0; background: transparent; color: var(--term-text); font: 13px/1.55 var(--mono); padding: 0; }
+  .term-input input:focus-visible { outline: none; }
+  .term-input:focus-within { box-shadow: inset 2px 0 0 var(--term-prompt); margin-left: -8px; padding-left: 6px; }
+  .term-toggle { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 14px; border: 0; border-top: 1px solid var(--border); background: var(--sidebar); color: var(--muted); cursor: pointer; font-size: 12px; text-align: left; }
+  .term-toggle[hidden] { display: none; }
+
+  /* Setup dialog */
+  dialog { width: 480px; padding: 0; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--window); color: var(--text); box-shadow: 0 24px 60px -20px rgb(20 10 50 / .5); }
+  dialog::backdrop { background: rgb(13 11 19 / .45); }
+  .dlg-head { padding: 18px 20px 0; }
+  .dlg-head h2 { margin: 0; font-size: 16px; }
+  .steps { display: flex; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; font-size: 12px; color: var(--muted); }
+  .steps li { padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); }
+  .steps li[aria-current="step"] { color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  .dlg-body { padding: 16px 20px; }
+  .checks { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .checks li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+  .checks .what { font-weight: 600; }
+  .checks .why { grid-column: 1 / -1; color: var(--muted); font-size: 13px; }
+  .dlg-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px 18px; border-top: 1px solid var(--border); }
+  .status-line { margin-right: auto; align-self: center; color: var(--muted); font-size: 13px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } }
+</style>
+</head>
+<body>
+<div class="scroll-x">
+<div class="window" id="window" data-screen-label="Desktop window">
+  <div class="titlebar"><div class="lights" aria-hidden="true"><span></span><span></span><span></span></div><div class="title">kirokit</div></div>
+  <div class="app" id="app">
+    <aside class="sidebar" aria-label="Sections">
+      <div class="brand">
+        <svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#4c1d95"/></linearGradient></defs><rect width="512" height="512" rx="112" fill="url(#bg)"/><g fill="none" stroke="#ede9fe" stroke-opacity=".55" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"><path d="M168 120c-36 0-44 14-44 44v52c0 22-10 40-32 40 22 0 32 18 32 40v52c0 30 8 44 44 44"/><path d="M344 120c36 0 44 14 44 44v52c0 22 10 40 32 40-22 0-32 18-32 40v52c0 30-8 44-44 44"/></g><g fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"><path d="M208 200l60 56-60 56"/><path d="M290 322h54"/></g></svg>
+        <span class="brand-name">kirokit</span>
+      </div>
+      <nav aria-label="Main">
+        <ul class="nav">
+          <li><button data-page="teams" aria-current="page" title="Teams"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.3c2.6-.4 4.6 1.2 5 4.7"/></svg><span class="label">Teams</span><span class="count">2</span></button></li>
+          <li><button data-page="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 15.5h5"/></svg><span class="label">Agents</span><span class="count">4</span></button></li>
+          <li><button data-page="install" title="Install and sync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4"/><path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/></svg><span class="label">Install and sync</span></button></li>
+          <li><button data-page="skills" title="Skills and MCP versions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="label">Skills and MCP versions</span></button></li>
+          <li><button data-page="settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 7l2.6 1.5M17.2 15.5l2.6 1.5M4.2 17l2.6-1.5M17.2 8.5L19.8 7"/></svg><span class="label">Settings</span></button></li>
+        </ul>
+      </nav>
+      <div class="spacer"></div>
+      <button class="collapse" id="collapse" aria-expanded="true" aria-controls="app" title="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span class="label">Collapse</span><kbd>⌘B</kbd></button>
+    </aside>
+
+    <div class="work">
+      <main id="main">
+        <section id="page-teams" data-screen-label="Teams">
+          <div class="page-head"><div><h1>Teams</h1><p class="lede">Pick your team and install its agents into Kiro. No terminal needed.</p></div></div>
+          <div class="grid">
+            <article class="card" data-team="platform-team">
+              <div class="card-head"><h3>platform-team</h3><span class="badge off" data-status>Not installed</span></div>
+              <ul class="facts"><li><b>2</b> agents: devops, platformdev</li><li><b>2</b> skills</li><li><b>3</b> prompts</li><li>Steering: team-conventions, shared security-baseline</li></ul>
+              <div class="actions"><button class="btn primary" data-install="platform-team">Install</button><button class="btn" data-goto="agents">View agents</button></div>
+            </article>
+            <article class="card" data-team="data-team">
+              <div class="card-head"><h3>data-team</h3><span class="badge ok" data-status>✓ Installed</span></div>
+              <ul class="facts"><li><b>2</b> agents: godev, javadev</li><li><b>1</b> skill</li><li><b>2</b> prompts</li><li>Steering: data-conventions</li></ul>
+              <div class="actions"><button class="btn" data-sync="data-team">Sync</button><button class="btn" data-goto="agents">View agents</button></div>
+            </article>
+          </div>
+          <p class="note">Install state on this page is sample data; the rest comes from this repository.</p>
+        </section>
+
+        <section id="page-agents" data-screen-label="Agents" hidden>
+          <div class="page-head"><div><h1>Agents</h1><p class="lede">What each team's agents do, and the tools and servers they use.</p></div></div>
+          <table>
+            <thead><tr><th scope="col">Agent</th><th scope="col">Team</th><th scope="col">What it does</th><th scope="col">Tools</th><th scope="col">Secrets</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">devops</td><td class="mono">platform-team</td><td class="desc">Triages and resolves Jira tickets for platform-team, following the team's shared security baseline steering.</td><td><span class="chip">read</span><span class="chip">write</span><span class="chip">glob</span><span class="chip">knowledge</span><span class="chip">shell</span><span class="chip">@atlassian</span><span class="chip">@context7</span></td><td><span class="badge warn">Needs SOPS</span></td></tr>
+              <tr><td class="mono">platformdev</td><td class="mono">platform-team</td><td class="desc">Looks up Confluence documentation for platform-team, following the team's shared security baseline steering.</td><td><span class="chip">read</span><span class="chip">write</span><span class="chip">glob</span><span class="chip">knowledge</span><span class="chip">shell</span><span class="chip">@confluence-mcp</span></td><td><span class="badge warn">Needs SOPS</span></td></tr>
+              <tr><td class="mono">godev</td><td class="mono">data-team</td><td class="desc">Go backend developer agent for data-team, with access to the build pipeline status via a local, non-secret MCP server.</td><td><span class="chip">read</span><span class="chip">write</span><span class="chip">glob</span><span class="chip">knowledge</span><span class="chip">shell</span><span class="chip">@pipeline-mcp</span></td><td><span class="badge off">None</span></td></tr>
+              <tr><td class="mono">javadev</td><td class="mono">data-team</td><td class="desc">Java backend developer agent for data-team, with access to the analytics warehouse via Snowflake.</td><td><span class="chip">read</span><span class="chip">write</span><span class="chip">glob</span><span class="chip">knowledge</span><span class="chip">shell</span><span class="chip">@snowflake-mcp</span></td><td><span class="badge warn">Needs SOPS</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="page-install" data-screen-label="Install and sync" hidden>
+          <div class="page-head"><div><h1>Install and sync</h1><p class="lede">What is installed in your Kiro home folder, and whether it is current.</p></div></div>
+          <table>
+            <thead><tr><th scope="col">Team</th><th scope="col">Status</th><th scope="col">Files recorded</th><th scope="col">Last change</th><th scope="col"><span class="sr">Actions</span></th></tr></thead>
+            <tbody>
+              <tr data-row="platform-team"><td class="mono">platform-team</td><td><span class="badge off" data-status>Not installed</span></td><td class="num" data-files>—</td><td data-when>—</td><td><div class="actions" data-actions><button class="btn primary" data-install="platform-team">Install</button></div></td></tr>
+              <tr data-row="data-team"><td class="mono">data-team</td><td><span class="badge ok" data-status>✓ Installed</span></td><td class="num" data-files>14</td><td data-when>Today, 09:12</td><td><div class="actions" data-actions><button class="btn" data-sync="data-team">Sync</button><button class="btn" data-uninstall="data-team">Uninstall</button></div></td></tr>
+            </tbody>
+          </table>
+          <p class="note">Sample data. kirokit records which files each install wrote; it does not record a time, so "Last change" would come from the app.</p>
+        </section>
+
+        <section id="page-skills" data-screen-label="Skills and MCP versions" hidden>
+          <div class="page-head"><div><h1>Skills and MCP versions</h1><p class="lede">Where each skill comes from, and the server versions every team shares.</p></div></div>
+          <h2>Skills</h2>
+          <table>
+            <thead><tr><th scope="col">Skill</th><th scope="col">Team</th><th scope="col">Source</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">confluence-lookup</td><td class="mono">platform-team</td><td>Written by the team</td></tr>
+              <tr><td class="mono">jira-search</td><td class="mono">platform-team</td><td>Written by the team</td></tr>
+              <tr><td class="mono">sql-helper</td><td class="mono">data-team</td><td>Written by the team</td></tr>
+            </tbody>
+          </table>
+          <p class="note">No team declares external skills yet.</p>
+          <h2>MCP versions</h2>
+          <table>
+            <thead><tr><th scope="col">Server</th><th scope="col">Version</th><th scope="col">Used by</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">mcp-remote</td><td class="mono num">0.15.1</td><td class="mono">devops</td></tr>
+              <tr><td class="mono">context7-mcp</td><td class="mono num">4.4.2</td><td class="mono">devops</td></tr>
+              <tr><td class="mono">confluence-mcp</td><td class="mono num">2.1.0</td><td class="mono">platformdev</td></tr>
+              <tr><td class="mono">pipeline-mcp</td><td class="mono num">3.0.0</td><td class="mono">godev</td></tr>
+              <tr><td class="mono">snowflake-mcp</td><td class="mono num">0.9.1</td><td class="mono">javadev</td></tr>
+              <tr><td class="mono">jira-mcp</td><td class="mono num">1.4.2</td><td>Not used</td></tr>
+              <tr><td class="mono">example-mcp</td><td class="mono num">1.0.0</td><td>Not used</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="page-settings" data-screen-label="Settings" hidden>
+          <div class="page-head"><div><h1>Settings</h1><p class="lede">The two folders kirokit works with.</p></div></div>
+          <div class="field"><label for="kirohome">Kiro home folder</label><input id="kirohome" value="/Users/you/.kiro" spellcheck="false"><span class="hint">Where Kiro reads its agents. Defaults to ~/.kiro unless KIRO_HOME is set.</span></div>
+          <div class="field"><label for="repo">Repository path</label><input id="repo" value="/Users/you/src/kiro-cli-kit" spellcheck="false"><span class="hint">Your copy of the team configs. Sync updates it from git.</span></div>
+          <div class="actions"><button class="btn primary" id="save">Save</button><span class="status-line" id="save-status" role="status"></span></div>
+        </section>
+      </main>
+
+      <button class="term-toggle" id="term-open" hidden aria-controls="terminal">Show terminal <kbd>⌃`</kbd></button>
+      <section class="terminal" id="terminal" aria-label="Terminal" data-screen-label="Terminal">
+        <div class="resize" id="resize" role="separator" aria-orientation="horizontal" aria-label="Resize terminal" aria-valuenow="220" aria-valuemin="120" aria-valuemax="480" tabindex="0"></div>
+        <div class="term-bar"><span class="tab">TERMINAL</span><span class="grow"></span>
+          <button class="icon-btn" id="term-clear" aria-label="Clear terminal" title="Clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M10 11v6M14 11v6M7 7l1 12h8l1-12M10 7V4h4v3"/></svg></button>
+          <button class="icon-btn" id="term-close" aria-label="Hide terminal" title="Hide (⌃`)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
+        <div class="term-body" id="term-body" aria-live="polite">
+          <div class="line dim">Type a kirokit command, or press a button above. Try: kirokit help</div>
+          <div class="line"><span class="p">~/src/kiro-cli-kit $</span> kirokit sync data-team</div>
+          <div class="line">synced data-team into /Users/you/.kiro at 9a919bf</div>
+          <div class="term-input"><label class="p" for="term-in">~/src/kiro-cli-kit $</label><input id="term-in" autocomplete="off" spellcheck="false" aria-label="Terminal input"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</div>
+
+<dialog id="replace" aria-labelledby="replace-title">
+  <div class="dlg-head"><h2 id="replace-title">Replace the installed team?</h2></div>
+  <div class="dlg-body"><p class="note" style="margin:0">Only one team is installed at a time. Replacing runs <span class="mono">kirokit uninstall</span> for the installed team, then <span class="mono">kirokit install</span> for the new one.</p></div>
+  <div class="dlg-foot"><button class="btn" id="replace-cancel">Cancel</button><button class="btn primary" id="replace-go">Replace</button></div>
+</dialog>
+
+<dialog id="setup" aria-labelledby="setup-title">
+  <div class="dlg-head"><h2 id="setup-title">Install platform-team</h2>
+    <ol class="steps"><li aria-current="step" data-step="1">1 · Check prerequisites</li><li data-step="2">2 · Install</li></ol></div>
+  <div class="dlg-body">
+    <ul class="checks" id="checks">
+      <li data-check="sops"><span class="what">SOPS</span><span class="badge ok">✓ Found</span><span class="why">Decrypts the team's MCP server secrets when an agent starts.</span></li>
+      <li data-check="key"><span class="what">Decryption key</span><span class="badge warn" data-key-badge>Missing</span><span class="why" data-key-why>devops and platformdev need it. Ask your team lead for the key, then check again.</span></li>
+      <li data-check="kiro"><span class="what">Kiro CLI</span><span class="badge ok">✓ Found</span><span class="why">Runs the agents once they are installed.</span></li>
+    </ul>
+  </div>
+  <div class="dlg-foot"><span class="status-line" id="setup-status" role="status">1 prerequisite missing</span>
+    <button class="btn" id="setup-cancel">Cancel</button><button class="btn" id="setup-recheck">Check again</button><button class="btn primary" id="setup-go" disabled>Install</button></div>
+</dialog>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const applyTheme = (t) => { if (t === 'light' || t === 'dark') root.dataset.theme = t; };
+  window.addEventListener('ql:design-mode', (e) => applyTheme(e.detail && e.detail.theme));
+  applyTheme(root.dataset.theme);
+
+  const pages = ['teams', 'agents', 'install', 'skills', 'settings'];
+  const navButtons = [...document.querySelectorAll('.nav button')];
+  function go(page) {
+    pages.forEach((p) => { document.getElementById('page-' + p).hidden = p !== page; });
+    navButtons.forEach((b) => { if (b.dataset.page === page) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    document.getElementById('main').scrollTop = 0;
+  }
+  navButtons.forEach((b) => b.addEventListener('click', () => go(b.dataset.page)));
+  document.addEventListener('click', (e) => { const g = e.target.closest('[data-goto]'); if (g) go(g.dataset.goto); });
+
+  const app = document.getElementById('app');
+  const collapse = document.getElementById('collapse');
+  function toggleRail() {
+    const rail = app.classList.toggle('rail');
+    collapse.setAttribute('aria-expanded', String(!rail));
+    collapse.title = rail ? 'Expand sidebar' : 'Collapse sidebar';
+    collapse.querySelector('.label').textContent = rail ? 'Expand' : 'Collapse';
+  }
+  collapse.addEventListener('click', toggleRail);
+
+  // Terminal
+  const term = document.getElementById('terminal');
+  const body = document.getElementById('term-body');
+  const input = document.getElementById('term-in');
+  const inputRow = input.parentElement;
+  const openBtn = document.getElementById('term-open');
+  const PROMPT = '~/src/kiro-cli-kit $';
+  const state = { 'platform-team': false, 'data-team': true };
+  function line(text, cls) { const d = document.createElement('div'); d.className = 'line' + (cls ? ' ' + cls : ''); d.textContent = text; body.insertBefore(d, inputRow); body.scrollTop = body.scrollHeight; }
+  function echo(cmd) { const d = document.createElement('div'); d.className = 'line'; const p = document.createElement('span'); p.className = 'p'; p.textContent = PROMPT; d.append(p, ' ' + cmd); body.insertBefore(d, inputRow); }
+  function showTerm(show) { term.hidden = !show; openBtn.hidden = show; if (show) input.focus(); else openBtn.focus(); }
+  document.getElementById('term-close').addEventListener('click', () => showTerm(false));
+  openBtn.addEventListener('click', () => showTerm(true));
+  document.getElementById('term-clear').addEventListener('click', () => { [...body.querySelectorAll('.line')].forEach((n) => n.remove()); input.focus(); });
+
+  const HOME = '/Users/you/.kiro';
+  const teams = Object.keys(state);
+  // The app allows one installed team: a typed install of another team uninstalls the installed one first.
+  const otherInstalled = (team) => teams.find((t) => t !== team && state[t]);
+  function dropOther(team) { const o = otherInstalled(team); if (o) { setInstalled(o, false); line('uninstalled ' + o + ' from ' + HOME); } }
+  function run(cmd) {
+    echo(cmd);
+    const [bin, sub, arg] = cmd.trim().split(/\s+/);
+    if (!bin) return;
+    if (bin === 'clear') { [...body.querySelectorAll('.line')].forEach((n) => n.remove()); return; }
+    if (bin !== 'kirokit') { line('zsh: command not found: ' + bin, 'err'); return; }
+    const needTeam = () => { if (!arg) { line('Error: accepts 1 arg(s), received 0', 'err'); return false; } if (!teams.includes(arg)) { line('Error: kirokit ' + sub + ': team ' + arg + ' not found', 'err'); return false; } return true; };
+    switch (sub) {
+      case undefined: case 'help': line('Usage: kirokit [command]\n\nCommands: render  test  update  install  uninstall  sync  skills  onboard  version', 'dim'); break;
+      case 'install': if (needTeam()) { dropOther(arg); setInstalled(arg, true); line('installed ' + arg + ' into ' + HOME); } break;
+      case 'uninstall': if (needTeam()) { setInstalled(arg, false); line('uninstalled ' + arg + ' from ' + HOME); } break;
+      case 'sync': if (needTeam()) { dropOther(arg); setInstalled(arg, true); line('synced ' + arg + ' into ' + HOME + ' at 9a919bf'); } break;
+      case 'test': (arg ? [arg] : teams).forEach((t) => line(t + ': ok', 'ok')); break;
+      case 'render': (arg ? [arg] : teams).forEach((t) => line('rendered ' + t + ' -> out/' + t)); break;
+      case 'version': line('kirokit v0.4.0\ncommit: 9a919bf…'); break;
+      default: line('Error: unknown command "' + sub + '" for "kirokit"', 'err');
+    }
+  }
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const v = input.value; input.value = ''; run(v); } });
+  body.addEventListener('click', () => input.focus());
+
+  // Resize
+  const resize = document.getElementById('resize');
+  const setH = (h) => { h = Math.max(120, Math.min(480, Math.round(h))); term.style.height = h + 'px'; resize.setAttribute('aria-valuenow', h); };
+  resize.addEventListener('pointerdown', (e) => {
+    const startY = e.clientY, startH = term.getBoundingClientRect().height; resize.setPointerCapture(e.pointerId);
+    const move = (ev) => setH(startH + (startY - ev.clientY));
+    const up = () => { resize.removeEventListener('pointermove', move); resize.removeEventListener('pointerup', up); };
+    resize.addEventListener('pointermove', move); resize.addEventListener('pointerup', up);
+  });
+  resize.addEventListener('keydown', (e) => { const h = term.getBoundingClientRect().height; if (e.key === 'ArrowUp') { setH(h + 20); e.preventDefault(); } if (e.key === 'ArrowDown') { setH(h - 20); e.preventDefault(); } });
+
+  // Shortcuts: Cmd/Ctrl+B for the sidebar, Ctrl+` for the terminal
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') { e.preventDefault(); toggleRail(); }
+    if (e.ctrlKey && e.key === '`') { e.preventDefault(); showTerm(term.hidden); }
+  });
+
+  // Install state shown on Teams and Install and sync
+  function setInstalled(team, on) {
+    state[team] = on;
+    document.querySelectorAll('[data-team="' + team + '"], [data-row="' + team + '"]').forEach((el) => {
+      const badge = el.querySelector('[data-status]');
+      badge.className = 'badge ' + (on ? 'ok' : 'off'); badge.textContent = on ? '✓ Installed' : 'Not installed';
+    });
+    const card = document.querySelector('[data-team="' + team + '"] .actions');
+    card.innerHTML = on
+      ? '<button class="btn" data-sync="' + team + '">Sync</button><button class="btn" data-goto="agents">View agents</button>'
+      : '<button class="btn primary" data-install="' + team + '">Install</button><button class="btn" data-goto="agents">View agents</button>';
+    const row = document.querySelector('[data-row="' + team + '"]');
+    row.querySelector('[data-files]').textContent = on ? (team === 'data-team' ? '14' : '17') : '—';
+    row.querySelector('[data-when]').textContent = on ? 'Just now' : '—';
+    row.querySelector('[data-actions]').innerHTML = on
+      ? '<button class="btn" data-sync="' + team + '">Sync</button><button class="btn" data-uninstall="' + team + '">Uninstall</button>'
+      : '<button class="btn primary" data-install="' + team + '">Install</button>';
+  }
+
+  // Buttons run their command in the terminal
+  const dlg = document.getElementById('setup');
+  let pendingTeam = null, opener = null, keyFound = false;
+  document.addEventListener('click', (e) => {
+    const i = e.target.closest('[data-install]'), s = e.target.closest('[data-sync]'), u = e.target.closest('[data-uninstall]');
+    if (s) { if (term.hidden) showTerm(true); run('kirokit sync ' + s.dataset.sync); }
+    if (u) { if (term.hidden) showTerm(true); run('kirokit uninstall ' + u.dataset.uninstall); }
+    if (i) {
+      pendingTeam = i.dataset.install; opener = i;
+      const o = otherInstalled(pendingTeam);
+      if (o) { document.getElementById('replace-title').textContent = 'Replace ' + o + ' with ' + pendingTeam + '?'; proceeding = false; replaceDlg.showModal(); document.getElementById('replace-cancel').focus(); }
+      else openSetup();
+    }
+  });
+  const replaceDlg = document.getElementById('replace');
+  let proceeding = false;
+  document.getElementById('replace-cancel').addEventListener('click', () => replaceDlg.close());
+  document.getElementById('replace-go').addEventListener('click', () => { proceeding = true; replaceDlg.close(); openSetup(); });
+  replaceDlg.addEventListener('close', () => { if (!proceeding && opener && document.contains(opener)) opener.focus(); });
+  function openSetup() {
+    document.getElementById('setup-title').textContent = 'Install ' + pendingTeam;
+    renderChecks(); dlg.showModal(); document.getElementById(keyFound ? 'setup-go' : 'setup-recheck').focus();
+  }
+  function renderChecks() {
+    const badge = dlg.querySelector('[data-key-badge]'), why = dlg.querySelector('[data-key-why]'), go = document.getElementById('setup-go');
+    badge.className = 'badge ' + (keyFound ? 'ok' : 'warn'); badge.textContent = keyFound ? '✓ Found' : 'Missing';
+    why.textContent = keyFound ? 'Your key can decrypt this team\'s secrets.' : (pendingTeam === 'data-team' ? 'javadev needs it.' : 'devops and platformdev need it.') + ' Ask your team lead for the key, then check again.';
+    go.disabled = !keyFound;
+    document.getElementById('setup-status').textContent = keyFound ? 'Ready to install' : '1 prerequisite missing';
+  }
+  document.getElementById('setup-recheck').addEventListener('click', () => { keyFound = true; renderChecks(); document.getElementById('setup-go').focus(); });
+  document.getElementById('setup-cancel').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('close', () => {
+    // The opener is replaced when a card re-renders; fall back to that team's new first action.
+    const target = opener && document.contains(opener) ? opener : document.querySelector('[data-team="' + pendingTeam + '"] .actions .btn');
+    if (target) target.focus();
+  });
+  document.getElementById('setup-go').addEventListener('click', () => {
+    const go = document.getElementById('setup-go'); go.disabled = true; go.textContent = 'Installing…';
+    dlg.querySelectorAll('.steps li').forEach((li) => { if (li.dataset.step === '2') li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
+    setTimeout(() => {
+      go.textContent = 'Install'; dlg.close();
+      if (term.hidden) showTerm(true);
+      const o = otherInstalled(pendingTeam); if (o) run('kirokit uninstall ' + o);
+      run('kirokit install ' + pendingTeam);
+      dlg.querySelectorAll('.steps li').forEach((li) => { if (li.dataset.step === '1') li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
+    }, 700);
+  });
+
+  document.getElementById('save').addEventListener('click', () => { document.getElementById('save-status').textContent = 'Saved on this computer (simulated)'; });
+})();
+</script>
+</body>
+</html>
