@@ -1,0 +1,8 @@
+$ install data-team
+installed data-team into /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.sx1QeR7HP4
+exit=0
+$ install no-such-team
+kirokit install: manifest: read teams/no-such-team/manifest.yaml: open teams/no-such-team/manifest.yaml: no such file or directory
+exit=1
+$ installed after
+data-team.json

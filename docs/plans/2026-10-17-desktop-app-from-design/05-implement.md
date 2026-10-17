@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 16 min so far.
+5 of 24 tasks done · 1 of 7 slices finished · started 18 Oct, 00:00 · 17 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -46,11 +46,22 @@
 - slice 1 · 2357174 · `go vet ./...` · exit 0 · 0.2s
 - slice 1 · 2357174 · `go test ./...` · exit 0 · 8.6s
 - slice 1 · 2357174 · `golangci-lint run` · exit 0 · 0.6s
+- [PASS] scenario 1 step 1 (QualityLayer) · ee57a68 · `rm -rf /tmp/ql-kk-s1 && mkdir -p /tmp/ql-kk-s1/home && go build -o /tmp/ql-kk-s1/kirokit ./cmd/kirokit` · exit 0 · as expected
+- [PASS] scenario 1 step 2 (QualityLayer) · ee57a68 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install platform-team` · exit 0 · printed `installed platform-team into /tmp/ql-kk-s1/home` as expected
+- [PASS] scenario 1 step 3 (QualityLayer) · ee57a68 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install data-team` · exit 0 · printed `uninstalled platform-team from /tmp/ql-kk-s1/home` as expected
+- [PASS] scenario 1 step 4 (QualityLayer) · ee57a68 · `ls /tmp/ql-kk-s1/home/.kirokit-installed` · exit 0 · printed `data-team.json` as expected
+- [PASS] scenario 1 step 5 (QualityLayer) · ee57a68 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install data-team` · exit 0 · printed `installed data-team into /tmp/ql-kk-s1/home` as expected
+- [PASS] scenario 1 step 6 (QualityLayer) · ee57a68 · `cd / && env KIROKIT_REPO=/Users/mavogel/Developer/projects/kiro-cli-kit /tmp/ql-kk-s1/kirokit render platform-team --out /tmp/ql-kk-s1/out` · exit 0 · printed `rendered platform-team -> /tmp/ql-kk-s1/out` as expected
+- [PASS] scenario 1 step 7 (QualityLayer) · ee57a68 · `git clone -q /Users/mavogel/Developer/projects/kiro-cli-kit /tmp/ql-kk-s1/clone` · exit 0 · as expected
+- [PASS] scenario 1 step 8 (QualityLayer) · ee57a68 · `env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit sync --latest-tag --repo /tmp/ql-kk-s1/clone` · exit 0 · as expected
+- [PASS] scenario 1 step 9 (QualityLayer) · ee57a68 · `/tmp/ql-kk-s1/kirokit sync --kb-agent x` · exit 1 · as expected
+- [PASS] scenario 1 step 10 (QualityLayer) · ee57a68 · `go test ./...` · exit 0 · as expected
 
 ## Decided while building
 
 <!-- ql:decisions -->
 - Slice 1 · Git calls in tests and skills fetch now ignore the commit tool's repository variables, so two more files change; nothing you approved changes.
+- Slice 1 · Installing a mistyped team name removed the installed team first and then failed, so install now checks the new team renders before removing anything; nothing you approved changes.
 - Slice 1 · The scheduled-sync setup script gets a header comment about one team per machine; nothing you approved changes.
 <!-- /ql:decisions -->
 
@@ -69,6 +80,15 @@
 ### Checkpoint 1 · run 1 · counted toward the stop
 
 It failed in the program: failure 1 of the 4 after which the checkpoint stays open and the build goes on.
+
+### Checkpoint after slice 1 · run 2
+
+**Runner:** fresh helper
+
+- [PASS] scenario 1: steps 1-10 were already run by QualityLayer and recorded PASS (cited, not rerun) — `evidence/cp-1-run-2-sync-unknown-team.txt` covers only the boundary
+- [FAIL] boundary: with data-team installed, `kirokit sync nonexistent-team --repo <clone>` printed `uninstalled data-team from <home>`, then failed with `manifest: read teams/nonexistent-team/manifest.yaml: no such file`, exit 1; `.kirokit-installed` was left empty. A failed sync destroys the working install (`uninstallOthers` runs in `cmd/kirokit/commands/sync.go` before the team or the checkout is validated, and before a failing `git pull`). — `evidence/cp-1-run-2-sync-unknown-team.txt`
+
+**Result:** fail
 
 ## Deviations
 

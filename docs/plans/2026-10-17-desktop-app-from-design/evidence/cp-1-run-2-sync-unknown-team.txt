@@ -1,0 +1,7 @@
+Probe: install data-team, then 'kirokit sync nonexistent-team --repo <clone>' (KIRO_HOME temp)
+stdout: uninstalled data-team from <home>
+stderr: kirokit sync: manifest: read teams/nonexistent-team/manifest.yaml: open ...: no such file or directory
+exit=1
+.kirokit-installed afterwards: empty (data-team removed)
+Cause: cmd/kirokit/commands/sync.go calls uninstallOthers before chdir/updateCheckout/team validation.
+Also without --repo (checkout has no upstream): git pull fails after the uninstall, same outcome.
