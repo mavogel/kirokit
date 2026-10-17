@@ -60,11 +60,11 @@ func projectRoot(t *testing.T, source string) {
 	root := t.TempDir()
 	writeTree(t, root, map[string]string{
 		"env/mcp-versions.yaml":                  "x: \"1\"\n",
-		"teams/demo/manifest.yaml":               "team: demo\nglobalSteerings: []\nexternalSkills:\n  - source: " + source + "\n    ref: main\n    path: skills/pdf\n",
+		"teams/demo/manifest.yaml":               "team: demo\nglobalSteerings: []\nexternalSkills:\n  - source: " + source + "\n    ref: main\n    paths: [skills/pdf]\n",
 		"teams/demo/agents/a1/agent.json.tmpl":   `{"name": "a1"}`,
 		"teams/plain/manifest.yaml":              "team: plain\nglobalSteerings: []\n",
 		"teams/plain/agents/a1/agent.json.tmpl":  `{"name": "a1"}`,
-		"teams/broken/manifest.yaml":             "team: broken\nglobalSteerings: []\nexternalSkills:\n  - source: " + filepath.Join(source, "missing") + "\n    ref: main\n    path: skills/pdf\n",
+		"teams/broken/manifest.yaml":             "team: broken\nglobalSteerings: []\nexternalSkills:\n  - source: " + filepath.Join(source, "missing") + "\n    ref: main\n    paths: [skills/pdf]\n",
 		"teams/broken/agents/a1/agent.json.tmpl": `{"name": "a1"}`,
 	})
 	if err := os.MkdirAll(filepath.Join(root, "global", "steerings"), 0o755); err != nil {
@@ -217,7 +217,7 @@ func TestSkillsFetch_AllSkillsOfARepositoryWithExcludeEndToEnd(t *testing.T) {
 		"env/mcp-versions.yaml":                "x: \"1\"\n",
 		"teams/demo/agents/a1/agent.json.tmpl": `{"name": "a1"}`,
 		"teams/demo/manifest.yaml": "team: demo\nglobalSteerings: []\nexternalSkills:\n  - source: " + source +
-			"\n    ref: main\n    path: skills\n    all: true\n    exclude: [docx]\n",
+			"\n    ref: main\n    paths: [skills]\n    all: true\n    exclude: [docx]\n",
 	})
 	if err := os.MkdirAll(filepath.Join(root, "global", "steerings"), 0o755); err != nil {
 		t.Fatal(err)

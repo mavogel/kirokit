@@ -9,22 +9,30 @@ globalSteerings:
 #
 # externalSkills:
 #   - source: https://github.com/anthropics/skills.git
-#     # One entry vendors one skill directory; add an entry per skill you want.
 #     # anthropics/skills publishes no tags, so pin a commit (or follow a branch).
 #     ref: dbd4588f9e1033efb41dad4bef2f7947c8993d44
-#     path: skills/frontend-design
-#     # name: frontend-design  # optional; defaults to the last element of path
+#     # Skill directories to vendor from this repo, each named after its last
+#     # element. Add a path per skill you want.
+#     paths:
+#       - skills/frontend-design
+#       - skills/skill-creator
 #
 #   # Or every skill in a directory (each gets its own lock entry). Check the
 #   # licence of what you take; some skills in this repository are restricted.
 #   - source: https://github.com/anthropics/skills.git
 #     ref: dbd4588f9e1033efb41dad4bef2f7947c8993d44
-#     path: skills
+#     paths:
+#       - skills
 #     all: true
-#     exclude: [docx, pdf, pptx, xlsx]
+#     exclude:
+#       - docx
+#       - pdf
+#       - pptx
+#       - xlsx
 #
 #   # A private repository authenticates through your git login (SSH key or
 #   # credential helper); never put a token in the URL.
 #   - source: git@github.com:your-org/private-skills.git
 #     ref: v1.2.0
-#     path: skills/jira-triage
+#     paths:
+#       - skills/jira-triage

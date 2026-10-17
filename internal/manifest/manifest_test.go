@@ -58,10 +58,10 @@ func TestLoad_ExternalSkills(t *testing.T) {
 externalSkills:
   - source: https://github.com/anthropics/skills.git
     ref: abc123
-    path: skills/pdf
+    paths: [skills/pdf]
   - source: git@github.com:acme/private.git
     ref: v1.2.0
-    path: team/sql
+    paths: [team/sql]
     name: warehouse-sql
 `)
 
@@ -82,7 +82,7 @@ externalSkills:
 
 func TestLoad_ExternalSkillsAcceptsKeyOnlySSHSources(t *testing.T) {
 	for _, source := range []string{"ssh://git@host/r.git", "git@host:org/r.git", "https://host/r.git"} {
-		path := writeFixture(t, "team: t\nexternalSkills:\n  - source: "+source+"\n    ref: main\n    path: skills/x\n")
+		path := writeFixture(t, "team: t\nexternalSkills:\n  - source: "+source+"\n    ref: main\n    paths: [skills/x]\n")
 		if _, err := Load(path); err != nil {
 			t.Errorf("source %q rejected: %v", source, err)
 		}
@@ -91,7 +91,7 @@ func TestLoad_ExternalSkillsAcceptsKeyOnlySSHSources(t *testing.T) {
 
 func TestLoad_ExternalSkillsRejectsInvalidEntries(t *testing.T) {
 	entry := func(source, ref, p, name string) string {
-		s := "team: t\nexternalSkills:\n  - source: " + source + "\n    ref: " + ref + "\n    path: " + p + "\n"
+		s := "team: t\nexternalSkills:\n  - source: " + source + "\n    ref: " + ref + "\n    paths: [" + p + "]\n"
 		if name != "" {
 			s += "    name: " + name + "\n"
 		}
@@ -111,7 +111,7 @@ func TestLoad_ExternalSkillsRejectsInvalidEntries(t *testing.T) {
 		{"bare token userinfo", entry("https://TOKEN@h/r.git", "main", "skills/x", ""), "credentials"},
 		{"ssh password", entry("ssh://u:p@h/r.git", "main", "skills/x", ""), "credentials"},
 		{"duplicate names", entry("https://h/r.git", "main", "skills/x", "") +
-			"  - source: https://h/o.git\n    ref: main\n    path: other/x\n", "duplicate"},
+			"  - source: https://h/o.git\n    ref: main\n    paths: [other/x]\n", "duplicate"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -131,7 +131,7 @@ func TestLoad_ExternalSkillsRejectsInvalidEntries(t *testing.T) {
 
 func TestLoad_ExternalSkillsRejectsGitOptionAndTransportInjection(t *testing.T) {
 	entry := func(source, ref string) string {
-		return "team: t\nexternalSkills:\n  - source: '" + source + "'\n    ref: '" + ref + "'\n    path: skills/x\n"
+		return "team: t\nexternalSkills:\n  - source: '" + source + "'\n    ref: '" + ref + "'\n    paths: [skills/x]\n"
 	}
 	tests := []struct {
 		name, source, ref, wantInErr string
@@ -158,7 +158,7 @@ func TestLoad_ExternalSkillsRejectsGitOptionAndTransportInjection(t *testing.T) 
 }
 
 func TestLoad_ExternalSkillsAcceptsLocalPathsAndCommitRefs(t *testing.T) {
-	path := writeFixture(t, "team: t\nexternalSkills:\n  - source: /srv/git/skills.git\n    ref: 0123456789abcdef0123456789abcdef01234567\n    path: skills/x\n  - source: ../sibling\n    ref: release/1.2\n    path: skills/y\n")
+	path := writeFixture(t, "team: t\nexternalSkills:\n  - source: /srv/git/skills.git\n    ref: 0123456789abcdef0123456789abcdef01234567\n    paths: [skills/x]\n  - source: ../sibling\n    ref: release/1.2\n    paths: [skills/y]\n")
 	if _, err := Load(path); err != nil {
 		t.Fatalf("Load rejected local-path sources or ordinary refs: %v", err)
 	}
@@ -169,12 +169,12 @@ func TestLoad_ExternalSkillsCollectionEntry(t *testing.T) {
 externalSkills:
   - source: https://github.com/anthropics/skills.git
     ref: abc123
-    path: skills
+    paths: [skills]
     all: true
     exclude: [docx, pdf]
   - source: https://github.com/anthropics/skills.git
     ref: abc123
-    path: skills/skill-creator
+    paths: [skills/skill-creator]
 `))
 	if err != nil {
 		t.Fatalf("Load returned error: %v", err)
@@ -193,8 +193,8 @@ func TestLoad_ExternalSkillsCollectionDoesNotClashWithASingleEntryNamedLikeItsPa
 	// entry whose directory is also called "skills" is not a duplicate.
 	path := writeFixture(t, `team: t
 externalSkills:
-  - {source: "https://h/r.git", ref: main, path: skills, all: true}
-  - {source: "https://h/o.git", ref: main, path: other/skills}
+  - {source: "https://h/r.git", ref: main, paths: [skills], all: true}
+  - {source: "https://h/o.git", ref: main, paths: [other/skills]}
 `)
 	if _, err := Load(path); err != nil {
 		t.Fatalf("Load rejected a collection beside a single skill: %v", err)
@@ -205,11 +205,11 @@ func TestLoad_ExternalSkillsRejectsInvalidCollectionEntries(t *testing.T) {
 	tests := []struct {
 		name, entry, wantInErr string
 	}{
-		{"all with a name", `{source: "https://h/r.git", ref: main, path: skills, all: true, name: mine}`, "name"},
-		{"exclude without all", `{source: "https://h/r.git", ref: main, path: skills/x, exclude: [y]}`, "exclude"},
-		{"exclude with a slash", `{source: "https://h/r.git", ref: main, path: skills, all: true, exclude: ["a/b"]}`, "exclude"},
-		{"empty exclude element", `{source: "https://h/r.git", ref: main, path: skills, all: true, exclude: [""]}`, "exclude"},
-		{"collection at the repository root", `{source: "https://h/r.git", ref: main, path: ".", all: true}`, "path"},
+		{"all with a name", `{source: "https://h/r.git", ref: main, paths: [skills], all: true, name: mine}`, "name"},
+		{"exclude without all", `{source: "https://h/r.git", ref: main, paths: [skills/x], exclude: [y]}`, "exclude"},
+		{"exclude with a slash", `{source: "https://h/r.git", ref: main, paths: [skills], all: true, exclude: ["a/b"]}`, "exclude"},
+		{"empty exclude element", `{source: "https://h/r.git", ref: main, paths: [skills], all: true, exclude: [""]}`, "exclude"},
+		{"collection at the repository root", `{source: "https://h/r.git", ref: main, paths: ["."], all: true}`, "path"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -221,5 +221,79 @@ func TestLoad_ExternalSkillsRejectsInvalidCollectionEntries(t *testing.T) {
 				t.Errorf("err = %v, want it to name externalSkills[0] and mention %q", err, tc.wantInErr)
 			}
 		})
+	}
+}
+
+func TestLoad_ExternalSkillsPathsEntryExpandsToOneSkillPerPath(t *testing.T) {
+	m, err := Load(writeFixture(t, `team: t
+externalSkills:
+  - source: https://github.com/anthropics/skills.git
+    ref: abc123
+    paths: [skills/pdf, skills/xlsx]
+  - source: https://h/o.git
+    ref: main
+    paths: [skills/other]
+`))
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	var got []string
+	for _, e := range m.ExternalSkills {
+		if e.Source == "" || e.Ref == "" || len(e.Paths) != 0 {
+			t.Errorf("entry %+v, want source and ref set and paths expanded away", e)
+		}
+		got = append(got, e.Source+" "+e.Ref+" "+e.Path+" "+e.EffectiveName())
+	}
+	want := []string{
+		"https://github.com/anthropics/skills.git abc123 skills/pdf pdf",
+		"https://github.com/anthropics/skills.git abc123 skills/xlsx xlsx",
+		"https://h/o.git main skills/other other",
+	}
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Errorf("entries = %q, want %q", got, want)
+	}
+}
+
+func TestLoad_ExternalSkillsRejectsInvalidPathsEntries(t *testing.T) {
+	tests := []struct {
+		name, entry, wantInErr string
+	}{
+		{"legacy path key", `{source: "https://h/r.git", ref: main, path: skills/a}`, "paths"},
+		{"name with several paths", `{source: "https://h/r.git", ref: main, paths: [skills/a, skills/b], name: mine}`, "name"},
+		{"exclude with several paths", `{source: "https://h/r.git", ref: main, paths: [skills, more], all: true, exclude: [x]}`, "exclude"},
+		{"escaping path", `{source: "https://h/r.git", ref: main, paths: [skills/a, ../b]}`, "path"},
+		{"empty path", `{source: "https://h/r.git", ref: main, paths: [""]}`, "path"},
+		{"duplicate skill name", `{source: "https://h/r.git", ref: main, paths: [a/pdf, b/pdf]}`, "pdf"},
+		{"bad source", `{source: "-oops", ref: main, paths: [skills/a]}`, "source"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Load(writeFixture(t, "team: t\nexternalSkills:\n  - "+tc.entry+"\n"))
+			if err == nil {
+				t.Fatalf("Load accepted %s", tc.entry)
+			}
+			if !strings.Contains(err.Error(), tc.wantInErr) || !strings.Contains(err.Error(), "externalSkills[0]") {
+				t.Errorf("err = %v, want it to name externalSkills[0] and mention %q", err, tc.wantInErr)
+			}
+		})
+	}
+}
+
+func TestLoad_ExternalSkillsAllExpandsEachPathToACollection(t *testing.T) {
+	m, err := Load(writeFixture(t, `team: t
+externalSkills:
+  - source: https://h/r.git
+    ref: main
+    all: true
+    paths:
+      - skills
+      - extra/skills
+`))
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	if len(m.ExternalSkills) != 2 || !m.ExternalSkills[0].IsCollection() || !m.ExternalSkills[1].IsCollection() ||
+		m.ExternalSkills[0].Path != "skills" || m.ExternalSkills[1].Path != "extra/skills" {
+		t.Errorf("entries = %+v, want two collections at skills and extra/skills", m.ExternalSkills)
 	}
 }
