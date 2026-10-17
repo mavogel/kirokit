@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-8 of 24 tasks done · 2 of 7 slices finished · started 18 Oct, 00:00 · 29 min so far.
+12 of 24 tasks done · 3 of 7 slices finished · started 18 Oct, 00:00 · 40 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -13,8 +13,8 @@
 |---|---|---|---|
 | 1 | One team stays installed and kirokit runs from any folder | `KIROKIT_REPO` roots every repository path, `install` and `sync` uninstall any other installed team first, and `sync` without a team only updates the checkout. | done |
 | 2 | The app opens with the design's shell and remembers its settings | A Wails window shows the logo, the sidebar with five sections in light and dark mode, the collapsing icon rail, and a Settings page that saves. | done |
-| 3 | The pages show the repository's real data | Teams, Agents, Install and Skills and MCP versions read the app's own copy of the repository, and the screens redraw when install records change. | next |
-| 4 | A real terminal docks at the bottom | The dock opens, closes and resizes like VS Code's and holds two tabs: your login shell and the kirokit tab for button commands. | after 3 |
+| 3 | The pages show the repository's real data | Teams, Agents, Install and Skills and MCP versions read the app's own copy of the repository, and the screens redraw when install records change. | done |
+| 4 | A real terminal docks at the bottom | The dock opens, closes and resizes like VS Code's and holds two tabs: your login shell and the kirokit tab for button commands. | next |
 | 5 | A person installs a team with buttons only | First launch asks for the repository's address and clones it, the setup dialog checks the prerequisites, and Install, Sync, Uninstall and Update run their `kirokit` commands in the terminal. | after 4 |
 | 6 | One command builds the macOS app and CI builds it too | `task desktop:build` produces a universal `kirokit.app` with the CLI inside, and a new workflow runs the app's tests and build on macOS. | after 5 |
 | 7 | Each release attaches the app and a Homebrew cask | A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_darwin_universal.zip` and pushes the `kirokit-desktop` cask. | after 6 |
@@ -85,6 +85,12 @@
 - T8 · 48002f1 · `task desktop:test` · reused: nothing changed since they passed
 - slice 2 · 48002f1 · `task desktop:test` · reused: nothing changed since they passed
 - slice 2 · 48002f1 · `go build ./...` · exit 0 · 0.4s
+- T9 · 492219a · `cd desktop && go test -run 'Capture|Prereq' ./...` · exit 0 · 1.5s
+- T10 · 492219a · `cd desktop && go test -run Catalog ./...` · exit 0 · 0.7s
+- T11 · 492219a · `cd desktop && go test -race -run Installs ./...` · exit 0 · 1.7s
+- T9 · 492219a · `cd desktop && go test -run 'Capture|Prereq' ./...` · exit 0 · 0.4s
+- T12 · 492219a · `cd desktop/frontend && node --test src/ && npm run build` · exit 0 · 0.5s
+- slice 3 · 492219a · `task desktop:test` · exit 0 · 3.5s
 
 ## Decided while building
 
@@ -94,6 +100,8 @@
 - Slice 1 · A mistyped team or a failed update in sync removed the installed team first, so sync now updates and checks the new team before removing anything; nothing you approved changes.
 - Slice 1 · The scheduled-sync setup script gets a header comment about one team per machine; nothing you approved changes.
 - The Plan · App bundle id and macOS 13 minimum live in two plist files, and the dev server serves the logo; nothing you approved changes.
+- The Plan · Startup hooks, the module requirements, a Settings note, shared page helpers and ignored generated files are needed by the data slice; nothing you approved changes.
+- Slice 3 · A placeholder file in the ignored build folder lets a clean checkout compile the app; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checkpoints
@@ -165,6 +173,7 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 ### Checkpoint after slice 2 · run 1
 
 **Runner:** fresh helper
+**Revision:** 4de8c22a2fb7743e33680f790c94b09ad4b91ac432b29e4fc81d513df611bb78
 
 - [PASS] scenario 2: all 8 steps showed their Expected. Dev server answered on :34115; at 1280x800 logo, five sidebar items (Teams, Agents, Install and sync, Skills and MCP versions, Settings) and main pane rendered; toggle took the sidebar 232px -> 60px (main 1220px wide) and back; Cmd-B twice gave 60px -> 232px; dark emulation switched body from rgb(255,255,255)/rgb(29,23,48) to rgb(23,19,31)/rgb(236,233,246); Kiro home "/" was refused with "Choose a folder inside your home folder, not the home folder itself" beside the field (field invalid, no settings.json created); the two valid values showed "Saved on this computer" and wrote settings.json; after stopping wails/vite/app by pid, port 34115 freed, restart with same HOME and reload, Settings showed /tmp/ql-kk-s2/kiro and /tmp/ql-kk-s2/origin — `evidence/cp-2-run-1-expanded.png`, `evidence/cp-2-run-1-rail.png`, `evidence/cp-2-run-1-settings-saved.png`, `evidence/cp-2-run-1-settings-restored.png`
 - [PASS] boundary: Kiro home set to "/" (the filesystem root) was refused with a message and nothing was saved. The Teams pane shows only its heading and intro line (no team list yet), which this scenario does not require.
@@ -193,6 +202,8 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 - T3 (found by checkpoint 1): a mistyped team or a failed update in sync removed the installed team first, so sync now updates and checks the new team before removing anything; nothing you approved changes.
 - T5 (amended): The scheduled-sync setup script gets a header comment about one team per machine; nothing you approved changes.
 - T6, T8 (amended): App bundle id and macOS 13 minimum live in two plist files, and the dev server serves the logo; nothing you approved changes.
+- T9, T12 (amended): Startup hooks, the module requirements, a Settings note, shared page helpers and ignored generated files are needed by the data slice; nothing you approved changes.
+- T9 (amended): A placeholder file in the ignored build folder lets a clean checkout compile the app; nothing you approved changes.
 
 ## Plan amended
 
@@ -211,6 +222,18 @@ Amended by the agent on 2026-10-17; changed 04-outline.md.
 ### T6, T8 · amended
 
 App bundle id and macOS 13 minimum live in two plist files, and the dev server serves the logo; nothing you approved changes.
+
+Amended by the agent on 2026-10-17; changed 04-outline.md.
+
+### T9, T12 · amended
+
+Startup hooks, the module requirements, a Settings note, shared page helpers and ignored generated files are needed by the data slice; nothing you approved changes.
+
+Amended by the agent on 2026-10-17; changed 04-outline.md.
+
+### T9 · amended
+
+A placeholder file in the ignored build folder lets a clean checkout compile the app; nothing you approved changes.
 
 Amended by the agent on 2026-10-17; changed 04-outline.md.
 

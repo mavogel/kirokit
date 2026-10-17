@@ -81,6 +81,28 @@ func (a *App) SaveSettings(s Settings) error {
 	return os.Rename(tmp.Name(), a.settingsPath())
 }
 
+// defaultKiroHome is the captured KIRO_HOME, else ~/.kiro.
+func defaultKiroHome(env EnvCapture, ready bool) string {
+	if ready {
+		if p := env.Getenv("KIRO_HOME"); p != "" {
+			return p
+		}
+	}
+	return filepath.Join(homeDir(), ".kiro")
+}
+
+// kiroHome is the Kiro home folder commands act on: the saved Settings value,
+// which wins over the shell's own KIRO_HOME, else the default.
+func (a *App) kiroHome() string {
+	if p := a.loadSettings().KiroHome; p != "" {
+		return p
+	}
+	a.mu.Lock()
+	env, ready := a.env, a.envReady
+	a.mu.Unlock()
+	return defaultKiroHome(env, ready)
+}
+
 func checkKiroHome(p string) string {
 	if !filepath.IsAbs(p) {
 		return "Enter an absolute folder, such as " + filepath.Join(homeDir(), ".kiro")

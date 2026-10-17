@@ -25,12 +25,21 @@ export function initSettings() {
     else input.removeAttribute('aria-invalid');
   };
 
+  const envNote = document.getElementById('env-note');
+  let edited = false;
+  home.addEventListener('input', () => { edited = true; });
+
   // Shows the saved values, or the default Kiro home before anything is saved.
+  // The window opens before the login shell has been read, so until it has
+  // (env.ready) the default is provisional: ask again, and replace it by the
+  // captured KIRO_HOME unless the person has typed in the field.
   async function load() {
     try {
       const st = await api.state();
-      home.value = st.settings.kiroHome || st.env.defaultKiroHome;
-      repo.value = st.settings.repoUrl;
+      if (!edited) home.value = st.settings.kiroHome || st.env.defaultKiroHome;
+      if (!repo.value) repo.value = st.settings.repoUrl;
+      envNote.textContent = st.env.note || '';
+      if (!st.env.ready) setTimeout(load, 300);
     } catch (e) {
       status.textContent = String(e.message || e);
     }

@@ -12,6 +12,13 @@ export const state = () => app().State();
 
 export const saveSettings = (settings) => app().SaveSettings(settings);
 
+export const catalog = () => app().Catalog();
+
+export const installs = () => app().Installs();
+
+// Captures the login environment afresh each time it is called.
+export const prerequisites = (team) => app().Prerequisites(team);
+
 // Subscribes to a Go event; returns the function that unsubscribes.
 export function on(event, handler) {
   const rt = window.runtime;

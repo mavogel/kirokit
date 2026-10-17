@@ -67,6 +67,7 @@
         <div class="page-head"><div><h1>Settings</h1><p class="lede">Where kirokit installs agents, and where its templates come from.</p></div></div>
         <div class="field"><label for="kirohome">Kiro home folder</label><input id="kirohome" spellcheck="false" autocomplete="off" aria-describedby="kirohome-hint kirohome-error"><span class="hint" id="kirohome-hint">Where Kiro reads its agents. Defaults to ~/.kiro unless KIRO_HOME is set in your shell. A team installed in the old folder stays there; uninstall it first to remove it.</span><span class="error" id="kirohome-error" role="alert"></span></div>
         <div class="field"><label for="repo">Repository address</label><input id="repo" placeholder="https://github.com/your-org/kiro-configs.git" spellcheck="false" autocomplete="off" aria-describedby="repo-hint repo-error"><span class="hint" id="repo-hint">Where your team keeps its templates.</span><span class="error" id="repo-error" role="alert"></span></div>
+        <p class="note" id="env-note" role="status"></p>
         <div class="actions"><button class="btn primary" id="save">Save</button><span class="status-line" id="save-status" role="status"></span></div>
       </section>
     </main>
