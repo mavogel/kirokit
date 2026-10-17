@@ -162,6 +162,30 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 
 **Result:** pass
 
+### Checkpoint after slice 2 · run 1
+
+**Runner:** fresh helper
+
+- [PASS] scenario 2: all 8 steps showed their Expected. Dev server answered on :34115; at 1280x800 logo, five sidebar items (Teams, Agents, Install and sync, Skills and MCP versions, Settings) and main pane rendered; toggle took the sidebar 232px -> 60px (main 1220px wide) and back; Cmd-B twice gave 60px -> 232px; dark emulation switched body from rgb(255,255,255)/rgb(29,23,48) to rgb(23,19,31)/rgb(236,233,246); Kiro home "/" was refused with "Choose a folder inside your home folder, not the home folder itself" beside the field (field invalid, no settings.json created); the two valid values showed "Saved on this computer" and wrote settings.json; after stopping wails/vite/app by pid, port 34115 freed, restart with same HOME and reload, Settings showed /tmp/ql-kk-s2/kiro and /tmp/ql-kk-s2/origin — `evidence/cp-2-run-1-expanded.png`, `evidence/cp-2-run-1-rail.png`, `evidence/cp-2-run-1-settings-saved.png`, `evidence/cp-2-run-1-settings-restored.png`
+- [PASS] boundary: Kiro home set to "/" (the filesystem root) was refused with a message and nothing was saved. The Teams pane shows only its heading and intro line (no team list yet), which this scenario does not require.
+- Finding: `wails dev` generates `desktop/frontend/wailsjs/` and `desktop/frontend/package.json.md5`; both appear as untracked in `git status` and are not git-ignored. The Plan says they must not be committed, so they need .gitignore entries.
+
+**Verdict:** The desktop window opened in the dev server with the designed sidebar and main pane, collapsed to an icon rail by button and Cmd-B, followed dark mode, refused an unsafe Kiro home, and kept its two saved settings across a full restart.
+
+**Pictures:**
+
+- `evidence/cp-2-run-1-expanded.png` — expanded sidebar with logo, five sections and the Teams pane at 1280x800 (dark scheme), proving the layout matches the design.
+- `evidence/cp-2-run-1-rail.png` — sidebar collapsed to an icon rail with a wider main pane.
+- `evidence/cp-2-run-1-settings-saved.png` — Settings with both values and the "Saved on this computer" confirmation.
+- `evidence/cp-2-run-1-settings-restored.png` — Settings after restart and reload with both values still filled in.
+
+**Try it:**
+
+1. Start the app with an empty home folder. `mkdir -p /tmp/kk-try/home && env HOME=/tmp/kk-try/home task desktop:dev`
+2. Open http://localhost:34115, toggle the sidebar and press Command-B, set Kiro home to `/` and Save (refused), then to a folder under /tmp and Save, restart and reopen Settings to see the values kept.
+
+**Result:** pass
+
 ## Deviations
 
 - T4 (amended): Git calls in tests and skills fetch now ignore the commit tool's repository variables, so two more files change; nothing you approved changes.
