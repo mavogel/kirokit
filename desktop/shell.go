@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/mavogel/kirokit/desktop/terminal"
@@ -29,7 +30,8 @@ type termExit struct {
 
 // BundledCLI returns the kirokit binary the app's terminals use.
 // 1. $KIROKIT_DESKTOP_CLI if set. 2. <executable>/../../Resources/bin/kirokit.
-// 3. desktop/build/dev-bin/kirokit, which `task desktop:dev` builds.
+// 3. desktop/build/dev-bin/kirokit, which `task desktop:dev` builds; under
+// `wails dev` (the executable is in <cwd>/build/bin) it comes before 2.
 func BundledCLI() (string, error) {
 	exe, _ := os.Executable() //nolint:errcheck // an empty path just skips the bundle lookup
 	wd, _ := os.Getwd()       //nolint:errcheck // an empty path just skips the dev lookup
@@ -41,15 +43,22 @@ func resolveCLI(override, exe, wd string) (string, error) {
 		return override, nil
 	}
 	var candidates []string
+	var dev string
+	if wd != "" {
+		dev = filepath.Join(wd, "build", "dev-bin", "kirokit")
+	}
+	// `wails dev` runs the app in desktop/build/bin, which an earlier
+	// desktop:build may have left with its own bundled CLI; the dev-bin build
+	// is the one under test, so it comes first there.
+	if dev != "" && exe != "" && strings.HasPrefix(exe, filepath.Join(wd, "build", "bin")+string(filepath.Separator)) {
+		candidates = append(candidates, dev)
+	}
 	if exe != "" {
 		macOS := filepath.Dir(exe)
-		candidates = append(candidates,
-			filepath.Join(macOS, "..", "Resources", "bin", "kirokit"),
-			// wails dev runs desktop/build/bin/kirokit.
-			filepath.Join(macOS, "..", "dev-bin", "kirokit"))
+		candidates = append(candidates, filepath.Join(macOS, "..", "Resources", "bin", "kirokit"))
 	}
-	if wd != "" {
-		candidates = append(candidates, filepath.Join(wd, "build", "dev-bin", "kirokit"))
+	if dev != "" {
+		candidates = append(candidates, dev)
 	}
 	for _, c := range candidates {
 		if info, err := os.Stat(c); err == nil && !info.IsDir() {

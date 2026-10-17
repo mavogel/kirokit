@@ -33,6 +33,17 @@ test('plain B and Control-B do nothing', () => {
   assert.equal(sb.collapsed, false);
 });
 
+test('Command-B is ignored while the sidebar is not showing', () => {
+  let hidden = true;
+  const sb = createSidebar({ isHidden: () => hidden });
+  const e = key({ metaKey: true });
+  assert.equal(sb.handleKey(e), false);
+  assert.equal(sb.collapsed, false);
+  hidden = false;
+  assert.equal(sb.handleKey(key({ metaKey: true })), true);
+  assert.equal(sb.collapsed, true);
+});
+
 test('select switches among the five pages and ignores unknown ones', () => {
   const sb = createSidebar();
   assert.deepEqual(PAGES, ['teams', 'agents', 'install', 'skills', 'settings']);

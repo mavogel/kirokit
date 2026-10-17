@@ -519,7 +519,8 @@ A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_
 | Step | Action | Expected |
 |---|---|---|
 | 1 | In a terminal run `rm -rf /tmp/ql-kk-s2 && mkdir -p /tmp/ql-kk-s2/home` then `env HOME=/tmp/ql-kk-s2/home task desktop:dev` in the background and wait for `http://localhost:34115` | the dev server answers |
-| 2 | Open `http://localhost:34115` in a browser at 1280 by 800 | the logo, the sidebar with Teams, Agents, Install and sync, Skills and MCP versions, Settings, and the main pane |
+| 2 | Open `http://localhost:34115` in a browser at 1280 by 800 | the "Set up kirokit" page, because no clone exists yet |
+| 2a | Enter `/Users/mavogel/Developer/projects/kiro-cli-kit` and press Clone | the clone finishes and the page shows the logo, the sidebar with Teams, Agents, Install and sync, Skills and MCP versions, Settings, and the main pane |
 | 3 | Click the sidebar toggle | the sidebar becomes an icon rail and the main pane is wider |
 | 4 | Click the toggle again, then press Command-B twice | expanded, rail, expanded |
 | 5 | Emulate `prefers-color-scheme: dark` | the page background and text switch to the dark tokens |

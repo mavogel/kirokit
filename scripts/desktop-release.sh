@@ -43,7 +43,9 @@ url="https://github.com/${repo}/releases/download/v${version}/${zip_name}"
 
 mkdir -p "$out/Casks"
 rm -f "$zip"
-ditto -c -k --keepParent "$app" "$zip"
+# --norsrc/--noextattr/--noacl keep AppleDouble (._*) entries out of the zip:
+# `unzip` extracts them as files, which breaks the app's code-signature seal.
+ditto -c -k --keepParent --norsrc --noextattr --noacl "$app" "$zip"
 sha="$(shasum -a 256 "$zip" | awk '{print $1}')"
 
 cat > "$cask" <<EOF

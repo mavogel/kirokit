@@ -3,7 +3,9 @@
 
 export const PAGES = ['teams', 'agents', 'install', 'skills', 'settings'];
 
-export function createSidebar({ collapsed = false, page = 'teams' } = {}) {
+// isHidden() is true while the sidebar is not showing (the first-launch page);
+// Command-B then does nothing instead of changing a sidebar nobody can see.
+export function createSidebar({ collapsed = false, page = 'teams', isHidden = () => false } = {}) {
   const state = { collapsed, page };
   const listeners = new Set();
   const emit = () => listeners.forEach((fn) => fn(state));
@@ -23,6 +25,7 @@ export function createSidebar({ collapsed = false, page = 'teams' } = {}) {
     // Command-B only: plain B and Control-B belong to the page's inputs.
     handleKey(e) {
       if (!e.metaKey || e.ctrlKey || String(e.key).toLowerCase() !== 'b') return false;
+      if (isHidden()) return false;
       e.preventDefault();
       this.toggle();
       return true;

@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-24 of 24 tasks done · 7 of 7 slices finished · started 18 Oct, 00:00.
+24 of 24 tasks done · 7 of 7 slices finished · started 18 Oct, 00:00 · 1 h 45 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -130,6 +130,23 @@
 - all · 72e379a · `cd desktop/frontend && npm ci && npm run build` · reused: nothing changed since they passed
 - all · 72e379a · `cd desktop && go vet ./... && go test ./...` · reused: nothing changed since they passed
 - all · 72e379a · `task desktop:build` · reused: nothing changed since they passed
+- all · 5ebc94b · `go test ./...` · exit 0 · 0.6s
+- all · 5ebc94b · `go vet ./...` · exit 0 · 0.1s
+- all · 5ebc94b · `golangci-lint run` · exit 0 · 0.6s
+- all · 5ebc94b · `go build ./...` · exit 0 · 0.3s
+- all · 5ebc94b · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
+- all · 5ebc94b · `cd desktop/frontend && npm ci && npm run build` · exit 0 · 1.9s
+- all · 5ebc94b · `cd desktop && go vet ./... && go test ./...` · exit 0 · 6.3s
+- all · 5ebc94b · `task desktop:build` · exit 0 · 5.7s
+- all · 5ebc94b · `go test ./...` · reused: nothing changed since they passed
+- all · 5ebc94b · `go vet ./...` · reused: nothing changed since they passed
+- all · 5ebc94b · `golangci-lint run` · reused: nothing changed since they passed
+- all · 5ebc94b · `go build ./...` · reused: nothing changed since they passed
+- all · 5ebc94b · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since they passed
+- all · 5ebc94b · `cd desktop/frontend && npm ci && npm run build` · reused: nothing changed since they passed
+- all · 5ebc94b · `cd desktop && go vet ./... && go test ./...` · reused: nothing changed since they passed
+- all · 5ebc94b · `task desktop:build` · reused: nothing changed since they passed
+- T18 · 5ebc94b · `cd desktop/frontend && node --test src/ && npm run build` · exit 0 · 0.9s
 
 ## Decided while building
 
@@ -143,6 +160,7 @@
 - Slice 3 · A placeholder file in the ignored build folder lets a clean checkout compile the app; nothing you approved changes.
 - Slice 4 · The build keeps the dist placeholder and the dock markup lives in the page; nothing you approved changes.
 - The Plan · Clone logic, first-launch page, dialogs, docs and a keystroke queue need files no card named; oracle commands now set the repository folder.
+- Slice 2 · Scenario 2 now clones first, because the pages stay hidden until a clone exists; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checkpoints
@@ -272,6 +290,7 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 - T9 (amended): A placeholder file in the ignored build folder lets a clean checkout compile the app; nothing you approved changes.
 - T13 (amended): The build keeps the dist placeholder and the dock markup lives in the page; nothing you approved changes.
 - T17, T18, T19, T20 (amended): Clone logic, first-launch page, dialogs, docs and a keystroke queue need files no card named; oracle commands now set the repository folder.
+- T7 (amended): Scenario 2 now clones first, because the pages stay hidden until a clone exists; nothing you approved changes.
 
 ## Plan amended
 
@@ -314,6 +333,12 @@ Amended by the agent on 2026-10-17; changed 04-outline.md.
 ### T17, T18, T19, T20 · amended
 
 Clone logic, first-launch page, dialogs, docs and a keystroke queue need files no card named; oracle commands now set the repository folder.
+
+Amended by the agent on 2026-10-17; changed 04-outline.md.
+
+### T7 · amended
+
+Scenario 2 now clones first, because the pages stay hidden until a clone exists; nothing you approved changes.
 
 Amended by the agent on 2026-10-17; changed 04-outline.md.
 

@@ -172,6 +172,8 @@ func TestBundledCLI_FixedOrder(t *testing.T) {
 	app := filepath.Join(root, "kirokit.app", "Contents", "MacOS", "kirokit")
 	inApp := writeScript(t, filepath.Join(root, "kirokit.app", "Contents", "Resources", "bin"), "kirokit", "")
 	dev := writeScript(t, filepath.Join(root, "work", "build", "dev-bin"), "kirokit", "")
+	devApp := filepath.Join(root, "work", "build", "bin", "kirokit.app", "Contents", "MacOS", "kirokit")
+	writeScript(t, filepath.Join(root, "work", "build", "bin", "kirokit.app", "Contents", "Resources", "bin"), "kirokit", "")
 	override := writeScript(t, filepath.Join(root, "custom"), "kirokit", "")
 	work := filepath.Join(root, "work")
 
@@ -179,6 +181,9 @@ func TestBundledCLI_FixedOrder(t *testing.T) {
 		{"override wins", override, app, work, override},
 		{"app resources", "", app, work, inApp},
 		{"dev-bin by working directory", "", filepath.Join(root, "elsewhere", "kirokit"), work, dev},
+		// wails dev runs the app that an earlier desktop:build left in build/bin,
+		// bundled CLI included; the dev-bin build is the one under test.
+		{"wails dev prefers dev-bin over a stale bundled CLI", "", devApp, work, dev},
 	} {
 		got, err := resolveCLI(tc.override, tc.exe, tc.wd)
 		if err != nil || got != tc.want {

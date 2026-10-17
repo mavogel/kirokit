@@ -13,6 +13,8 @@ fail() { echo "FAIL: $*" >&2; exit 1; }
 app="$work/kirokit.app"
 mkdir -p "$app/Contents/MacOS"
 echo "binary" > "$app/Contents/MacOS/kirokit"
+# An extended attribute is what makes a plain `ditto -c -k` store a ._ file.
+xattr -w com.apple.test x "$app/Contents/MacOS/kirokit" 2>/dev/null || true
 
 out="$work/out"
 log="$work/log"
@@ -25,6 +27,35 @@ zip="$out/kirokit-desktop_1.2.3_darwin_universal.zip"
 first="$(unzip -Z1 "$zip" | head -n 1)"
 case "$first" in kirokit.app/*) ;; *) fail "first zip entry is '$first', want kirokit.app/..." ;; esac
 unzip -Z1 "$zip" | grep -qx 'kirokit.app/Contents/MacOS/kirokit' || fail "binary missing from zip"
+
+# No AppleDouble (._*) or __MACOSX entries: `unzip` extracts them as files that
+# break the app's code-signature seal.
+if unzip -Z1 "$zip" | grep -E '(^|/)\._|^__MACOSX'; then fail "zip carries AppleDouble or __MACOSX entries"; fi
+
+# A signed app still verifies after extraction with plain `unzip`.
+if command -v codesign > /dev/null 2>&1; then
+  signed="$work/signed/kirokit.app"
+  mkdir -p "$signed/Contents/MacOS"
+  cp /bin/echo "$signed/Contents/MacOS/kirokit"
+  cat > "$signed/Contents/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>kirokit</string>
+<key>CFBundleIdentifier</key><string>de.example.kirokit-test</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+</dict></plist>
+PLIST
+  xattr -w com.apple.test x "$signed/Contents/Info.plist" 2>/dev/null || true
+  if codesign --force --deep -s - "$signed" > /dev/null 2>&1; then
+    bash "$script" --version 1.2.3 --app "$signed" --out "$work/out-signed" > /dev/null 2>&1 || fail "signed app dry run failed"
+    mkdir -p "$work/unz"
+    unzip -q "$work/out-signed/kirokit-desktop_1.2.3_darwin_universal.zip" -d "$work/unz"
+    codesign --verify --deep --strict "$work/unz/kirokit.app" || fail "unzip-extracted signed app fails codesign --verify"
+  else
+    echo "skip: could not ad-hoc sign a test app"
+  fi
+fi
 
 sha="$(shasum -a 256 "$zip" | awk '{print $1}')"
 cask="$out/Casks/kirokit-desktop.rb"

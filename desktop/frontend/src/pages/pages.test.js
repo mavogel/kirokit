@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { teamsView } from './teams.js';
 import { agentsView } from './agents.js';
 import { installView, syncArgs, uninstallArgs } from './install.js';
-import { updateArgs } from './settings.js';
+import { updateArgs, saveAndMaybeClone } from './settings.js';
 import { skillsView } from './skills.js';
 import { welcomeView, showWelcome } from './welcome.js';
 
@@ -16,7 +16,7 @@ const catalog = {
       name: 'alpha',
       prompts: 2,
       steerings: ['style'],
-      agents: [{ name: 'ops', description: 'Does <ops> & more', tools: ['read', '@jira'], servers: ['jira-mcp'], needsKey: true }],
+      agents: [{ name: 'ops', description: 'Does <ops> & more', tools: ['read', '@jira'], servers: ['jira'], pins: ['jira-mcp'], needsKey: true }],
       skills: [
         { name: 'own', source: 'Written by the team' },
         { name: 'ext', source: 'https://example.com/s.git @ v1' },
@@ -139,6 +139,43 @@ test('The sidebar is hidden until a clone exists', () => {
   assert.equal(showWelcome({ cloned: true }), false);
   // git has made the folder before the first sync ends; the page stays until clone:done.
   assert.equal(showWelcome({ cloned: true, welcome: { busy: true } }), true);
+});
+
+test('A clone started from Settings keeps the pages showing', () => {
+  const view = { cloned: true, welcome: { busy: true, fromSettings: true } };
+  assert.equal(showWelcome(view), false);
+  assert.equal(showWelcome({ ...view, cloned: false }), false);
+});
+
+test('Saving a different address in Settings clones it; the same one does not', async () => {
+  const calls = [];
+  const save = async (s) => calls.push(['save', s]);
+  const clone = async (a) => calls.push(['clone', a]);
+  const saved = { repoUrl: 'https://example.com/old.git', kiroHome: '/h' };
+
+  const changed = await saveAndMaybeClone(save, clone, saved, { repoUrl: 'https://example.com/new.git', kiroHome: '/h2' });
+  assert.equal(changed, true);
+  // The old address is saved with the home folder; Clone records the new one
+  // only once it starts, so a refused address is never remembered.
+  assert.deepEqual(calls, [['save', { repoUrl: 'https://example.com/old.git', kiroHome: '/h2' }], ['clone', 'https://example.com/new.git']]);
+
+  calls.length = 0;
+  assert.equal(await saveAndMaybeClone(save, clone, saved, { ...saved }), false);
+  assert.deepEqual(calls, [['save', saved]]);
+});
+
+test('A refused save does not start a clone, and a refused clone rejects', async () => {
+  const saved = { repoUrl: 'https://example.com/old.git', kiroHome: '/h' };
+  let cloned = false;
+  await assert.rejects(
+    saveAndMaybeClone(async () => { throw new Error('KiroHome: no'); }, async () => { cloned = true; }, saved, { repoUrl: 'https://example.com/n.git', kiroHome: '/' }),
+    /KiroHome/,
+  );
+  assert.equal(cloned, false);
+  await assert.rejects(
+    saveAndMaybeClone(async () => {}, async () => { throw new Error('kirokit is still running a command'); }, saved, { repoUrl: 'https://example.com/n.git', kiroHome: '/h' }),
+    /still running/,
+  );
 });
 
 test('No page source names a sample team', () => {

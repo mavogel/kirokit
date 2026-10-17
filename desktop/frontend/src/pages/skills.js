@@ -13,9 +13,9 @@ export function skillsView(view) {
       skillRows.push(`<tr><td class="mono">${esc(s.name)}</td><td>${esc(t.name)}</td><td class="desc">${esc(s.source)}</td></tr>`);
     }
     for (const a of t.agents) {
-      for (const server of a.servers) {
-        if (!users.has(server)) users.set(server, new Set());
-        users.get(server).add(t.name);
+      for (const pin of a.pins || []) {
+        if (!users.has(pin)) users.set(pin, new Set());
+        users.get(pin).add(t.name);
       }
     }
   }

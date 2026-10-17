@@ -17,7 +17,7 @@ document.getElementById('logo').src = logoUrl;
 const app = document.getElementById('app');
 const collapse = document.getElementById('collapse');
 const navButtons = [...document.querySelectorAll('.nav button')];
-const sidebar = createSidebar();
+const sidebar = createSidebar({ isHidden: () => setup() });
 
 // The pages draw from one view: the catalog, the install records, whether the
 // clone exists, and the state of the buttons. A catalog error is kept as text
@@ -100,7 +100,23 @@ async function startClone(address) {
   }
 }
 
-const settings = initSettings(() => runCommand(updateArgs(view.installs), 'update'));
+// A new address saved in Settings clones into a fresh folder while the pages
+// keep using the old clone. A refusal rejects back to the Settings form.
+async function cloneFromSettings(address) {
+  const before = view.welcome;
+  view.notice = '';
+  view.welcome = { address, error: '', busy: true, fromSettings: true };
+  try {
+    await api.clone(address);
+  } catch (e) {
+    view.welcome = before;
+    throw e;
+  } finally {
+    draw();
+  }
+}
+
+const settings = initSettings(() => runCommand(updateArgs(view.installs), 'update'), cloneFromSettings);
 const paint = [
   initWelcome(document.getElementById('page-welcome'), startClone),
   initTeams(document.getElementById('teams-grid'), installTeam),
@@ -168,7 +184,7 @@ api.on('term:kirokit:exit', ({ id }) => {
   refresh();
 });
 api.on('clone:done', ({ ok, error }) => {
-  view.welcome = { ...view.welcome, busy: false, error: ok ? '' : error };
+  view.welcome = { ...view.welcome, busy: false, fromSettings: false, error: ok ? '' : error };
   view.notice = error || '';
   settings.load(); // the Settings address field now shows the cloned address
   refresh();

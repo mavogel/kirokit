@@ -5,7 +5,10 @@ import { esc } from './html.js';
 // view.welcome = { address, error, busy }
 // It also stays while the clone runs: git creates the folder before the first
 // sync has finished.
-export const showWelcome = (view) => !view.cloned || Boolean(view.welcome?.busy);
+// A clone started from Settings (welcome.fromSettings) never hides the pages:
+// the old clone keeps serving them until the new one is ready.
+export const showWelcome = (view) =>
+  !view.welcome?.fromSettings && (!view.cloned || Boolean(view.welcome?.busy));
 
 export function welcomeView(view) {
   const w = view.welcome || {};

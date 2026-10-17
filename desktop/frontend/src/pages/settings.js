@@ -12,6 +12,18 @@ export function parseFieldErrors(message) {
   return found;
 }
 
+// Saves the form and, when it holds a different repository address, starts the
+// fresh-folder clone. The old address is what gets saved with the form: Clone
+// records the new one itself once it starts, so a refused address is never
+// remembered. Resolves to whether a clone started; rejects with the save's or
+// the clone's refusal (a save refusal means no clone started).
+export async function saveAndMaybeClone(save, clone, saved, form) {
+  const changed = form.repoUrl !== '' && form.repoUrl !== saved.repoUrl;
+  await save({ repoUrl: changed ? saved.repoUrl : form.repoUrl, kiroHome: form.kiroHome });
+  if (changed) await clone(form.repoUrl);
+  return changed;
+}
+
 // Update fetches the newest release: for the installed team when there is one,
 // else only the checkout.
 export const updateArgs = (installs) => {
@@ -19,9 +31,10 @@ export const updateArgs = (installs) => {
   return team ? ['sync', team, '--latest-tag'] : ['sync', '--latest-tag'];
 };
 
-// onUpdate() runs Update. The returned paint(view) keeps the button disabled
+// onUpdate() runs Update; onClone(address) starts a clone of a new address and
+// rejects with the reason it was refused. The returned paint(view) keeps the button disabled
 // while a command runs and shows a refusal beside it.
-export function initSettings(onUpdate) {
+export function initSettings(onUpdate, onClone) {
   const updateBtn = document.getElementById('update');
   const updateErr = document.getElementById('update-error');
   updateBtn.addEventListener('click', () => onUpdate());
@@ -39,6 +52,7 @@ export function initSettings(onUpdate) {
   };
 
   const envNote = document.getElementById('env-note');
+  const saved = { repoUrl: '' }; // the address Settings last held
   let edited = false;
   home.addEventListener('input', () => { edited = true; });
 
@@ -50,6 +64,7 @@ export function initSettings(onUpdate) {
     try {
       const st = await api.state();
       if (!edited) home.value = st.settings.kiroHome || st.env.defaultKiroHome;
+      saved.repoUrl = st.settings.repoUrl || '';
       if (!repo.value) repo.value = st.settings.repoUrl;
       envNote.textContent = st.env.note || '';
       if (!st.env.ready) setTimeout(load, 300);
@@ -62,11 +77,27 @@ export function initSettings(onUpdate) {
     status.textContent = '';
     show(home, homeErr, '');
     show(repo, repoErr, '');
+    let cloning = false;
     try {
-      await api.saveSettings({ repoUrl: repo.value.trim(), kiroHome: home.value.trim() });
-      status.textContent = 'Saved on this computer';
+      const form = { repoUrl: repo.value.trim(), kiroHome: home.value.trim() };
+      const changed = await saveAndMaybeClone(
+        api.saveSettings,
+        async (address) => {
+          cloning = true;
+          await onClone(address);
+        },
+        saved,
+        form,
+      );
+      saved.repoUrl = form.repoUrl;
+      status.textContent = changed ? 'Saved. Cloning the new repository; follow it in the kirokit tab.' : 'Saved on this computer';
     } catch (e) {
       const err = parseFieldErrors(e && e.message ? e.message : e);
+      // A refused clone start carries no field prefix: it belongs beside the address.
+      if (cloning && !err.repoUrl) {
+        err.repoUrl = err.other;
+        err.other = '';
+      }
       show(home, homeErr, err.kiroHome);
       show(repo, repoErr, err.repoUrl);
       status.textContent = err.other;

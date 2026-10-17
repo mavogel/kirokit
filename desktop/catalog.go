@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -42,7 +44,10 @@ type Agent struct {
 	Description string   `json:"description"`
 	Tools       []string `json:"tools"`
 	Servers     []string `json:"servers"`
-	NeedsKey    bool     `json:"needsKey"`
+	// Pins are the keys of env/mcp-versions.yaml the agent's template resolves
+	// with mcpVersion; a server name need not equal the key of its pin.
+	Pins     []string `json:"pins"`
+	NeedsKey bool     `json:"needsKey"`
 }
 
 // Skill's Source is "Written by the team" or "<source> @ <ref>".
@@ -128,6 +133,7 @@ func readTeam(teamsRoot, name, rendered string) (Team, error) {
 			a.Servers = append(a.Servers, s)
 		}
 		sort.Strings(a.Servers)
+		a.Pins = templatePins(filepath.Join(teamDir, "agents", file, "agent.json.tmpl"))
 		_, statErr := os.Stat(filepath.Join(teamDir, "agents", file, "env", "secrets.enc.yaml"))
 		a.NeedsKey = statErr == nil
 		team.Agents = append(team.Agents, a)
@@ -174,6 +180,25 @@ func readTeam(teamsRoot, name, rendered string) (Team, error) {
 	}
 	sort.Strings(team.Steerings)
 	return team, nil
+}
+
+var mcpVersionCall = regexp.MustCompile(`mcpVersion\s+"([^"]+)"`)
+
+// templatePins returns the sorted, distinct keys the agent template passes to
+// mcpVersion. An unreadable template has none.
+func templatePins(path string) []string {
+	pins := []string{}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return pins
+	}
+	for _, m := range mcpVersionCall.FindAllStringSubmatch(string(data), -1) {
+		if !slices.Contains(pins, m[1]) {
+			pins = append(pins, m[1])
+		}
+	}
+	sort.Strings(pins)
+	return pins
 }
 
 func nonNil(s []string) []string {

@@ -73,6 +73,28 @@ func TestCatalog_ReadsRealTeams(t *testing.T) {
 	}
 }
 
+// Pins lists the central version pins an agent's template resolves, which is
+// not the same as its server names: devops runs "atlassian" through the
+// pinned mcp-remote proxy and "context7" through the pinned context7-mcp.
+func TestCatalog_AgentPinsFollowMcpVersionCalls(t *testing.T) {
+	cat, err := BuildCatalog("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string][]string{
+		"platform-team/devops":      {"context7-mcp", "mcp-remote"},
+		"platform-team/platformdev": {"confluence-mcp"},
+		"data-team/javadev":         {"snowflake-mcp"},
+		"data-team/godev":           {"pipeline-mcp"},
+	}
+	for key, pins := range want {
+		team, agent, _ := strings.Cut(key, "/")
+		if got := findAgent(t, findTeam(t, cat, team), agent).Pins; !slices.Equal(got, pins) {
+			t.Errorf("%s Pins = %v, want %v", key, got, pins)
+		}
+	}
+}
+
 // NeedsKey follows the encrypted secrets file in the source tree.
 func TestCatalog_NeedsKeyExactlyForShippedSecrets(t *testing.T) {
 	cat, err := BuildCatalog("..")
