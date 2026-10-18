@@ -49,15 +49,16 @@ jobs:
       - name: Build
         run: task desktop:build
 
-      # Early feedback on the release config: the same GoReleaser run as the
-      # Release workflow, as a snapshot that builds the CLI archives, the app's
-      # DMGs and the casks but publishes nothing.
+      # Early feedback on the release config, on pull requests only: the same
+      # GoReleaser run as the Release workflow, as a snapshot that builds the CLI
+      # archives, the app's DMGs and the casks but publishes nothing. A push to
+      # main is the Release workflow's own run, which does it for real.
       - name: Stage the app for GoReleaser
-        if: env.GORELEASER_KEY != ''
+        if: github.event_name == 'pull_request' && env.GORELEASER_KEY != ''
         run: scripts/desktop-prebuilt.sh
 
       - name: Release snapshot
-        if: env.GORELEASER_KEY != ''
+        if: github.event_name == 'pull_request' && env.GORELEASER_KEY != ''
         uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
         with:
           distribution: goreleaser-pro
