@@ -15,8 +15,9 @@ export function parseFieldErrors(message) {
 // Saves the form and, when it holds a different repository address, starts the
 // fresh-folder clone. The old address is what gets saved with the form: Clone
 // records the new one itself once the clone succeeds, so a refused or failed
-// address is never remembered. Resolves to whether a clone started; rejects with the save's or
-// the clone's refusal (a save refusal means no clone started).
+// address is never remembered. Resolves to whether a clone started; rejects
+// with the save's or the clone's refusal (a save refusal means no clone
+// started).
 export async function saveAndMaybeClone(save, clone, saved, form) {
   const changed = form.repoUrl !== '' && form.repoUrl !== saved.repoUrl;
   await save({ repoUrl: changed ? saved.repoUrl : form.repoUrl, kiroHome: form.kiroHome });
@@ -32,8 +33,8 @@ export const updateArgs = (installs) => {
 };
 
 // onUpdate() runs Update; onClone(address) starts a clone of a new address and
-// rejects with the reason it was refused. The returned paint(view) keeps the button disabled
-// while a command runs and shows a refusal beside it.
+// rejects with the reason it was refused. The returned paint(view) keeps the
+// button disabled while a command runs and shows a refusal beside it.
 export function initSettings(onUpdate, onClone) {
   const updateBtn = document.getElementById('update');
   const updateErr = document.getElementById('update-error');

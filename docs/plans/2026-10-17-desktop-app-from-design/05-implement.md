@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-24 of 24 tasks done · 7 of 7 slices finished · started 18 Oct, 00:00 · 2 h 12 min so far.
+24 of 24 tasks done · 7 of 7 slices finished · started 18 Oct, 00:00.
 <!-- /ql:summary -->
 
 ## Slices
