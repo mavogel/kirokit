@@ -44,7 +44,7 @@ the vendored diff, then run kirokit update <team>.`,
 			out := cmd.OutOrStdout()
 			fetched := false
 			for _, t := range teams {
-				m, err := manifest.Load(filepath.Join(teamsRoot, t, "manifest.yaml"))
+				m, err := manifest.Load(filepath.Join(repoPath(teamsRoot), t, "manifest.yaml"))
 				if err != nil {
 					return fmt.Errorf("kirokit skills fetch: %s: %w", t, err)
 				}
@@ -55,7 +55,7 @@ the vendored diff, then run kirokit update <team>.`,
 					continue
 				}
 
-				lock, err := externalskills.Fetch(filepath.Join(teamsRoot, t), m.ExternalSkills)
+				lock, err := externalskills.Fetch(filepath.Join(repoPath(teamsRoot), t), m.ExternalSkills)
 				if err != nil {
 					return fmt.Errorf("kirokit skills fetch: %s: %w", t, err)
 				}

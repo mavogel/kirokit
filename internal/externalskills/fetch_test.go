@@ -14,7 +14,7 @@ func git(t *testing.T, dir string, args ...string) string {
 	t.Helper()
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(),
+	cmd.Env = append(WithoutRepoGitEnv(),
 		"GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t",
 		"GIT_CONFIG_GLOBAL=/dev/null", "GIT_CONFIG_SYSTEM=/dev/null")
 	out, err := cmd.CombinedOutput()
@@ -142,6 +142,7 @@ func TestFetch_CommitSHAPinFallsBackWhenShallowFetchIsRefused(t *testing.T) {
 	git(t, probe, "init", "-q")
 	probeCmd := exec.Command("git", "fetch", "--depth", "1", repo, v1)
 	probeCmd.Dir = probe
+	probeCmd.Env = WithoutRepoGitEnv()
 	if err := probeCmd.Run(); err == nil {
 		t.Skip("this git serves unadvertised commits even over protocol v0; the fallback cannot be forced here")
 	}

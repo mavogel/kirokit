@@ -1,0 +1,10 @@
+# Spike: creack/pty v1.1.24 + golang.org/x/sys v0.49.0, /bin/zsh -l in a pty (2026-10-17, macOS, go1.27.2)
+StartWithSize(80x24), write "echo marker-$KIROKIT_SPIKE\r", Setsize(120x40), write "stty size\r", write "exit\r", Wait, Close
+marker seen: true      (env passed through, output streamed)
+resize seen: true      ("40 120" printed after Setsize)
+exit code: 0           (shell exits and is reaped; read loop ends on EOF)
+
+Busy-shell detection, with this user's zsh configuration, while "sleep 3" runs:
+TIOCGPGRP on the master: fg pgrp == shell pid before, during and after sleep (no signal)
+children of the shell (kern.proc.all, Ppid): always 1, a helper zsh (pid 39249, own pgid) the user's config starts; sleep never appears as a direct child
+=> whether the person's own shell is busy cannot be read reliably from outside across shell configurations

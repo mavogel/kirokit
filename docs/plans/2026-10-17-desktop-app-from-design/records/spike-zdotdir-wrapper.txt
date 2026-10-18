@@ -1,0 +1,15 @@
+# Spike: zsh startup wrapper keeps the bundled CLI first and the app's settings exported (2026-10-17)
+Wrapper folder (ZDOTDIR) holds .zshenv .zprofile .zshrc .zlogin; each sources the person's own "$HOME/<file>" with ZDOTDIR="$HOME".
+The wrapper .zshrc then runs:
+  path=("$KIROKIT_BIN" ${path:#$KIROKIT_BIN})
+  export KIROKIT_REPO="$KIROKIT_APP_REPO" KIRO_HOME="$KIROKIT_APP_KIRO_HOME"
+
+$ env -i HOME=$HOME USER=$USER SHELL=/bin/zsh TERM=xterm PATH=<bin>:/usr/bin:/bin ZDOTDIR=<wrapper> \
+    KIROKIT_BIN=<bin> KIROKIT_APP_REPO=/tmp/repo KIROKIT_APP_KIRO_HOME=/tmp/kh KIRO_HOME=/wrong \
+    /bin/zsh -il -c 'command -v kirokit; kirokit; echo "KIRO_HOME=$KIRO_HOME KIROKIT_REPO=$KIROKIT_REPO"; command -v sops'
+<bin>/kirokit
+bundled-kirokit
+KIRO_HOME=/tmp/kh KIROKIT_REPO=/tmp/repo
+/opt/homebrew/bin/sops          (the person's own startup files still ran: Homebrew is on PATH)
+
+Limit: no other kirokit is on this machine's PATH, so the case "user rc puts an older kirokit first" was not reproduced; the wrapper's last-word prepend covers it by construction.

@@ -1,0 +1,25 @@
+Scenario 4 at 0074301 (iteration 3). Setup exactly as step 1 (origin tagged v99.0.0, empty keys.txt, /tmp/ql-kk-s4/kirokit built at HEAD),
+task desktop:dev with HOME=/tmp/ql-kk-s4/home SOPS_AGE_KEY_FILE=/tmp/ql-kk-s4/keys.txt (task pid 19269). Chrome DevTools 1280x800.
+step 2  "Set up kirokit" with the address field.                                                   PASS
+step 3  "-oops" + Clone: "Use an https, ssh or file address, git@host:path, or an absolute path" beside the field, aria-invalid;
+        the dock stayed closed and nothing ran.                                                    PASS
+step 4  /tmp/ql-kk-s4/origin + Clone: kirokit tab "▸ git clone -- /tmp/ql-kk-s4/origin …/repo", "Cloning into …", "done.",
+        "▸ kirokit sync --latest-tag", "checked out v99.0.0 at 0074301"; Teams lists data-team and platform-team.   PASS
+step 5  Settings (address field shows /tmp/ql-kk-s4/origin, stored after the successful clone): Kiro home /tmp/ql-kk-s4/kiro, Save -> "Saved on this computer".  PASS
+step 6  Install on platform-team: dialog "Install platform-team", SOPS /opt/homebrew/bin/sops found, Decryption key /tmp/ql-kk-s4/keys.txt found,
+        Kiro CLI /opt/homebrew/bin/kiro-cli found, "Everything is ready. You can install.", Install enabled.  (it3-scenario-4-step-6.png)  PASS
+step 7  Install: "▸ kirokit install platform-team", "installed platform-team into /tmp/ql-kk-s4/kiro"; Teams "platform-team installed, Last change 02:27".  PASS
+step 8  Install and sync: platform-team installed, 13 files, Sync, Uninstall.                       PASS
+step 9  zsh: `kirokit install data-team` -> "uninstalled platform-team from /tmp/ql-kk-s4/kiro", "installed data-team into /tmp/ql-kk-s4/kiro";
+        Install and sync: only data-team (9 files); Teams: data-team installed, platform-team not installed.  (it3-scenario-4-step-9.png)  PASS
+step 9a diff -r exit 0 (it3-oracle.txt)                                                              PASS
+step 10 Install on platform-team: "Replace the installed team?" "data-team is installed. A Kiro home holds one team, so installing platform-team
+        uninstalls data-team first." Cancel: no dialog open, kirokit tab unchanged, nothing installed.  (it3-scenario-4-step-10.png)  PASS
+step 11 Install, Replace, setup dialog Install: "▸ kirokit install platform-team", "uninstalled data-team from /tmp/ql-kk-s4/kiro",
+        "installed platform-team into /tmp/ql-kk-s4/kiro".                                          PASS
+step 12 Sync: "▸ kirokit sync platform-team --latest-tag", "synced platform-team into /tmp/ql-kk-s4/kiro at 0074301".   PASS
+step 13 diff -r exit 0 (it3-oracle.txt)                                                              PASS
+step 14 Uninstall: "▸ kirokit uninstall platform-team", "uninstalled platform-team from /tmp/ql-kk-s4/kiro"; "Nothing is installed yet"; Teams none installed.  PASS
+step 15 v99.1.0, v99.2.0 (+ qa-team) in origin, Update: "▸ kirokit sync --latest-tag", "updated 0074301 -> f504d22", "checked out v99.2.0 at f504d22";
+        Teams lists data-team, platform-team, qa-team.  (it3-scenario-4-step-15.png)                PASS
+dev log: only the known wails dev noise "Unknown message from front end: runtime:ready" (9x, from other sessions' pages reconnecting); no panic.

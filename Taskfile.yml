@@ -28,3 +28,21 @@ tasks:
       - task: vet
       - task: lint
       - task: test
+
+  desktop:test:
+    desc: Build the desktop frontend, run its tests, then vet and test the desktop module
+    cmds:
+      - cd desktop/frontend && npm ci && npm run build
+      - cd desktop/frontend && node --test "src/**/*.test.js"
+      - cd desktop && go vet ./... && go test ./...
+
+  desktop:dev:
+    desc: Open the desktop app in Wails dev mode (Wails v2.14.0)
+    cmds:
+      - go build -o desktop/build/dev-bin/kirokit ./cmd/kirokit
+      - cd desktop && go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 dev
+
+  desktop:build:
+    desc: Build desktop/build/bin/kirokit.app (universal, macOS 13 or later, CLI bundled; VERSION overrides git describe)
+    cmds:
+      - scripts/desktop-build.sh

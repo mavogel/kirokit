@@ -1,0 +1,154 @@
+HEAD: 65af3388d2afbaa4174e7bf1a19b0b05bfb5a9ec
+== Scenario 1 ==
+
+### 1 build
+exit 0
+
+### 2
+installed platform-team into /tmp/ql-kk-s1/home
+exit 0
+
+### 3
+uninstalled platform-team from /tmp/ql-kk-s1/home
+installed data-team into /tmp/ql-kk-s1/home
+exit 0
+
+### 4
+data-team.json
+exit 0
+
+### 5
+installed data-team into /tmp/ql-kk-s1/home
+exit 0
+
+### 6
+rendered platform-team -> /tmp/ql-kk-s1/out
+exit 0
+
+### 7
+exit 0
+
+### 8
+updated 65af338 -> 9a919bf
+checked out v0.2.0 at 9a919bf
+exit 0
+data-team.json
+
+### 9
+kirokit sync: --kb-agent needs a team
+exit 1
+
+### probe: install unknown team keeps data-team
+kirokit install: manifest: read teams/no-such-team/manifest.yaml: open teams/no-such-team/manifest.yaml: no such file or directory
+exit 1
+data-team.json
+
+### 10
+?   	github.com/mavogel/kirokit/cmd/kirokit	[no test files]
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	(cached)
+ok  	github.com/mavogel/kirokit/internal/backup	(cached)
+ok  	github.com/mavogel/kirokit/internal/externalskills	(cached)
+ok  	github.com/mavogel/kirokit/internal/golden	(cached)
+ok  	github.com/mavogel/kirokit/internal/install	(cached)
+ok  	github.com/mavogel/kirokit/internal/kiroconfig	(cached)
+ok  	github.com/mavogel/kirokit/internal/manifest	(cached)
+ok  	github.com/mavogel/kirokit/internal/mcpversions	(cached)
+ok  	github.com/mavogel/kirokit/internal/render	(cached)
+ok  	github.com/mavogel/kirokit/internal/scaffold	(cached)
+ok  	github.com/mavogel/kirokit/internal/sopswrap	(cached)
+exit 0
+
+== Scenario 5 ==
+
+### 1 task desktop:build
+exit 0
+
+[31;107m[31;107m ♥  [0m[0m [92m[92mIf Wails is useful to you or your company, please consider sponsoring the project:[0m[0m
+https://github.com/sponsors/leaanthony
+desktop/build/bin/kirokit.app: replacing existing signature
+built desktop/build/bin/kirokit.app (version 0.2.0-24-g65af338-dirty)
+
+### 2
+x86_64 arm64
+
+### 3
+x86_64 arm64
+
+### 4
+kirokit 0.2.0-24-g65af338-dirty
+commit: 65af3388d2afbaa4174e7bf1a19b0b05bfb5a9ec
+built:  2026-10-17T23:55:18Z
+exit 0
+
+### 5
+macos-latest
+
+### 6
+exit 0
+
+== Scenario 6 ==
+
+### 1
+desktop-release_test: ok
+exit 0
+
+### 2
+zip:    /tmp/ql-kk-s6/kirokit-desktop_0.0.0_darwin_universal.zip
+sha256: 0ce3ab34ca60d934f8db34d59fac3aa9c0d63591deed5888ae127c769bc505bc
+cask:   /tmp/ql-kk-s6/Casks/kirokit-desktop.rb (Casks/kirokit-desktop.rb)
+Dry run: nothing was uploaded or pushed (pass --publish to upload and push).
+exit 0
+
+### 3
+Archive:  /tmp/ql-kk-s6/kirokit-desktop_0.0.0_darwin_universal.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  10-18-2026 00:26   kirokit.app/
+        0  10-18-2026 00:26   kirokit.app/Contents/
+        0  10-18-2026 00:26   kirokit.app/Contents/_CodeSignature/
+     2676  10-18-2026 01:55   kirokit.app/Contents/_CodeSignature/CodeResources
+        0  10-18-2026 01:55   kirokit.app/Contents/MacOS/
+
+### 4
+release
+
+### probe: missing --version
+desktop-release: --version is required
+usage: desktop-release.sh --version <version> --app <kirokit.app> --out <dir> [--publish]
+exit 1
+
+== Judge note: release zip AppleDouble and codesign after unzip ==
+
+### ._ or __MACOSX entries in the real app zip (count)
+0
+
+### xattrs present on the built app (proves the zip had something to drop)
+desktop/build/bin/kirokit.app/Contents/_CodeSignature/CodeResources: com.apple.provenance: 
+desktop/build/bin/kirokit.app/Contents/_CodeSignature: com.apple.provenance: 
+desktop/build/bin/kirokit.app/Contents/MacOS/kirokit: com.apple.provenance: 
+desktop/build/bin/kirokit.app/Contents/MacOS: com.apple.provenance: 
+desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit: com.apple.provenance: 
+
+### codesign --verify on the built app
+exit 0
+
+### unzip extract, then codesign --verify
+unzip exit 0
+/tmp/ql-kk-s6-unz:
+.
+..
+kirokit.app
+
+/tmp/ql-kk-s6-unz/kirokit.app/Contents:
+.
+..
+Info.plist
+MacOS
+Resources
+_CodeSignature
+/tmp/ql-kk-s6-unz/kirokit.app: valid on disk
+/tmp/ql-kk-s6-unz/kirokit.app: satisfies its Designated Requirement
+codesign exit 0
+
+### control: the old ditto flags on the same app
+10

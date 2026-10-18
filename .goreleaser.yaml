@@ -24,6 +24,44 @@ builds:
       - -X github.com/mavogel/kirokit/cmd/kirokit/commands.commit={{ .Commit }}
       - -X github.com/mavogel/kirokit/cmd/kirokit/commands.date={{ .Date }}
 
+  # The Wails desktop app is built by `task desktop:build`; scripts/desktop-prebuilt.sh
+  # stages its universal binary once per architecture, because a cask only
+  # takes DMGs labelled amd64 or arm64.
+  - id: kirokit-desktop-bin
+    builder: prebuilt
+    binary: kirokit
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    prebuilt:
+      path: desktop/build/bin/prebuilt/kirokit_{{ .Os }}_{{ .Arch }}/kirokit
+
+# Wraps the universal binary in kirokit.app. The Wails Info.plist, icon and the
+# bundled CLI come from the built app, so the bundle matches `task desktop:build`.
+app_bundles:
+  - id: kirokit-desktop
+    ids:
+      - kirokit-desktop-bin
+    name: kirokit
+    bundle: io.github.mavogel.kirokit
+    extra_files:
+      - src: desktop/build/bin/prebuilt/bundle/Contents/Info.plist
+        dst: Contents/Info.plist
+      - src: desktop/build/bin/prebuilt/bundle/Contents/Resources/iconfile.icns
+        dst: Contents/Resources/iconfile.icns
+      - src: desktop/build/bin/prebuilt/bundle/Contents/Resources/bin/kirokit
+        dst: Contents/Resources/bin/kirokit
+
+dmg:
+  - id: kirokit-desktop
+    ids:
+      - kirokit-desktop
+    use: appbundle
+    replace: true
+    name: "kirokit-desktop_{{ .Version }}_darwin_{{ .Arch }}"
+
 archives:
   - id: default
     ids:
@@ -55,6 +93,8 @@ changelog:
 
 homebrew_casks:
   - name: kirokit
+    ids:
+      - default
     repository:
       owner: mavogel
       name: homebrew-tap
@@ -68,6 +108,25 @@ homebrew_casks:
           if OS.mac?
             system_command "/usr/bin/xattr",
                            args: ["-dr", "com.apple.quarantine", "#{staged_path}/kirokit"]
+          end
+
+  - name: kirokit-desktop
+    ids:
+      - kirokit-desktop
+    app: kirokit.app
+    repository:
+      owner: mavogel
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: https://github.com/mavogel/kirokit
+    description: Desktop app to install and sync Kiro CLI team configs
+    # The app is not notarized; without this macOS reports "kirokit is damaged".
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr",
+                           args: ["-dr", "com.apple.quarantine", "#{appdir}/kirokit.app"]
           end
 
 release:

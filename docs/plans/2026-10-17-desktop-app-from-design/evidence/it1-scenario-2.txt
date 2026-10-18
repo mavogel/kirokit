@@ -1,0 +1,15 @@
+# Scenario 2 at 5ebc94b (task desktop:dev with HOME=/tmp/ql-kk-s2/home; Go and npm caches passed through as in scenario 3; Chrome DevTools 1280x800)
+1  dev server answered on :34115
+2  FAIL as written: with an empty HOME the page shows "Set up kirokit" (address field, Clone, Show terminal) and no sidebar,
+   because T18 hides the sidebar pages until a clone exists. Scenario 2 predates T18 and was not amended. (it1-scenario-2-step-2.png)
+   Cmd-B pressed on that first-launch page silently collapsed the hidden sidebar: after the clone it first appeared as the rail.
+   To continue, the address /Users/mavogel/Developer/projects/kiro-cli-kit was cloned from the first-launch page; then:
+   logo visible, sidebar Teams, Agents, Install and sync, Skills and MCP versions, Settings, main pane; aria-current="page" on Teams.
+3-4 toggle: sidebar 60 -> 232 -> 60 px, main 1220 -> 1048 -> 1220 px; Cmd-B twice: 232 then 60; Ctrl-B and plain b: no change. (it1-scenario-2-rail.png)
+5  prefers-color-scheme light: body rgb(255,255,255) / rgb(29,23,48); dark: rgb(23,19,31) / rgb(236,233,246). (it1-scenario-2-light.png)
+6  Kiro home "/" + Save: refused, "Choose a folder inside your home folder, not the home folder itself" beside the field, aria-invalid; settings.json kiroHome stayed "". (it1-scenario-2-step-6.png)
+7  /tmp/ql-kk-s2/kiro and /tmp/ql-kk-s2/origin + Save: "Saved on this computer".
+8  all dev pids stopped (kill by pid), port 34115 free, restarted with the same HOME, reload, Settings: /tmp/ql-kk-s2/kiro and /tmp/ql-kk-s2/origin. (it1-scenario-2-step-8.png)
+Console on every load: "Uncaught TypeError: Cannot read properties of null (reading 'nodes')" at Overlay.svelte, thrown from
+the Wails dev-server script /wails/ipc.js (Svelte runtime; the app's own src/ has no "nodes"), not from the app code.
+Dev log: repeated "ERR | Unknown message from front end: runtime:ready" from the Wails dev server.

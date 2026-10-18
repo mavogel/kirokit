@@ -1,0 +1,4 @@
+Fix of the it2 scenario 2 step 7 gap, task desktop:dev with HOME=/tmp/ql-kk-fx/home (seeded clone of origin2, settings repoUrl /tmp/ql-kk-s2/origin2), Chrome DevTools on :34115.
+1. Settings, address /tmp/ql-kk-fx/missing, Save: after the git failure (exit 128) #repo-error beside the field reads "git clone failed (exit 128). Check the address and your access, then try again.", aria-invalid true, status empty (no "Cloning"). State().settings.repoUrl stays /tmp/ql-kk-s2/origin2 (fx-clone-failed-step.png).
+2. Save again with the same unsaved address: a second git clone of the missing address ran (kirokit tab shows two), the same error beside the field.
+3. Address /tmp/ql-kk-fx/origin3 (clone of origin2, tag v101.0.0), Save: status "Cloned. The new repository is in use.", no field error, State().settings.repoUrl = /tmp/ql-kk-fx/origin3 (fx-clone-ok-step.png).

@@ -1,0 +1,33 @@
+Scenario 2 at 0074301 (iteration 3). App: task desktop:dev, HOME=/tmp/ql-kk-s2/home, Chrome DevTools at http://localhost:34115, 1280x800.
+App data folder: /tmp/ql-kk-s2/home/Library/Application Support/kirokit-desktop
+
+step 1  rm -rf /tmp/ql-kk-s2, task desktop:dev (pids 11514 task, 11576 go run, 11582 wails, 11655 npm, 11671 vite, 11773 app); port 34115 answered 200.
+step 2  "Set up kirokit" page with "Repository address" field and Clone.            PASS
+probe   first launch, Clone /tmp/ql-kk-s2/no-such-origin: field kept the address, aria-invalid=true,
+        alert "git clone failed (exit 128). Check the address and your access, then try again."
+        The app data folder did not exist afterwards: no settings.json, no stored address
+        (new-code behaviour: before 7f82ec4 Clone wrote settings.json with the address before cloning).
+step 2a Clone /Users/mavogel/Developer/projects/kiro-cli-kit: sidebar Teams 2, Agents 4, Install and sync,
+        Skills and MCP versions, Settings, main pane; settings.json repoUrl = that path; repo/ at v0.2.0.   PASS
+step 3  toggle: sidebar 232 -> 60 px, main 1048 -> 1220 px.                          PASS
+step 4  toggle back 232/1048; Meta+B -> 60/1220; Meta+B -> 232/1048; Control+B -> unchanged 232.   PASS
+step 5  dark: body rgb(255,255,255)/rgb(29,23,48) -> rgb(23,19,31)/rgb(236,233,246).  PASS
+step 6  Kiro home "/" + Save: "Choose a folder inside your home folder, not the home folder itself"
+        beside the field, aria-invalid; settings.json unchanged (kiroHome "").       PASS
+step 7  Kiro home /tmp/ql-kk-s2/kiro, address /tmp/ql-kk-s2/origin (does not exist: step 1 removed it), Save:
+        within 100 ms: status "" (empty), repo-error "git clone failed (exit 128). Check the address and your
+        access, then try again.", field keeps /tmp/ql-kk-s2/origin, aria-invalid=true.
+        kirokit tab: "▸ git clone -- /tmp/ql-kk-s2/origin …/repo", "fatal: repository '/tmp/ql-kk-s2/origin' does not exist", "exited with code 128".
+        settings.json: repoUrl still /Users/mavogel/Developer/projects/kiro-cli-kit, kiroHome /tmp/ql-kk-s2/kiro.
+        repo/ still the old clone (origin kiro-cli-kit, v0.2.0), no repo.old-*.
+        => NO saved confirmation is shown, which the step expects. (evidence/it3-scenario-2-step-7-failed.png)  FAIL as written
+ retry  Save again, nothing changed: a second "▸ git clone -- /tmp/ql-kk-s2/origin …" ran (count 1 -> 2), failed again,
+        error back beside the field.                                                  retry works
+ valid  created /tmp/ql-kk-s2/origin (clone of this repo + teams/ops-team, tag v100.0.0), Save:
+        52 ms "Saved. Cloning the new repository; follow it in the kirokit tab."; 459 ms "Cloned. The new repository is in use.",
+        no field error. Tab: "▸ git clone -- /tmp/ql-kk-s2/origin …", "▸ kirokit sync --latest-tag", "checked out v100.0.0 at d6bf4cc".
+        settings.json repoUrl /tmp/ql-kk-s2/origin; repo/ origin /tmp/ql-kk-s2/origin at v100.0.0;
+        repo.old-1792283038 -> kiro-cli-kit. Sidebar Teams 3, Agents 6 (ops-team).  (evidence/it3-scenario-2-step-7-cloned.png)
+ probe  Save again unchanged: "Saved on this computer", 0 new commands in the tab.
+step 8  killed 11773 11671 11655 11582 11576 11514; port 34115 free; restarted (task pid 15338), reloaded, Settings:
+        Kiro home /tmp/ql-kk-s2/kiro, address /tmp/ql-kk-s2/origin, Teams 3.          PASS (evidence/it3-scenario-2-step-8.png)

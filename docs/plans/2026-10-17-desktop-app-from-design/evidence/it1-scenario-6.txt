@@ -1,0 +1,32 @@
+# Scenario 6
+$ bash scripts/desktop-release_test.sh
+desktop-release_test: ok
+[exit 0]
+
+$ rm -rf /tmp/ql-kk-s6; bash scripts/desktop-release.sh --version 0.0.0 --app desktop/build/bin/kirokit.app --out /tmp/ql-kk-s6
+zip:    /tmp/ql-kk-s6/kirokit-desktop_0.0.0_darwin_universal.zip
+sha256: 13152e0e44b8d8b6377013c5c0c5badd5d425ad30540f2e96928fe2214621f57
+cask:   /tmp/ql-kk-s6/Casks/kirokit-desktop.rb (Casks/kirokit-desktop.rb)
+Dry run: nothing was uploaded or pushed (pass --publish to upload and push).
+[exit 0]
+
+$ unzip -l /tmp/ql-kk-s6/kirokit-desktop_0.0.0_darwin_universal.zip | head -8
+Archive:  /tmp/ql-kk-s6/kirokit-desktop_0.0.0_darwin_universal.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  10-18-2026 00:26   kirokit.app/
+        0  10-18-2026 00:26   kirokit.app/Contents/
+        0  10-18-2026 00:26   kirokit.app/Contents/_CodeSignature/
+     2676  10-18-2026 01:28   kirokit.app/Contents/_CodeSignature/CodeResources
+      163  10-18-2026 01:28   kirokit.app/Contents/_CodeSignature/._CodeResources
+[exit 0]
+
+$ ruby -ryaml -e 'y=YAML.load_file(".github/workflows/release.yaml"); puts y["jobs"]["desktop"]["needs"]'
+release
+[exit 0]
+
+# probe: missing version
+$ bash scripts/desktop-release.sh --app desktop/build/bin/kirokit.app --out /tmp/ql-kk-s6b
+desktop-release: --version is required
+usage: desktop-release.sh --version <version> --app <kirokit.app> --out <dir> [--publish]
+[exit 1]

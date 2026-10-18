@@ -1,0 +1,14 @@
+# Spike: login-shell environment capture from a minimal, Finder-like environment (2026-10-17)
+$ env -i HOME=$HOME USER=$USER PATH=/usr/bin:/bin:/usr/sbin:/sbin /bin/sh -c 'command -v sops kiro-cli'
+not found on minimal PATH
+$ env -i HOME=$HOME USER=$USER SHELL=/bin/zsh PATH=/usr/bin:/bin:/usr/sbin:/sbin /bin/zsh -ilc 'printf "__KIROKIT_ENV__\n"; /usr/bin/env'  -> PATH entries include:
+/Users/<user>/.local/bin
+/opt/homebrew/bin
+/opt/homebrew/sbin
+/usr/local/bin
+$ ... /bin/zsh -ilc 'command -v sops kiro-cli git'
+/opt/homebrew/bin/sops
+/Users/<user>/.local/bin/kiro-cli
+/usr/bin/git
+age key file present at sops's macOS default: ~/Library/Application Support/sops/age/keys.txt (existence only)
+$ time /bin/zsh -ilc exit   -> 0.19s total (prints "can't change option: zle" on stderr, harmless)

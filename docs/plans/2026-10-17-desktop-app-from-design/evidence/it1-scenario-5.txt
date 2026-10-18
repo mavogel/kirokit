@@ -1,0 +1,39 @@
+# Scenario 5
+$ task desktop:build 2>&1 | tail -15
+  [90m[90m•[0m[0m [39m[39mGenerating bindings: [0m[0m2026/10/18 01:28:19 [0;33mKnownStructs: install.Record	main.Agent	main.AppState	main.Catalog	main.Check	main.EnvStatus	main.Settings	main.Skill	main.Team
+Not found: time.Time
+[0m
+Done.
+  [90m[90m•[0m[0m [39m[39mInstalling frontend dependencies: [0m[0mDone.
+  [90m[90m•[0m[0m [39m[39mCompiling frontend: [0m[0mDone.
+  [90m[90m•[0m[0m [39m[39mCompiling application: [0m[0mDone.
+  [90m[90m•[0m[0m [39m[39mPackaging application: [0m[0mDone.
+  [90m[90m•[0m[0m [39m[39mSelf-signing application: [0m[0mDone.
+Built '/Users/mavogel/Developer/projects/kiro-cli-kit/desktop/build/bin/kirokit.app/Contents/MacOS/kirokit' in 2.878s.
+
+[31;107m[31;107m ♥  [0m[0m [92m[92mIf Wails is useful to you or your company, please consider sponsoring the project:[0m[0m
+https://github.com/sponsors/leaanthony
+desktop/build/bin/kirokit.app: replacing existing signature
+built desktop/build/bin/kirokit.app (version 0.2.0-23-g5ebc94b-dirty)
+[exit 0]
+
+$ lipo -archs desktop/build/bin/kirokit.app/Contents/MacOS/kirokit
+x86_64 arm64
+[exit 0]
+
+$ lipo -archs desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit
+x86_64 arm64
+[exit 0]
+
+$ desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit version
+kirokit 0.2.0-23-g5ebc94b-dirty
+commit: 5ebc94bd380e4672568d9aeb5bd1d8d728a7b2ec
+built:  2026-10-17T23:28:11Z
+[exit 0]
+
+$ ruby -ryaml -e 'puts YAML.load_file(".github/workflows/desktop.yaml")["jobs"].values.first["runs-on"]'
+macos-latest
+[exit 0]
+
+$ go build ./...
+[exit 0]

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kirokit</title>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="sidebar" aria-label="Sections">
+    <div class="brand">
+      <img class="mark" id="logo" alt="" width="28" height="28">
+      <span class="brand-name">kirokit</span>
+    </div>
+    <nav aria-label="Main">
+      <ul class="nav">
+        <li><button data-page="teams" aria-current="page" title="Teams"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.3c2.6-.4 4.6 1.2 5 4.7"/></svg><span class="label">Teams</span><span class="count" data-count="teams"></span></button></li>
+        <li><button data-page="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 15.5h5"/></svg><span class="label">Agents</span><span class="count" data-count="agents"></span></button></li>
+        <li><button data-page="install" title="Install and sync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4"/><path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/></svg><span class="label">Install and sync</span></button></li>
+        <li><button data-page="skills" title="Skills and MCP versions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="label">Skills and MCP versions</span></button></li>
+        <li><button data-page="settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 7l2.6 1.5M17.2 15.5l2.6 1.5M4.2 17l2.6-1.5M17.2 8.5L19.8 7"/></svg><span class="label">Settings</span></button></li>
+      </ul>
+    </nav>
+    <div class="spacer"></div>
+    <button class="collapse" id="collapse" aria-expanded="true" aria-controls="app" title="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span class="label">Collapse</span><kbd>⌘B</kbd></button>
+  </aside>
+
+  <div class="work">
+    <main id="main">
+      <section id="page-welcome" data-screen-label="Set up kirokit" hidden></section>
+
+      <section id="page-teams" data-screen-label="Teams">
+        <div class="page-head"><div><h1>Teams</h1><p class="lede">Pick your team and install its agents into Kiro. No terminal needed.</p></div></div>
+        <p class="notice" id="notice" role="status" hidden></p>
+        <div class="grid" id="teams-grid"></div>
+      </section>
+
+      <section id="page-agents" data-screen-label="Agents" hidden>
+        <div class="page-head"><div><h1>Agents</h1><p class="lede">What each team's agents do, and the tools and servers they use.</p></div></div>
+        <table>
+          <thead><tr><th scope="col">Agent</th><th scope="col">Team</th><th scope="col">What it does</th><th scope="col">Tools</th><th scope="col">Secrets</th></tr></thead>
+          <tbody id="agents-body"></tbody>
+        </table>
+      </section>
+
+      <section id="page-install" data-screen-label="Install and sync" hidden>
+        <div class="page-head"><div><h1>Install and sync</h1><p class="lede">What is installed in your Kiro home folder, and whether it is current.</p></div></div>
+        <table>
+          <thead><tr><th scope="col">Team</th><th scope="col">Status</th><th scope="col">Files recorded</th><th scope="col">Last change</th><th scope="col"><span class="sr">Actions</span></th></tr></thead>
+          <tbody id="install-body"></tbody>
+        </table>
+        <p class="note">Files recorded and Last change come from kirokit's install record for each team.</p>
+      </section>
+
+      <section id="page-skills" data-screen-label="Skills and MCP versions" hidden>
+        <div class="page-head"><div><h1>Skills and MCP versions</h1><p class="lede">Where each skill comes from, and the server versions every team shares.</p></div></div>
+        <h2>Skills</h2>
+        <table>
+          <thead><tr><th scope="col">Skill</th><th scope="col">Team</th><th scope="col">Source</th></tr></thead>
+          <tbody id="skills-body"></tbody>
+        </table>
+        <h2>MCP versions</h2>
+        <table>
+          <thead><tr><th scope="col">Server</th><th scope="col">Version</th><th scope="col">Used by</th></tr></thead>
+          <tbody id="mcp-body"></tbody>
+        </table>
+      </section>
+
+      <section id="page-settings" data-screen-label="Settings" hidden>
+        <div class="page-head"><div><h1>Settings</h1><p class="lede">Where kirokit installs agents, and where its templates come from.</p></div></div>
+        <div class="field"><label for="kirohome">Kiro home folder</label><input id="kirohome" spellcheck="false" autocomplete="off" aria-describedby="kirohome-hint kirohome-error"><span class="hint" id="kirohome-hint">Where Kiro reads its agents. Defaults to ~/.kiro unless KIRO_HOME is set in your shell. A team installed in the old folder stays there; uninstall it first to remove it.</span><span class="error" id="kirohome-error" role="alert"></span></div>
+        <div class="field"><label for="repo">Repository address</label><input id="repo" placeholder="https://github.com/your-org/kiro-configs.git" spellcheck="false" autocomplete="off" aria-describedby="repo-hint repo-error"><span class="hint" id="repo-hint">Where your team keeps its templates.</span><span class="error" id="repo-error" role="alert"></span></div>
+        <div class="field"><label for="repodir">Repository folder</label><input id="repodir" spellcheck="false" autocomplete="off" aria-describedby="repodir-hint repodir-error"><span class="hint" id="repodir-hint">Where the repository is cloned. Choosing another folder shows the setup page again so you can clone there; the old folder is left as it is.</span><span class="error" id="repodir-error" role="alert"></span></div>
+        <p class="note" id="env-note" role="status"></p>
+        <div class="actions"><button class="btn primary" id="save">Save</button><span class="status-line" id="save-status" role="status"></span></div>
+        <h2>Templates</h2>
+        <p class="note">Update fetches the newest release of your team's repository, and re-installs the installed team from it.</p>
+        <div class="actions"><button class="btn" id="update">Update</button><span class="error" id="update-error" role="alert"></span></div>
+      </section>
+    </main>
+
+    <button class="term-toggle" id="term-open" aria-controls="terminal">Show terminal <kbd>⌃`</kbd></button>
+    <section class="terminal" id="terminal" aria-label="Terminal" hidden>
+      <div class="resize" id="resize" role="separator" aria-orientation="horizontal" aria-label="Resize terminal" aria-valuenow="220" aria-valuemin="120" aria-valuemax="480" tabindex="0"></div>
+      <div class="term-bar">
+        <div class="term-tabs" role="tablist" aria-label="Terminals" id="term-tabs">
+          <button role="tab" id="tab-kirokit" aria-selected="true" aria-controls="term-kirokit" tabindex="0">kirokit</button>
+          <button role="tab" id="tab-shell" aria-selected="false" aria-controls="term-shell" tabindex="-1">zsh</button>
+        </div>
+        <span class="grow"></span>
+        <button class="icon-btn" id="term-clear" aria-label="Clear terminal" title="Clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M10 11v6M14 11v6M7 7l1 12h8l1-12M10 7V4h4v3"/></svg></button>
+        <button class="icon-btn" id="term-close" aria-label="Hide terminal" title="Hide (⌃`)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
+      <div class="term-bodies" id="term-bodies">
+        <div class="term-body" id="term-kirokit" role="tabpanel" aria-labelledby="tab-kirokit"></div>
+        <div class="term-body" id="term-shell" role="tabpanel" aria-labelledby="tab-shell" hidden></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<dialog id="replace-dialog" aria-labelledby="replace-title">
+  <form method="dialog">
+    <h2 id="replace-title">Replace the installed team?</h2>
+    <p id="replace-text"></p>
+    <div class="dialog-actions"><button class="btn" value="cancel">Cancel</button><button class="btn primary" value="ok">Replace</button></div>
+  </form>
+</dialog>
+
+<dialog id="setup-dialog" aria-labelledby="setup-title">
+  <form method="dialog">
+    <h2 id="setup-title">Install</h2>
+    <p class="note">kirokit needs these on this computer before it can install a team.</p>
+    <ul class="checks" id="setup-checks"></ul>
+    <p class="status-line" id="setup-status" role="status"></p>
+    <div class="dialog-actions"><button class="btn" value="cancel">Cancel</button><button class="btn" id="setup-again" type="button">Check again</button><button class="btn primary" id="setup-install" value="ok" disabled>Install</button></div>
+  </form>
+</dialog>
+<script src="./src/main.js" type="module"></script>
+</body>
+</html>

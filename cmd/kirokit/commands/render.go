@@ -31,7 +31,7 @@ func newRenderCmd() *cobra.Command {
 				if team == "" {
 					outDir = filepath.Join(out, t)
 				}
-				if err := render.RenderTeam(teamsRoot, t, globalRoot, envVersionsPath, outDir, ""); err != nil {
+				if err := render.RenderTeam(repoPath(teamsRoot), t, repoPath(globalRoot), repoPath(envVersionsPath), outDir, ""); err != nil {
 					return fmt.Errorf("kirokit render: %s: %w", t, err)
 				}
 				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "rendered %s -> %s\n", t, outDir)

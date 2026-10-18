@@ -1,0 +1,68 @@
+name: Desktop
+
+on:
+  pull_request:
+    paths:
+      - "desktop/**"
+      - "cmd/**"
+      - "internal/**"
+      - "go.mod"
+      - "go.sum"
+      - "Taskfile.yml"
+      - ".goreleaser.yaml"
+      - "scripts/**"
+      - ".github/workflows/desktop.yaml"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    runs-on: macos-latest
+    env:
+      # GoReleaser Pro license key; empty on fork pull requests, which skips the snapshot.
+      GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: stable
+
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: lts/*
+
+      - name: Install Task
+        run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
+
+      - name: Test
+        run: task desktop:test
+
+      - name: Build
+        run: task desktop:build
+
+      # Early feedback on the release config: the same GoReleaser run as the
+      # Release workflow, as a snapshot that builds the CLI archives, the app's
+      # DMGs and the casks but publishes nothing.
+      - name: Stage the app for GoReleaser
+        if: env.GORELEASER_KEY != ''
+        run: scripts/desktop-prebuilt.sh
+
+      - name: Release snapshot
+        if: env.GORELEASER_KEY != ''
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
+        with:
+          distribution: goreleaser-pro
+          version: "~> v2"
+          args: release --snapshot --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: unused-in-a-snapshot

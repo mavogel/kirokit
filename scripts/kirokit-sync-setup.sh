@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Set up automatic `kirokit sync` on this machine: clones the config repo and
 # registers a launchd agent (macOS) or systemd user timer (Linux) that keeps
-# the team's Kiro config current.
+# the team's Kiro config current. A Kiro home holds one team: syncing a second
+# team replaces the first, so keep one scheduled sync per machine.
 set -euo pipefail
 
 usage() {

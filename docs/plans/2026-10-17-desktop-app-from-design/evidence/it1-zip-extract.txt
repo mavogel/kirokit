@@ -1,0 +1,18 @@
+# Zip from scenario 6 dry run: /tmp/ql-kk-s6/kirokit-desktop_0.0.0_darwin_universal.zip
+$ unzip -l ... | grep "/\._"
+      163  10-18-2026 01:28   kirokit.app/Contents/_CodeSignature/._CodeResources
+      163  10-18-2026 00:26   kirokit.app/Contents/.__CodeSignature
+      163  10-18-2026 01:28   kirokit.app/Contents/MacOS/._kirokit
+      163  10-18-2026 01:28   kirokit.app/Contents/._MacOS
+      163  10-18-2026 01:28   kirokit.app/Contents/Resources/bin/._kirokit
+      163  10-18-2026 01:28   kirokit.app/Contents/Resources/._bin
+      163  10-18-2026 01:28   kirokit.app/Contents/Resources/._iconfile.icns
+      163  10-18-2026 01:07   kirokit.app/Contents/._Resources
+      163  10-18-2026 01:28   kirokit.app/Contents/._Info.plist
+      163  10-18-2026 00:26   kirokit.app/._Contents
+
+$ unzip -q zip -d u && codesign --verify --deep --strict u/kirokit.app
+<tmp>/u/kirokit.app: a sealed resource is missing or invalid
+exit 1
+$ ditto -x -k zip d && codesign --verify --deep --strict d/kirokit.app
+exit 0

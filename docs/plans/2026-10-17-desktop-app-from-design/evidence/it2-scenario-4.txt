@@ -1,0 +1,25 @@
+Scenario 4 at 65af338: HOME=/tmp/ql-kk-s4/home, SOPS_AGE_KEY_FILE=/tmp/ql-kk-s4/keys.txt, task desktop:dev (task pid 76187), Chrome DevTools 1280x800
+Step 1: origin = clone of this repository tagged v99.0.0; /tmp/ql-kk-s4/kirokit built; app answered on :34115.
+Step 2: "Set up kirokit" with the Repository address field.
+Step 3: "-oops" -> "Use an https, ssh or file address, git@host:path, or an absolute path" beside the field (field invalid, value kept); both terminal tabs empty apart from the kirokit tab's banner (it2-scenario-4-step-3.png).
+Step 4: /tmp/ql-kk-s4/origin -> kirokit tab: "▸ git clone -- /tmp/ql-kk-s4/origin .../kirokit-desktop/repo", "Cloning into ...", "done.", "▸ kirokit sync --latest-tag", "checked out v99.0.0 at 65af338"; Teams listed data-team and platform-team.
+Step 5: Settings, Kiro home /tmp/ql-kk-s4/kiro, Save -> "Saved on this computer" (address field already equal to the saved address, so no clone started).
+Step 6: Install on platform-team -> setup dialog: found SOPS /opt/homebrew/bin/sops; found Decryption key /tmp/ql-kk-s4/keys.txt; found Kiro CLI /opt/homebrew/bin/kiro-cli; "Everything is ready. You can install."; Install enabled (it2-scenario-4-step-6.png).
+Step 7: Install -> "▸ kirokit install platform-team", "installed platform-team into /tmp/ql-kk-s4/kiro"; Teams card "platform-team installed".
+Step 8: Install and sync row "platform-team installed 13 18 Oct 2026, 02:02 Sync Uninstall".
+Step 9: zsh tab `kirokit install data-team` -> "uninstalled platform-team from /tmp/ql-kk-s4/kiro", "installed data-team into /tmp/ql-kk-s4/kiro"; Install and sync "data-team installed 9 ..."; Teams data-team installed, platform-team not installed (it2-scenario-4-step-9.png).
+### step 9a
+uninstalled data-team from /tmp/ql-kk-s4/kiro
+installed data-team into /tmp/ql-kk-s4/kiro
+diff exit 0
+       9
+Step 10: Install on platform-team -> replace-dialog "Replace the installed team? data-team is installed. A Kiro home holds one team, so installing platform-team uninstalls data-team first." (it2-scenario-4-step-10.png); Cancel -> no dialog open, kirokit tab unchanged.
+Step 11: Install, Replace, then Install in the setup dialog -> "▸ kirokit install platform-team", "uninstalled data-team from /tmp/ql-kk-s4/kiro", "installed platform-team into /tmp/ql-kk-s4/kiro".
+Step 12: Sync -> "▸ kirokit sync platform-team --latest-tag", "synced platform-team into /tmp/ql-kk-s4/kiro at 65af338" (it2-scenario-4-step-12.png).
+### step 13
+uninstalled platform-team from /tmp/ql-kk-s4/kiro
+installed platform-team into /tmp/ql-kk-s4/kiro
+diff exit 0
+Step 14: Uninstall -> "▸ kirokit uninstall platform-team", "uninstalled platform-team from /tmp/ql-kk-s4/kiro"; Teams both not installed; Install and sync "Nothing is installed yet."
+Step 15: origin got v99.1.0 and v99.2.0 (qa-team); Settings Update -> "▸ kirokit sync --latest-tag", "updated 65af338 -> 18d52bd", "checked out v99.2.0 at 18d52bd"; Teams lists data-team, platform-team, qa-team (it2-scenario-4-step-15.png).
+Console: one "Uncaught TypeError: Cannot read properties of null (reading 'nodes')" (the Wails dev overlay, as in iteration 1). Dev log: only "Unknown message from front end: runtime:ready" x8, the private-API warning and an ld version warning (it2-scenario-4-devlog.txt).

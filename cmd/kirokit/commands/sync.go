@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/mavogel/kirokit/internal/externalskills"
 	"github.com/mavogel/kirokit/internal/install"
 	"github.com/spf13/cobra"
 )
@@ -15,34 +16,61 @@ func newSyncCmd() *cobra.Command {
 	var latestTag bool
 	var kbAgent, kbSource, kbMount string
 	cmd := &cobra.Command{
-		Use:   "sync <team>",
+		Use:   "sync [team]",
 		Short: "Update a config checkout from git and reinstall a team, pruning files it no longer ships",
 		Long: `Update the kirokit config checkout at --repo, then install <team> from it.
+Once the checkout is updated and <team> renders, any other installed team is
+uninstalled, so a Kiro home holds one team. A failed update or an unknown team
+leaves the installed team untouched.
 
 By default the checked-out branch is fast-forwarded from its upstream. With
 --latest-tag the newest v* tag is checked out instead (detached HEAD), so only
 released changes reach this machine. Files a previous install wrote that the
 new version no longer ships are removed.
 
+Without <team> it only updates the checkout and installs nothing; the --kb-*
+flags need a team.
+
 Run it from a scheduler (see scripts/kirokit-sync-setup.sh).`,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			team := args[0]
+			team := ""
+			if len(args) == 1 {
+				team = args[0]
+			}
 			out := cmd.OutOrStdout()
 
-			kb, err := parseKnowledgeBaseFlags(kbAgent, kbSource, kbMount)
-			if err != nil {
-				return fmt.Errorf("kirokit sync: %w", err)
-			}
-			kiroHome, err := install.ResolveKiroHome()
-			if err != nil {
-				return fmt.Errorf("kirokit sync: %w", err)
+			var kb *install.KnowledgeBase
+			var kiroHome string
+			if team == "" {
+				for _, f := range []string{"kb-agent", "kb-source", "kb-mount"} {
+					if cmd.Flags().Changed(f) {
+						return fmt.Errorf("kirokit sync: --%s needs a team", f)
+					}
+				}
+			} else {
+				var err error
+				if kb, err = parseKnowledgeBaseFlags(kbAgent, kbSource, kbMount); err != nil {
+					return fmt.Errorf("kirokit sync: %w", err)
+				}
+				if kiroHome, err = install.ResolveKiroHome(); err != nil {
+					return fmt.Errorf("kirokit sync: %w", err)
+				}
 			}
 
-			// teams/, global/ and env/ resolve against the working directory.
-			if err := os.Chdir(repo); err != nil {
+			// An explicit --repo wins, else KIROKIT_REPO, else the working
+			// directory. teams/, global/ and env/ then resolve against it.
+			dir := repo
+			if dir == "" {
+				dir = repoBase
+			}
+			if dir == "" {
+				dir = "."
+			}
+			if err := os.Chdir(dir); err != nil {
 				return fmt.Errorf("kirokit sync: %w", err)
 			}
+			repoBase = ""
 
 			before, _ := gitOutput("rev-parse", "--short", "HEAD")
 			if err := updateCheckout(latestTag); err != nil {
@@ -53,10 +81,27 @@ Run it from a scheduler (see scripts/kirokit-sync-setup.sh).`,
 				_, _ = fmt.Fprintf(out, "updated %s -> %s\n", before, after)
 			}
 
+			if team == "" {
+				ref, _ := gitOutput("describe", "--tags", "--exact-match", "HEAD")
+				if branch, err := gitOutput("symbolic-ref", "--short", "-q", "HEAD"); err == nil {
+					ref = branch
+				}
+				_, _ = fmt.Fprintf(out, "checked out %s at %s\n", ref, after)
+				return nil
+			}
+
 			roots := install.Roots{
 				TeamsRoot:       teamsRoot,
 				GlobalRoot:      globalRoot,
 				EnvVersionsPath: envVersionsPath,
+			}
+			// Update and validate before removing anything: a failed pull or an
+			// unknown team must leave the installed team in place.
+			if err := install.Check(roots, team, kiroHome); err != nil {
+				return fmt.Errorf("kirokit sync: %w", err)
+			}
+			if err := uninstallOthers(out, kiroHome, team); err != nil {
+				return fmt.Errorf("kirokit sync: %w", err)
 			}
 			pruned, err := install.Sync(roots, team, kiroHome, kb)
 			if err != nil {
@@ -69,8 +114,8 @@ Run it from a scheduler (see scripts/kirokit-sync-setup.sh).`,
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&repo, "repo", ".", "path of the kirokit config checkout to update and install from")
-	cmd.Flags().BoolVar(&latestTag, "latest-tag", false, "check out the newest v* tag instead of fast-forwarding the current branch")
+	cmd.Flags().StringVar(&repo, "repo", "", "path of the kirokit config checkout to update and install from (default $KIROKIT_REPO, else the working directory)")
+	cmd.Flags().BoolVar(&latestTag, "latest-tag", false, "check out the newest v* tag instead of fast-forwarding the current branch (also without a team)")
 	cmd.Flags().StringVar(&kbAgent, "kb-agent", "", "attach a local knowledge base to this installed agent (requires --kb-source and --kb-mount)")
 	cmd.Flags().StringVar(&kbSource, "kb-source", "", "local folder to expose as a knowledgeBase resource")
 	cmd.Flags().StringVar(&kbMount, "kb-mount", "", "path where --kb-source is symlinked for the agent to reference")
@@ -98,7 +143,9 @@ func updateCheckout(latestTag bool) error {
 }
 
 func gitOutput(args ...string) (string, error) {
-	out, err := exec.Command("git", args...).CombinedOutput()
+	cmd := exec.Command("git", args...)
+	cmd.Env = externalskills.WithoutRepoGitEnv()
+	out, err := cmd.CombinedOutput()
 	text := strings.TrimSpace(string(out))
 	if err != nil {
 		return text, fmt.Errorf("git %s: %w: %s", strings.Join(args, " "), err, text)

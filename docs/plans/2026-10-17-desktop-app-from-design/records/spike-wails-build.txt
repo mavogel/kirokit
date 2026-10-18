@@ -1,0 +1,19 @@
+# Spike: Wails v2.14.0 universal macOS build in a nested module (2026-10-17, go1.27.2 darwin/arm64)
+$ GOBIN=<scratch>/bin go install github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 && wails version
+v2.14.0
+$ wails init -n desktop -t vanilla -d desktop; module set to example.com/root/desktop with replace => ../; app.go imports example.com/root/internal/x
+$ wails build -platform darwin/universal -clean
+# Building target: darwin/universal
+  • Generating bindings: Done.
+  • Installing frontend dependencies: Done.
+  • Compiling frontend: Done.
+  • Compiling application: # example.com/root/desktop
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-1956900255/go.o) was built for newer 'macOS' version (13.0) than being linked (10.13)
+# example.com/root/desktop
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-2932615/go.o) was built for newer 'macOS' version (13.0) than being linked (11.0)
+Done.
+  • Packaging application: Done.
+  • Self-signing application: Done.
+Built '/private/tmp/claude-501/-Users-mavogel-Developer-projects-kiro-cli-kit/36a14c25-a361-4e8a-a68b-feba65092e30/scratchpad/spike-wails.9Ubv/root/desktop/build/bin/desktop.app/Contents/MacOS/desktop' in 24.663s.
+desktop.app/
+x86_64 arm64

@@ -1,0 +1,387 @@
+diff --git a/desktop/frontend/src/api.test.js b/desktop/frontend/src/api.test.js
+new file mode 100644
+index 0000000..876bd73
+--- /dev/null
++++ b/desktop/frontend/src/api.test.js
+@@ -0,0 +1,44 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++
++// Wails runs each bound call on its own goroutine, so keystrokes sent without
++// waiting can reach the shell out of order (`commadn` for `command`).
++function fakeApp(log, delays) {
++  const call = (name) => (...args) =>
++    new Promise((resolve, reject) => {
++      const key = args[args.length - 1];
++      log.push(`start ${name} ${key}`);
++      setTimeout(() => {
++        log.push(`end ${name} ${key}`);
++        if (key === 'boom') reject(new Error('boom'));
++        else resolve();
++      }, delays[key] ?? 1);
++    });
++  return { ShellWrite: call('shell'), RunWrite: call('run') };
++}
++
++test('Keystrokes reach Go one call at a time, in the order they were typed', async () => {
++  const log = [];
++  globalThis.window = { go: { main: { App: fakeApp(log, { c: 30, o: 1, m: 10 }) } } };
++  const api = await import('./api.js');
++
++  await Promise.all(['c', 'o', 'm'].map((k) => api.shellWrite(k)));
++
++  assert.deepEqual(log, ['start shell c', 'end shell c', 'start shell o', 'end shell o', 'start shell m', 'end shell m']);
++});
++
++test('A failed keystroke call does not hold back the next one, and each target has its own line', async () => {
++  const log = [];
++  globalThis.window = { go: { main: { App: fakeApp(log, { boom: 20, x: 1, y: 1 }) } } };
++  const api = await import('./api.js');
++
++  const failed = api.runWrite(1, 'boom');
++  const next = api.runWrite(1, 'x');
++  const shell = api.shellWrite('y');
++  await assert.rejects(failed, /boom/);
++  await Promise.all([next, shell]);
++
++  assert.ok(log.indexOf('start shell y') < log.indexOf('end run boom'), 'the shell does not wait for the run line');
++  assert.ok(log.indexOf('start run x') > log.indexOf('end run boom'), 'x waits for boom to end');
++  assert.ok(log.includes('end run x'));
++});
+diff --git a/desktop/frontend/src/dialogs.test.js b/desktop/frontend/src/dialogs.test.js
+new file mode 100644
+index 0000000..97effea
+--- /dev/null
++++ b/desktop/frontend/src/dialogs.test.js
+@@ -0,0 +1,47 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { setupState, installPlan, replaceMessage, setupRows } from './dialogs.js';
++
++const found = (name) => ({ name, found: true, detail: '/usr/bin/' + name });
++const missing = (name) => ({ name, found: false, detail: 'Install it with: brew install ' + name });
++
++test('Install stays disabled while a check fails, and the status names how many', () => {
++  const state = setupState([found('SOPS'), missing('Decryption key'), missing('Kiro CLI')]);
++  assert.equal(state.canInstall, false);
++  assert.equal(state.failing, 2);
++  assert.match(state.status, /2 of 3 checks need attention/);
++});
++
++test('One failing check reads in the singular', () => {
++  assert.match(setupState([found('SOPS'), missing('Kiro CLI')]).status, /1 of 2 checks needs attention|1 check needs attention/);
++});
++
++test('All three found enables Install', () => {
++  const state = setupState([found('SOPS'), found('Decryption key'), found('Kiro CLI')]);
++  assert.equal(state.canInstall, true);
++  assert.equal(state.failing, 0);
++  assert.match(state.status, /ready/i);
++});
++
++test('No answer from the checks yet keeps Install disabled', () => {
++  assert.equal(setupState([]).canInstall, false);
++  assert.equal(setupState(null).canInstall, false);
++});
++
++test('Each check row shows found or missing with its detail, escaped', () => {
++  const rows = setupRows([found('SOPS'), { name: 'Kiro <CLI>', found: false, detail: 'sign in & retry' }]);
++  assert.match(rows, /data-found="true"[^>]*>[\s\S]*SOPS[\s\S]*\/usr\/bin\/SOPS/);
++  assert.match(rows, /data-found="false"[\s\S]*Kiro &lt;CLI&gt;[\s\S]*sign in &amp; retry/);
++});
++
++test('Installing a team plans a setup check, a replace when another team is installed, or nothing', () => {
++  assert.deepEqual(installPlan('b', []), { kind: 'setup' });
++  assert.deepEqual(installPlan('b', [{ Team: 'a' }]), { kind: 'replace', installed: ['a'] });
++  assert.deepEqual(installPlan('a', [{ Team: 'a' }]), { kind: 'skip' });
++});
++
++test('The replace message names both teams', () => {
++  const msg = replaceMessage('platform', ['data']);
++  assert.match(msg, /data/);
++  assert.match(msg, /platform/);
++});
+diff --git a/desktop/frontend/src/pages/pages.test.js b/desktop/frontend/src/pages/pages.test.js
+new file mode 100644
+index 0000000..65db6ef
+--- /dev/null
++++ b/desktop/frontend/src/pages/pages.test.js
+@@ -0,0 +1,149 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { readFileSync, readdirSync } from 'node:fs';
++import { teamsView } from './teams.js';
++import { agentsView } from './agents.js';
++import { installView, syncArgs, uninstallArgs } from './install.js';
++import { updateArgs } from './settings.js';
++import { skillsView } from './skills.js';
++import { welcomeView, showWelcome } from './welcome.js';
++
++const catalog = {
++  tag: 'v1.0.0',
++  pins: { 'jira-mcp': '1.4.2', 'unused-mcp': '0.1.0' },
++  teams: [
++    {
++      name: 'alpha',
++      prompts: 2,
++      steerings: ['style'],
++      agents: [{ name: 'ops', description: 'Does <ops> & more', tools: ['read', '@jira'], servers: ['jira-mcp'], needsKey: true }],
++      skills: [
++        { name: 'own', source: 'Written by the team' },
++        { name: 'ext', source: 'https://example.com/s.git @ v1' },
++      ],
++    },
++    { name: 'beta', prompts: 0, steerings: [], agents: [], skills: [] },
++  ],
++};
++const installs = [{ Team: 'alpha', Files: 7, Modified: '2026-10-17T09:30:00Z' }];
++const ready = { catalog, installs, error: '', cloned: true };
++
++test('Teams marks only the team with a record as installed and gives the change time', () => {
++  const html = teamsView(ready);
++  const [alpha, beta] = html.split('</article>');
++  assert.match(alpha, /data-team="alpha"/);
++  assert.match(alpha, /badge ok">installed</);
++  assert.match(alpha, /<time datetime="2026-10-17T09:30:00.000Z">/);
++  assert.match(beta, /not installed/);
++  assert.doesNotMatch(beta, /<time/);
++});
++
++test('Install lists installed teams with their file counts', () => {
++  const out = installView(ready);
++  assert.equal(out.blocked, false);
++  assert.match(out.html, /data-team="alpha"/);
++  assert.match(out.html, /<td class="num">7<\/td>/);
++  assert.doesNotMatch(out.html, /beta/);
++});
++
++test('Install says so when nothing is installed', () => {
++  const out = installView({ ...ready, installs: [] });
++  assert.equal(out.blocked, true);
++  assert.match(out.html, /Nothing is installed/);
++});
++
++test('Agents escapes text and flags the agent that needs a key', () => {
++  const out = agentsView(ready);
++  assert.match(out.html, /Does &lt;ops&gt; &amp; more/);
++  assert.match(out.html, /needs key/);
++  assert.match(out.html, /<span class="chip">read<\/span>/);
++});
++
++test('Skills shows each source and the teams that use a pinned server', () => {
++  const out = skillsView(ready);
++  assert.match(out.skills, /Written by the team/);
++  assert.match(out.skills, /https:\/\/example.com\/s.git @ v1/);
++  assert.match(out.mcp, /jira-mcp<\/td><td class="mono">1.4.2<\/td><td>alpha<\/td>/);
++  assert.match(out.mcp, /unused-mcp[\s\S]*no agent yet/);
++});
++
++test('A render error replaces every table with its message', () => {
++  const view = { catalog: { teams: [], pins: {} }, installs, error: 'team alpha: render: boom <x>', cloned: true };
++  assert.match(teamsView(view), /role="alert">team alpha: render: boom &lt;x&gt;</);
++  for (const out of [agentsView(view), skillsView(view)]) {
++    assert.equal(out.blocked, true);
++    assert.match(out.html ?? out.skills, /boom/);
++  }
++});
++
++test('Without a clone the pages point at Settings', () => {
++  const view = { catalog: { teams: [], pins: {} }, installs: [], error: '', cloned: false };
++  assert.match(teamsView(view), /Enter its address in Settings/);
++  assert.equal(agentsView(view).blocked, true);
++});
++
++test('Each team card has an Install button that is disabled while a command runs', () => {
++  const idle = teamsView(ready);
++  assert.match(idle, /<button class="btn primary" data-action="install" data-team="alpha">Install<\/button>/);
++  assert.match(idle, /data-action="install" data-team="beta"/);
++
++  const busy = teamsView({ ...ready, running: true });
++  assert.match(busy, /data-action="install" data-team="alpha" disabled/);
++});
++
++test('A still-running error shows beside the button it came from', () => {
++  const view = { ...ready, actionError: { where: 'install:beta', message: 'kirokit is still running a command' } };
++  const [alpha, beta] = teamsView(view).split('</article>');
++  assert.doesNotMatch(alpha, /still running/);
++  assert.match(beta, /role="alert">kirokit is still running a command</);
++});
++
++test('Install rows have Sync and Uninstall buttons for their team', () => {
++  const html = installView(ready).html;
++  assert.match(html, /data-action="sync" data-team="alpha">Sync</);
++  assert.match(html, /data-action="uninstall" data-team="alpha">Uninstall</);
++  assert.match(installView({ ...ready, running: true }).html, /data-action="sync" data-team="alpha" disabled/);
++});
++
++test('Buttons run the commands the design names', () => {
++  assert.deepEqual(syncArgs('alpha'), ['sync', 'alpha', '--latest-tag']);
++  assert.deepEqual(uninstallArgs('alpha'), ['uninstall', 'alpha']);
++  assert.deepEqual(updateArgs([]), ['sync', '--latest-tag']);
++  assert.deepEqual(updateArgs([{ Team: 'alpha' }]), ['sync', 'alpha', '--latest-tag']);
++});
++
++test('First launch asks for the address, prefilled from Settings', () => {
++  const view = { catalog: { teams: [], pins: {} }, installs: [], error: '', cloned: false, welcome: { address: 'https://example.com/x.git?a=1&b="2"' } };
++  const html = welcomeView(view);
++  assert.match(html, /<h1>Set up kirokit<\/h1>/);
++  assert.match(html, /id="clone-address"[^>]*value="https:\/\/example.com\/x.git\?a=1&amp;b=&quot;2&quot;"/);
++  assert.match(html, /<button class="btn primary" type="submit">Clone<\/button>/);
++  assert.doesNotMatch(html, /role="alert">[^<]/);
++});
++
++test('A refused or failed address stays in the field with its error beside it', () => {
++  const view = { cloned: false, welcome: { address: '-oops', error: 'Use an https, ssh or file address, <or> a path' } };
++  const html = welcomeView(view);
++  assert.match(html, /value="-oops"/);
++  assert.match(html, /aria-invalid="true"/);
++  assert.match(html, /id="clone-error" role="alert">Use an https, ssh or file address, &lt;or&gt; a path</);
++});
++
++test('While the clone runs the button says so and cannot be pressed twice', () => {
++  const html = welcomeView({ cloned: false, welcome: { address: '/x', busy: true } });
++  assert.match(html, /<button class="btn primary" type="submit" disabled>Cloning…<\/button>/);
++});
++
++test('The sidebar is hidden until a clone exists', () => {
++  assert.equal(showWelcome({ cloned: false }), true);
++  assert.equal(showWelcome({ cloned: true }), false);
++  // git has made the folder before the first sync ends; the page stays until clone:done.
++  assert.equal(showWelcome({ cloned: true, welcome: { busy: true } }), true);
++});
++
++test('No page source names a sample team', () => {
++  const dir = new URL('.', import.meta.url);
++  for (const f of readdirSync(dir).filter((n) => n.endsWith('.js') && !n.endsWith('.test.js'))) {
++    assert.doesNotMatch(readFileSync(new URL(f, dir), 'utf8'), /platform-team|data-team(?!=)/, f);
++  }
++});
+diff --git a/desktop/frontend/src/sidebar.test.js b/desktop/frontend/src/sidebar.test.js
+new file mode 100644
+index 0000000..c23a9a8
+--- /dev/null
++++ b/desktop/frontend/src/sidebar.test.js
+@@ -0,0 +1,55 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { createSidebar, PAGES } from './sidebar.js';
++
++const key = (init) => ({ key: 'b', metaKey: false, ctrlKey: false, preventDefault() { this.prevented = true; }, ...init });
++
++test('toggle collapses to the rail and expands again', () => {
++  const sb = createSidebar();
++  assert.equal(sb.collapsed, false);
++  sb.toggle();
++  assert.equal(sb.collapsed, true);
++  sb.toggle();
++  assert.equal(sb.collapsed, false);
++});
++
++test('Command-B toggles and is consumed', () => {
++  const sb = createSidebar();
++  const e = key({ metaKey: true });
++  assert.equal(sb.handleKey(e), true);
++  assert.equal(e.prevented, true);
++  assert.equal(sb.collapsed, true);
++  sb.handleKey(key({ metaKey: true, key: 'B' }));
++  assert.equal(sb.collapsed, false);
++});
++
++test('plain B and Control-B do nothing', () => {
++  const sb = createSidebar();
++  for (const init of [{}, { ctrlKey: true }]) {
++    const e = key(init);
++    assert.equal(sb.handleKey(e), false);
++    assert.equal(e.prevented, undefined);
++  }
++  assert.equal(sb.collapsed, false);
++});
++
++test('select switches among the five pages and ignores unknown ones', () => {
++  const sb = createSidebar();
++  assert.deepEqual(PAGES, ['teams', 'agents', 'install', 'skills', 'settings']);
++  assert.equal(sb.page, 'teams');
++  for (const p of PAGES) {
++    sb.select(p);
++    assert.equal(sb.page, p);
++  }
++  sb.select('nope');
++  assert.equal(sb.page, 'settings');
++});
++
++test('subscribers hear every change', () => {
++  const sb = createSidebar();
++  const seen = [];
++  sb.subscribe((s) => seen.push([s.collapsed, s.page]));
++  sb.toggle();
++  sb.select('agents');
++  assert.deepEqual(seen, [[true, 'teams'], [true, 'agents']]);
++});
+diff --git a/desktop/frontend/src/tabs.test.js b/desktop/frontend/src/tabs.test.js
+new file mode 100644
+index 0000000..cd9d8c6
+--- /dev/null
++++ b/desktop/frontend/src/tabs.test.js
+@@ -0,0 +1,62 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { createDock, MIN_HEIGHT, MAX_HEIGHT, TABS } from './tabs.js';
++
++test('the dock starts closed on the kirokit tab', () => {
++  const dock = createDock();
++  assert.equal(dock.open, false);
++  assert.equal(dock.tab, 'kirokit');
++  assert.deepEqual(TABS, ['kirokit', 'shell']);
++});
++
++test('open, close and toggle change only the visibility', () => {
++  const dock = createDock();
++  dock.show();
++  assert.equal(dock.open, true);
++  dock.hide();
++  assert.equal(dock.open, false);
++  dock.toggle();
++  assert.equal(dock.open, true);
++  dock.toggle();
++  assert.equal(dock.open, false);
++});
++
++test('height stays within the minimum and maximum', () => {
++  const dock = createDock();
++  dock.resize(10);
++  assert.equal(dock.height, MIN_HEIGHT);
++  dock.resize(5000);
++  assert.equal(dock.height, MAX_HEIGHT);
++  dock.resize(300.4);
++  assert.equal(dock.height, 300);
++  dock.resize(Number.NaN);
++  assert.equal(dock.height, 300);
++});
++
++test('closing and reopening keeps the height and the tab', () => {
++  const dock = createDock();
++  dock.show();
++  dock.select('shell');
++  dock.resize(333);
++  dock.hide();
++  dock.show();
++  assert.equal(dock.tab, 'shell');
++  assert.equal(dock.height, 333);
++});
++
++test('an unknown tab is ignored', () => {
++  const dock = createDock();
++  dock.select('nope');
++  assert.equal(dock.tab, 'kirokit');
++});
++
++test('selecting a tab shows the dock and listeners see every change', () => {
++  const dock = createDock();
++  const seen = [];
++  const off = dock.subscribe((s) => seen.push({ ...s }));
++  dock.select('shell');
++  assert.deepEqual(seen.at(-1), { open: true, tab: 'shell', height: dock.height });
++  off();
++  dock.resize(200);
++  assert.equal(seen.length, 1);
++});

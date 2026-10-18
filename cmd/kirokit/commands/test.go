@@ -23,10 +23,10 @@ func newTestCmd() *cobra.Command {
 			}
 
 			in := golden.Inputs{
-				TeamsRoot:       teamsRoot,
-				GlobalRoot:      globalRoot,
-				EnvVersionsPath: envVersionsPath,
-				GoldenRoot:      goldenRoot,
+				TeamsRoot:       repoPath(teamsRoot),
+				GlobalRoot:      repoPath(globalRoot),
+				EnvVersionsPath: repoPath(envVersionsPath),
+				GoldenRoot:      repoPath(goldenRoot),
 			}
 
 			mismatched := false
