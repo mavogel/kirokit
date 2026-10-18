@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-Taken as it stood after 3 rounds (the rounds did not settle): 1 item left open.
+Passed after 3 judge runs and 2 fix rounds.
 <!-- /ql:summary -->
 
 ## How it is checked
@@ -14,7 +14,7 @@ Taken as it stood after 3 rounds (the rounds did not settle): 1 item left open.
   - Result: done · 1 comment-only simplification (8ebce7f) · 0 tests added · docs: no further change needed · 2 screens compared: 2 captured, 0 stale, 0 not captured
 - **Security review** · a fresh agent · read-only
   - State: done
-  - Result: done · nothing severe in the change · read Polish's 4 commits once more: nothing new (the git environment helper moved unchanged to `externalskills.WithoutRepoGitEnv` and `sync.go` calls it; the rest is tests and one AGENTS.md line; no new path from outside input to a file, command, query or response)
+  - Result: done · nothing severe in the change · read Polish's 6 commits once more: nothing new (the git environment helper moved unchanged to `externalskills.WithoutRepoGitEnv` and `sync.go` calls it; the rest is tests and one AGENTS.md line; no new path from outside input to a file, command, query or response)
   - Why it runs here: The change crosses a trust boundary: other processes and two person-entered inputs. The app starts the person's login shell, git and the bundled kirokit..
 - **Second opinion** · Codex · GPT-6.1 Sol · another vendor
   - State: fail

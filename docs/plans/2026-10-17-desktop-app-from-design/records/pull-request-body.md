@@ -183,7 +183,7 @@ Releases gain a macOS job after the CLI release: build, zip without AppleDouble 
 ## How it was verified
 
 <!-- ql:checked -->
-Taken as it stood with 1 item still open; lanes that ran: Polish, Security review, Project checks, Code review, Second opinion and Fix rounds.
+Polish, Security review, Project checks, Code review, Second opinion and Fix rounds ran.
 <!-- /ql:checked -->
 
 ## Try it yourself

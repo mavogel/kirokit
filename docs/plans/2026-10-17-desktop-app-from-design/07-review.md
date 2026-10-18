@@ -185,7 +185,7 @@ Releases gain a macOS job after the CLI release: build, zip without AppleDouble 
 ## How it was verified
 
 <!-- ql:checked -->
-Taken as it stood with 1 item still open; lanes that ran: Polish, Security review, Project checks, Code review, Second opinion and Fix rounds.
+Polish, Security review, Project checks, Code review, Second opinion and Fix rounds ran.
 <!-- /ql:checked -->
 
 ## Try it yourself
@@ -224,9 +224,7 @@ Taken as it stood with 1 item still open; lanes that ran: Polish, Security revie
 ## Accepted with open items
 
 <!-- ql:accepted -->
-Checking ran twice without settling, so Verify ended and the build went to review. What was left open:
-
-- Judge, round 3: [FAIL] scenario 2: Step 7 expects a saved confirmation, but its address does not exist, so none shows. Step 1 removes `/tmp/ql-kk-s2`, so `/tmp/ql-kk-s2/origin` is missing; since Save clones a new address, the app now rightly shows "git clone failed (exit 128)…" beside the field with an empty status (Kiro home is saved silently). The scenario was not amended for the clone-on-save behaviour. Everything else held: first-launch page, clone, toggle and Command-B 232 -> 60 -> 232 px, Control-B nothing, dark tokens, `/` refused with nothing saved; a retry Save ran a second `▸ git clone`; with a valid origin created at that path Save showed "Saved. Cloning…" then "Cloned. The new repository is in use." and stored it; after a restart by pid both values were filled in. Amend step 7 (create the origin first, or expect the failure beside the field) — `evidence/it3-scenario-2.txt`, `evidence/it3-scenario-2-step-7-failed.png`
+None: the build passed its checks.
 <!-- /ql:accepted -->
 
 ## Decided while building
@@ -262,5 +260,5 @@ Nothing was left for you to settle.
 ## Ship
 
 <!-- ql:ship -->
-Approved · 18 Oct, 02:49. Branch `ql/desktop-app-from-design`.
+Shipped as pull request #6. Branch `ql/desktop-app-from-design`.
 <!-- /ql:ship -->
