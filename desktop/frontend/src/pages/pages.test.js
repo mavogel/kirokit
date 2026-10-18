@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { teamsView } from './teams.js';
 import { agentsView } from './agents.js';
 import { installView, syncArgs, uninstallArgs } from './install.js';
-import { updateArgs, saveAndMaybeClone } from './settings.js';
+import { updateArgs, saveAndMaybeClone, initSettings } from './settings.js';
 import { skillsView } from './skills.js';
 import { welcomeView, showWelcome } from './welcome.js';
 
@@ -156,7 +156,7 @@ test('Saving a different address in Settings clones it; the same one does not', 
   const changed = await saveAndMaybeClone(save, clone, saved, { repoUrl: 'https://example.com/new.git', kiroHome: '/h2' });
   assert.equal(changed, true);
   // The old address is saved with the home folder; Clone records the new one
-  // only once it starts, so a refused address is never remembered.
+  // only once the clone succeeds, so a refused or failed address is never remembered.
   assert.deepEqual(calls, [['save', { repoUrl: 'https://example.com/old.git', kiroHome: '/h2' }], ['clone', 'https://example.com/new.git']]);
 
   calls.length = 0;
@@ -176,6 +176,67 @@ test('A refused save does not start a clone, and a refused clone rejects', async
     saveAndMaybeClone(async () => {}, async () => { throw new Error('kirokit is still running a command'); }, saved, { repoUrl: 'https://example.com/n.git', kiroHome: '/h' }),
     /still running/,
   );
+});
+
+// A Settings page on a fake document: elements keep their handlers and text.
+function settingsPage({ stored, cloneRejects }) {
+  const els = {};
+  const el = (id) => (els[id] ||= {
+    id, value: '', textContent: '', disabled: false, attrs: {}, handlers: {},
+    addEventListener(type, fn) { this.handlers[type] = fn; },
+    setAttribute(k, v) { this.attrs[k] = v; },
+    removeAttribute(k) { delete this.attrs[k]; },
+    focus() {},
+  });
+  globalThis.document = { getElementById: el };
+  const calls = [];
+  globalThis.window = {
+    go: { main: { App: {
+      State: async () => ({ settings: { kiroHome: '/h', repoUrl: stored.repoUrl }, env: { ready: true, defaultKiroHome: '/h', note: '' } }),
+      SaveSettings: async (s) => { calls.push(['save', s.repoUrl]); stored.repoUrl = s.repoUrl; },
+    } } },
+  };
+  const page = initSettings(() => {}, async (address) => {
+    calls.push(['clone', address]);
+    if (cloneRejects) throw new Error(cloneRejects);
+  });
+  return { els, el, calls, page };
+}
+
+test('A failed clone from Settings shows beside the address and leaves Save able to retry', async () => {
+  const stored = { repoUrl: '/old/origin' };
+  const { el, calls, page } = settingsPage({ stored });
+  await page.load();
+  el('repo').value = '/missing/origin';
+
+  await el('save').handlers.click();
+  assert.match(el('save-status').textContent, /Cloning/);
+
+  page.cloneDone({ ok: false, error: 'git clone failed (exit 128).' });
+  assert.equal(el('repo-error').textContent, 'git clone failed (exit 128).');
+  assert.equal(el('repo').attrs['aria-invalid'], 'true');
+  assert.doesNotMatch(el('save-status').textContent, /Cloning/);
+  assert.equal(stored.repoUrl, '/old/origin');
+
+  calls.length = 0;
+  await el('save').handlers.click();
+  assert.deepEqual(calls, [['save', '/old/origin'], ['clone', '/missing/origin']]);
+  assert.equal(el('repo-error').textContent, '');
+});
+
+test('A finished clone clears the Cloning status in Settings', async () => {
+  const { el, page } = settingsPage({ stored: { repoUrl: '/old/origin' } });
+  await page.load();
+  el('repo').value = '/new/origin';
+  await el('save').handlers.click();
+
+  page.cloneDone({ ok: true, error: '' });
+  assert.doesNotMatch(el('save-status').textContent, /Cloning/);
+  assert.match(el('save-status').textContent, /Cloned/);
+  assert.equal(el('repo-error').textContent, '');
+
+  page.cloneDone({ ok: true, error: 'This repository has no release yet.' });
+  assert.match(el('save-status').textContent, /no release yet/);
 });
 
 test('No page source names a sample team', () => {

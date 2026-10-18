@@ -35,15 +35,19 @@ func (a *App) Clone(address string) error {
 		return err
 	}
 
-	s := a.loadSettings()
-	s.RepoURL = address
-	if err := a.writeSettings(s); err != nil {
-		a.release()
-		return err
-	}
 	go func() {
 		defer a.release()
-		a.emit("clone:done", a.cloneAndSync(address, cli))
+		res := a.cloneAndSync(address, cli)
+		if res.OK {
+			// The address is stored only once its clone is the one in use, so a
+			// failed clone never leaves an address the app is not using.
+			s := a.loadSettings()
+			s.RepoURL = address
+			if err := a.writeSettings(s); err != nil {
+				res = cloneResult{Error: "The repository was cloned but its address could not be saved: " + err.Error()}
+			}
+		}
+		a.emit("clone:done", res)
 	}()
 	return nil
 }

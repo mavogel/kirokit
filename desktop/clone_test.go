@@ -193,7 +193,7 @@ func TestClone_ASecondAddressKeepsTheOldCloneUnderAnotherName(t *testing.T) {
 	}
 }
 
-func TestClone_AFailedCloneRestoresTheOldOneAndKeepsTheAddress(t *testing.T) {
+func TestClone_AFailedCloneRestoresTheOldOneAndKeepsTheOldAddress(t *testing.T) {
 	good := newOrigin(t, "v1.0.0")
 	a, log := cloneApp(t)
 	if err := a.Clone(good); err != nil {
@@ -218,8 +218,22 @@ func TestClone_AFailedCloneRestoresTheOldOneAndKeepsTheAddress(t *testing.T) {
 	if olds, _ := filepath.Glob(filepath.Join(a.dataDir, "repo.old-*")); len(olds) != 0 {
 		t.Errorf("a restored clone leaves no repo.old-*, got %v", olds)
 	}
-	if got := a.State().Settings.RepoURL; got != missing {
-		t.Errorf("saved address = %q, want the failed address %q kept", got, missing)
+	if got := a.State().Settings.RepoURL; got != good {
+		t.Errorf("saved address = %q, want the address still in use %q (the failed %q must not be stored)", got, good, missing)
+	}
+}
+
+func TestClone_AFailedFirstCloneStoresNoAddress(t *testing.T) {
+	a, log := cloneApp(t)
+	missing := filepath.Join(t.TempDir(), "no-such-origin")
+	if err := a.Clone(missing); err != nil {
+		t.Fatal(err)
+	}
+	if res := log.waitClone(t); res.OK {
+		t.Fatalf("clone:done = %+v, want a failure", res)
+	}
+	if got := a.State().Settings.RepoURL; got != "" {
+		t.Errorf("saved address = %q, want none after a failed clone", got)
 	}
 }
 
@@ -238,6 +252,9 @@ func TestClone_AnOriginWithoutAReleaseTagKeepsTheClone(t *testing.T) {
 	}
 	if !a.State().Cloned {
 		t.Error("the clone must be kept")
+	}
+	if got := a.State().Settings.RepoURL; got != origin {
+		t.Errorf("saved address = %q, want %q: the kept clone is the one in use", got, origin)
 	}
 	if cat, err := a.Catalog(); err != nil || len(cat.Teams) != 1 {
 		t.Errorf("Catalog = %+v, %v; the app works from the default branch", cat, err)

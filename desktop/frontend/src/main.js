@@ -184,6 +184,7 @@ api.on('term:kirokit:exit', ({ id }) => {
   refresh();
 });
 api.on('clone:done', ({ ok, error }) => {
+  if (view.welcome.fromSettings) settings.cloneDone({ ok, error });
   view.welcome = { ...view.welcome, busy: false, fromSettings: false, error: ok ? '' : error };
   view.notice = error || '';
   settings.load(); // the Settings address field now shows the cloned address

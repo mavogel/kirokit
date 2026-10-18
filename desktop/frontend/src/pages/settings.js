@@ -14,8 +14,8 @@ export function parseFieldErrors(message) {
 
 // Saves the form and, when it holds a different repository address, starts the
 // fresh-folder clone. The old address is what gets saved with the form: Clone
-// records the new one itself once it starts, so a refused address is never
-// remembered. Resolves to whether a clone started; rejects with the save's or
+// records the new one itself once the clone succeeds, so a refused or failed
+// address is never remembered. Resolves to whether a clone started; rejects with the save's or
 // the clone's refusal (a save refusal means no clone started).
 export async function saveAndMaybeClone(save, clone, saved, form) {
   const changed = form.repoUrl !== '' && form.repoUrl !== saved.repoUrl;
@@ -89,7 +89,8 @@ export function initSettings(onUpdate, onClone) {
         saved,
         form,
       );
-      saved.repoUrl = form.repoUrl;
+      // saved.repoUrl stays: it is the address the app uses until a clone of
+      // the new one succeeds (load() then reads it), so Save can retry.
       status.textContent = changed ? 'Saved. Cloning the new repository; follow it in the kirokit tab.' : 'Saved on this computer';
     } catch (e) {
       const err = parseFieldErrors(e && e.message ? e.message : e);
@@ -112,5 +113,17 @@ export function initSettings(onUpdate, onClone) {
     updateErr.textContent = e && e.where === 'update' ? e.message : '';
   };
 
-  return { load, paint };
+  // The end of a clone this page started: a failure shows beside the address,
+  // and the status stops saying the clone is running.
+  const cloneDone = ({ ok, error }) => {
+    if (ok) {
+      show(repo, repoErr, '');
+      status.textContent = error || 'Cloned. The new repository is in use.';
+    } else {
+      show(repo, repoErr, error || 'The clone failed. See the kirokit tab.');
+      status.textContent = '';
+    }
+  };
+
+  return { load, paint, cloneDone };
 }
