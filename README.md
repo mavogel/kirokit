@@ -8,15 +8,17 @@ A `kirokit` Go CLI plus repository layout that lets multiple teams own their own
 
 ### using the cli
 
-Homebrew installs only the `kirokit` binary. The team configs (`teams/`, `global/`, `env/`) live in this repository, and `kirokit` reads them from the current directory, so clone it and run every command from its root. The example `platform-team` also launches SOPS-secured MCP servers, so install `sops` (`brew install sops`) and have a key that can decrypt its secrets file before starting the agent.
+Homebrew installs only the `kirokit` binary. The team configs (`teams/`, `global/`, `env/`) live in this repository, so `kirokit setup` downloads it first, onto its newest release. `kirokit` reads the configs from the folder `KIROKIT_REPO` names (else the current directory). The example `platform-team` also launches SOPS-secured MCP servers, so install `sops` (`brew install sops`) and have a key that can decrypt its secrets file before starting the agent.
 
 ```bash
 # install the binary via homebrew
 brew install --cask mavogel/tap/kirokit
 kirokit version
 
-# get the team configs and work from the repository root
-git clone https://github.com/mavogel/kirokit.git && cd kirokit
+# download the team configs (newest v* tag) and point kirokit at them;
+# use your team's repository address instead of the example one
+kirokit setup --source https://github.com/mavogel/kirokit.git --target ~/.kirokit-config
+export KIROKIT_REPO=~/.kirokit-config
 
 # let's backup first, if you have used it
 export KIRO_HOME_BACKUP=$KIRO_HOME
@@ -238,6 +240,19 @@ brew install --cask mavogel/tap/kirokit
 ```
 
 Each release publishes a Homebrew cask to [mavogel/homebrew-tap](https://github.com/mavogel/homebrew-tap) (`brew upgrade --cask kirokit` picks up new versions). The cask covers macOS and Linux (arm64 and amd64). The binaries are not notarized, so on macOS it clears the quarantine attribute after install.
+
+## Setup (initial download)
+
+```bash
+kirokit setup --source https://github.com/mavogel/kirokit.git --target ~/.kirokit-config
+export KIROKIT_REPO=~/.kirokit-config
+```
+
+- `setup` is the command-line twin of the desktop app's first launch: `git clone -- <source> <target>`, then a checkout of the newest `v*` tag (detached HEAD). `--source` and `--target` are required.
+- `--branch <name>` checks out that branch or tag instead (`git clone --branch`), skipping the newest-tag rule: `kirokit setup --source <address> --target <folder> --branch main`. It cannot be empty, start with `-` or contain whitespace, and an unknown name fails the clone. It is the same thing `manifest.yaml` calls `ref` for external skills, minus commit hashes.
+- `--source` is an `https`, `ssh` or `file` address, `git@host:path`, or an absolute path; an address starting with `-` is refused. `--target` must not exist or must be an empty folder, so an existing clone is never overwritten (use `sync` to update it).
+- Without `--branch`, a repository with no `v*` tag is kept on its default branch and `setup` prints that it has no release yet (exit 0).
+- It prints the `KIROKIT_REPO` line to use next; then run `install` or `sync`.
 
 ## Sync (automatic updates)
 

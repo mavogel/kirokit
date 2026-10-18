@@ -59,6 +59,7 @@ func newRootCmd() *cobra.Command {
 	root.AddCommand(newOnboardCmd())
 	root.AddCommand(newInstallCmd())
 	root.AddCommand(newUninstallCmd())
+	root.AddCommand(newSetupCmd())
 	root.AddCommand(newSyncCmd())
 	root.AddCommand(newSkillsCmd())
 	root.AddCommand(newVersionCmd())
