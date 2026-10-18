@@ -3,12 +3,12 @@ name: Release
 on:
   push:
     branches: [main]
-  # Manual dry run of the desktop job: builds the app, zips it and prints the
-  # cask, without uploading or pushing anything.
+  # Manual dry run: builds the CLI and the desktop app as a GoReleaser snapshot
+  # and prints the casks, without tagging, uploading or pushing anything.
   workflow_dispatch:
     inputs:
       dry_run:
-        description: Build the desktop zip and print the cask; never upload or push
+        description: Build a snapshot and print the casks; never tag, upload or push
         type: boolean
         default: true
 
@@ -21,12 +21,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # One macOS job: the desktop app needs a macOS runner, and GoReleaser then
+  # releases the CLI archives and the app's DMGs together, with a cask for each.
   release:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    outputs:
-      release: ${{ steps.version.outputs.release }}
-      tag: ${{ steps.version.outputs.tag }}
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -38,7 +36,16 @@ jobs:
         with:
           go-version: stable
 
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: lts/*
+
+      - name: Install Task
+        run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
+
       - name: Install svu
+        if: github.event_name == 'push'
         run: go install github.com/caarlos0/svu/v3@v3.4.1
 
       # svu reads the Conventional Commits since the latest tag. --v0 keeps a
@@ -46,6 +53,7 @@ jobs:
       # once the project is at v1.
       - name: Compute next version
         id: version
+        if: github.event_name == 'push'
         run: |
           current="$(svu current)"
           next="$(svu next --v0)"
@@ -64,6 +72,15 @@ jobs:
           git tag "${{ steps.version.outputs.tag }}"
           git push origin "${{ steps.version.outputs.tag }}"
 
+      # GoReleaser imports the app built here (see scripts/desktop-prebuilt.sh).
+      - name: Build the desktop app
+        if: steps.version.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          VERSION: ${{ steps.version.outputs.tag || '0.0.0-dryrun' }}
+        run: |
+          task desktop:build
+          scripts/desktop-prebuilt.sh
+
       - name: Release
         if: steps.version.outputs.release == 'true'
         uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
@@ -78,49 +95,20 @@ jobs:
           # Fine-grained PAT with contents:write on mavogel/homebrew-tap.
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
 
-  # Builds the universal macOS app, attaches its zip to the release and pushes
-  # the kirokit-desktop cask. A manual dispatch builds HEAD and only prints.
-  desktop:
-    needs: release
-    if: always() && (needs.release.outputs.release == 'true' || github.event_name == 'workflow_dispatch')
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Snapshot (dry run)
+        if: github.event_name == 'workflow_dispatch'
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
         with:
-          fetch-depth: 0
-          # The new tag on a release; HEAD of the dispatched ref on a dry run.
-          ref: ${{ github.event_name == 'push' && needs.release.outputs.tag || github.sha }}
-
-      - name: Set up Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
-        with:
-          go-version: stable
-
-      - name: Set up Node
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: lts/*
-
-      - name: Install Task
-        run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
-
-      - name: Build
+          distribution: goreleaser-pro
+          version: "~> v2"
+          args: release --snapshot --clean
         env:
-          VERSION: ${{ github.event_name == 'push' && needs.release.outputs.tag || '0.0.0-dryrun' }}
-        run: task desktop:build
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+          HOMEBREW_TAP_GITHUB_TOKEN: unused-in-a-snapshot
 
-      - name: Zip the app and print the cask (dry run)
+      - name: Print the casks (dry run)
         if: github.event_name == 'workflow_dispatch'
         run: |
-          bash scripts/desktop-release.sh --version 0.0.0-dryrun --app desktop/build/bin/kirokit.app --out "$RUNNER_TEMP/desktop-release"
-          cat "$RUNNER_TEMP/desktop-release/Casks/kirokit-desktop.rb"
-
-      - name: Upload the zip and push the cask
-        if: github.event_name == 'push'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Fine-grained PAT with contents:write on mavogel/homebrew-tap.
-          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
-          TAG: ${{ needs.release.outputs.tag }}
-        run: bash scripts/desktop-release.sh --version "$TAG" --app desktop/build/bin/kirokit.app --out "$RUNNER_TEMP/desktop-release" --publish
+          ls dist
+          cat dist/homebrew/Casks/*.rb
