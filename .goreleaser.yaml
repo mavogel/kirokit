@@ -102,13 +102,14 @@ homebrew_casks:
     homepage: https://github.com/mavogel/kirokit
     description: Render, test, and install multi-team Kiro CLI v3 configs
     # The binaries are not notarized; without this macOS reports "kirokit is damaged".
-    hooks:
-      post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr",
-                           args: ["-dr", "com.apple.quarantine", "#{staged_path}/kirokit"]
-          end
+    # custom_block, because GoReleaser's `hooks` still renders the deprecated
+    # `postflight`; move to `hooks.post.install_steps` once a release supports it.
+    custom_block: |
+      postflight_steps do
+        on_macos do
+          run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ "{{staged_path}}" }}/kirokit"]
+        end
+      end
 
   - name: kirokit-desktop
     ids:
@@ -121,13 +122,11 @@ homebrew_casks:
     homepage: https://github.com/mavogel/kirokit
     description: Desktop app to install and sync Kiro CLI team configs
     # The app is not notarized; without this macOS reports "kirokit is damaged".
-    hooks:
-      post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr",
-                           args: ["-dr", "com.apple.quarantine", "#{appdir}/kirokit.app"]
-          end
+    # custom_block for the same reason as the kirokit cask above.
+    custom_block: |
+      postflight_steps do
+        run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ "{{appdir}}" }}/kirokit.app"]
+      end
 
 release:
   github:
