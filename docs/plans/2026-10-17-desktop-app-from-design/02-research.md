@@ -367,6 +367,8 @@ Question 9: The current `go-git` release and how it authenticates to private rep
 | 5 | Which repository should the app clone by default? | Asked on first launch |
 | 6 | Which templates should the app's Update action bring in? | The newest release tag |
 | 7 | How should Homebrew offer the desktop app? | A separate kirokit-desktop cask |
+| 9 | What should change before this ships? | where does kirokit clone per default on first setup? can this be configurable |
+| 10 | Add a configurable clone folder to this task? | No: note as a follow-up |
 <!-- /ql:decided -->
 
 ## Code references

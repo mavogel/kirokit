@@ -174,6 +174,8 @@ flowchart LR
 - Research · Which repository should the app clone by default? — Asked on first launch
 - Research · Which templates should the app's Update action bring in? — The newest release tag
 - Research · How should Homebrew offer the desktop app? — A separate kirokit-desktop cask
+- Research · What should change before this ships? — where does kirokit clone per default on first setup? can this be configurable
+- Research · Add a configurable clone folder to this task? — No: note as a follow-up
 - Plan · Buttons run their commands in their own kirokit tab, beside your shell — B · Buttons run in a kirokit tab, each command in its own fresh terminal. Your shell keeps its own zsh tab.
 <!-- /ql:decided-by-you -->
 

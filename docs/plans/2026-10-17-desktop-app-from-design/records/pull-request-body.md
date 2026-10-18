@@ -10,7 +10,7 @@ People without a terminal can now install and update a team's Kiro config from a
 
 - **`kirokit install` and `kirokit sync` now keep one team per machine.** Installing or syncing a team first uninstalls any other installed team and prints a line for it. Two scheduled syncs of different teams on one machine now replace each other, which the README's migration note explains; the commit type needs a `!` so the release notes flag it.
 - **The release job has never run for real.** Uploading the app, pushing the `kirokit-desktop` cask to your tap and `brew install` can only be tried by a tagged release. The workflow and the zip script were checked locally in dry-run mode only.
-- **Two small gaps remain in Settings.** A Kiro home change saved in the same click as a failed address clone is saved without a confirmation. If the settings file cannot be written after a successful clone, the app reports a failure while the new clone is already in use; that path has no test.
+- **Two small gaps remain in Settings.** A Kiro home change saved in the same click as a failed address clone is saved without a confirmation. If the settings file cannot be written after a successful clone, the app reports a failure while the new clone is already in use; that path has no test. Follow-up, by your decision: the clone folder is fixed at `~/Library/Application Support/kirokit-desktop/repo` and is not configurable yet.
 
 ## What changed
 
@@ -50,7 +50,7 @@ Releases gain a macOS job after the CLI release: build, zip without AppleDouble 
 ## Built, slice by slice
 
 <!-- ql:slices -->
-7 slices · 24 tasks · 27 commits · 77 files · +7287 −42
+7 slices · 24 tasks · 28 commits · 77 files · +7287 −42
 
 **Slice 1 · One team stays installed and kirokit runs from any folder** · T1, T2, T3, T4, T5 · 18 files · +778 −41
 
