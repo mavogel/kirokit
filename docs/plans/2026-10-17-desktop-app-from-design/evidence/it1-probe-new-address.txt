@@ -1,0 +1,15 @@
+# Probe: a new repository address saved in Settings
+Settings: repository address set to /tmp/ql-kk-s4/origin2 (a different repo with ops-team, tag v100.0.0), Save -> 'Saved on this computer'; no command ran in the kirokit tab.
+Then Update -> '▸ kirokit sync --latest-tag' / 'checked out v99.2.0 at 48e4b3f' (still the old origin); Teams still lists data-team, platform-team, qa-team (no ops-team).
+
+$ cat settings.json
+{
+  "repoUrl": "/tmp/ql-kk-s4/origin2",
+  "kiroHome": "/tmp/ql-kk-s4/kiro"
+}
+$ ls app folder
+repo
+settings.json
+zdotdir
+$ git -C repo remote get-url origin
+/tmp/ql-kk-s4/origin

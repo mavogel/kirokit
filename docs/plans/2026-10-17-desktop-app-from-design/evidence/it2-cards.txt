@@ -1,0 +1,31 @@
+== desktop unit tests at 65af338 ==
+ok  	github.com/mavogel/kirokit/desktop	7.011s
+ok  	github.com/mavogel/kirokit/desktop/terminal	1.665s [no tests to run]
+== README ==
+75:- Paths `teams/`, `global/steerings/`, `env/mcp-versions.yaml` and `testdata/golden/` resolve against the cwd, or against `KIROKIT_REPO` when that environment variable is set (a relative value is made absolute once at
+201:- A Kiro home holds one team. `install <team>` first uninstalls every other installed team and prints `uninstalled <other> from <home>` for each, then `installed <team> into <home>`. Reinstalling the installed team r
+236:- `--repo` defaults to `$KIROKIT_REPO`, else the cwd; an explicit `--repo` wins over `KIROKIT_REPO`. `--kb-*` flags behave as for `install`; without them a previously attached knowledge base is dropped, so pass them
+238:**Migration:** one machine now holds one team. A second scheduled sync of a different team (a second run of `scripts/kirokit-sync-setup.sh --team <other>`) replaces the first team on every run instead of installing b
+252:`desktop/` holds a macOS app (Wails) for people who would rather press buttons than type commands. It bundles `kirokit` and runs the same commands, so what it writes is byte for byte what the command line writes. Ins
+254:- **First launch** asks for your team's repository address (https, ssh, `file://`, `git@host:path` or an absolute path; an address starting with `-` is refused), runs `git clone -- <address> <app folder>/repo`, then
+255:- **Teams** has an Install button per team. It first shows the checks it needs (SOPS, the decryption key, Kiro CLI, read from your login shell), then runs `kirokit install <team>`. A Kiro home holds one team, so inst
+256:- **Install and sync** has Sync (`kirokit sync <team> --latest-tag`) and Uninstall (`kirokit uninstall <team>`) per installed team; **Settings** has Update (`kirokit sync --latest-tag` for the installed team, or with
+257:- Every button command runs in the dock's **kirokit** tab, where a git sign-in prompt can be answered; the **zsh** tab is your own login shell with the bundled `kirokit` first on `PATH`. The app sets `KIROKIT_REPO` t
+258:- `KIROKIT_REPO` also works on the command line: with it set, `kirokit sync --latest-tag` (no team) updates a checkout from any folder.
+260:**Migration:** one machine now holds one team, in the app and on the command line alike. A second scheduled sync from `scripts/kirokit-sync-setup.sh` for another team replaces the first team on every run.
+== release.yaml desktop job ==
+release.if=github.event_name == 'push'
+release.outputs={"release"=>"${{ steps.version.outputs.release }}", "tag"=>"${{ steps.version.outputs.tag }}"}
+desktop.needs=release if=always() && (needs.release.outputs.release == 'true' || github.event_name == 'workflow_dispatch') runs-on=macos-latest
+- Checkout: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+- Set up Go: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+- Set up Node: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+- Install Task: go install github.com/go-task/task/v3/cmd/task@v3.54.0
+- Build: task desktop:build
+- Zip the app and print the cask (dry run): bash scripts/desktop-release.sh --version 0.0.0-dryrun --app desktop/build/bin/kirokit.app --out "$RUNNER_TEMP/desktop-release" cat "$RUNNER_TEMP/desktop-release/Casks/kirokit-desktop.rb"
+- Upload the zip and push the cask: bash scripts/desktop-release.sh --version "$TAG" --app desktop/build/bin/kirokit.app --out "$RUNNER_TEMP/desktop-release" --publish
+== AGENTS.md desktop ==
+8:- `desktop/` — the Wails desktop app: its own Go module (`desktop/go.mod`), `desktop/frontend/` (vite + xterm.js, tested with `node --test`); `task desktop:test` runs it
+ℹ tests 40
+ℹ pass 40
+ℹ fail 0

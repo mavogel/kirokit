@@ -1,0 +1,23 @@
+$ step 9a
+data-team.json
+uninstalled data-team from /tmp/ql-kk-s4/kiro
+installed data-team into /tmp/ql-kk-s4/kiro
+[diff exit 0]
+       9
+
+$ find /tmp/ql-kk-s4/kiro -type f  (no platform-team leftovers)
+./.kirokit-installed/data-team.json
+./agents/godev.json
+./agents/javadev.json
+./hooks/format-on-save.json
+./kirokit-secrets/data-team/javadev/secrets.enc.yaml
+./prompts/pipeline-status.md
+./prompts/warehouse-query.md
+./skills/sql-helper/SKILL.md
+./steering/data-conventions.md
+
+$ step 13
+uninstalled platform-team from /tmp/ql-kk-s4/kiro
+installed platform-team into /tmp/ql-kk-s4/kiro
+[diff exit 0]
+platform-team.json

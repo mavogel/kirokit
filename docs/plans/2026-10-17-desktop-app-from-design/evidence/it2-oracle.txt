@@ -1,0 +1,7 @@
+Oracle (from scenario 4 at 65af338): the app cloned a local origin of this repository, installed platform-team through the setup dialog, a typed kirokit install data-team in its zsh tab replaced platform-team on Teams and Install and sync, then a plain uninstall + install of data-team into the same Kiro home:
+### step 9a
+uninstalled data-team from /tmp/ql-kk-s4/kiro
+installed data-team into /tmp/ql-kk-s4/kiro
+diff exit 0
+       9
+See it2-scenario-4.txt steps 1-9 for the app side.

@@ -1,0 +1,11 @@
+# Scenario 3 at 5ebc94b (task desktop:dev, HOME=/tmp/ql-kk-s3/home, Chrome DevTools at 1280x800)
+1  app started on http://localhost:34115 (fixture clone + settings.json as written)
+2  Teams: data-team, platform-team, both "not installed". Agents: godev, javadev (data-team), devops, platformdev (platform-team) with tools read write glob knowledge shell and @servers.
+   Skills and MCP versions: confluence-mcp 2.1.0, context7-mcp 4.4.2, example-mcp 1.0.0, jira-mcp 1.4.2, mcp-remote 0.15.1, pipeline-mcp 3.0.0, snowflake-mcp 0.9.1 = env/mcp-versions.yaml (7 pins).
+   Install and sync: "Nothing is installed yet."
+3  Show terminal -> dock 220 px; drag of the top edge upward -> dock 370 px, main 580 -> 430 px.
+4  zsh tab: `command -v kirokit` -> /Users/mavogel/Developer/projects/kiro-cli-kit/desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit
+4a drag to 270 px -> xterm renders 12 rows, ~129-130 columns; `stty size` -> "12 130"
+5  `kirokit install data-team` -> "installed data-team into /tmp/ql-kk-s3/kiro"; Teams card and Install and sync row showed installed (9 files) within the 2 s poll, read <1 s after the output.
+6  `kirokit uninstall data-team` -> "uninstalled data-team from /tmp/ql-kk-s3/kiro"; Teams shows both not installed; Install and sync "Nothing is installed yet."
+7  Hide terminal -> "Show terminal" bar visible; show again -> zsh tab still holds every earlier line (command -v, stty size, install, uninstall).

@@ -1,0 +1,40 @@
+Scenario 2 (amended Outline, with step 2a) at 65af338, task desktop:dev with HOME=/tmp/ql-kk-s2/home, Chrome DevTools at 1280x800
+Step 1: dev server answered on :34115 (task pid 67496).
+Step 2: "Set up kirokit" page with the Repository address field and Clone (it2-scenario-2-step-2.png).
+  Probe (judge note, Command-B on first launch): real Meta+B and a dispatched metaKey keydown on the first-launch page left #app class "app setup", defaultPrevented false.
+Step 2a: Clone of /Users/mavogel/Developer/projects/kiro-cli-kit -> Teams with data-team, platform-team; sidebar showed Teams 2, Agents 4, Install and sync, Skills and MCP versions, Settings; Collapse button "expanded".
+  After the clone: side 232 px, main 1048 px (sidebar expanded, not the rail: the Command-B note is fixed).
+Step 3: toggle -> "app rail", side 60, main 1220.
+Step 4: toggle -> 232/1048; Command-B -> 60/1220; Command-B -> 232/1048. Control-B: no change. Real Meta+B through DevTools also toggled (it2-scenario-2-rail.png).
+Step 5: light emulation body rgb(255,255,255)/rgb(29,23,48) (it2-scenario-2-light.png); dark emulation rgb(23,19,31)/rgb(236,233,246).
+Step 6: Kiro home "/" -> "Choose a folder inside your home folder, not the home folder itself" beside the field; settings.json kept kiroHome "".
+Step 7: Kiro home /tmp/ql-kk-s2/kiro, address /tmp/ql-kk-s2/origin (does not exist), Save -> "Saved. Cloning the new repository; follow it in the kirokit tab."
+  kirokit tab: "▸ git clone -- /tmp/ql-kk-s2/origin .../kirokit-desktop/repo", "fatal: repository '/tmp/ql-kk-s2/origin' does not exist", "exited with code 128".
+  settings.json: {"repoUrl": "/tmp/ql-kk-s2/origin", "kiroHome": "/tmp/ql-kk-s2/kiro"}; repo/ restored (origin still the kiro-cli-kit path, v0.2.0).
+  The clone failure text went to #notice on the Teams page and #clone-error on the hidden welcome page; Settings still said "Saved. Cloning ..." (it2-scenario-2-step-7.png).
+  Pressing Save again with the same address: "Saved on this computer", nothing ran (no new git clone line in the kirokit tab).
+Step 8: stopped pids 67705 67636 67618 67548 67525 67496, ports 34115 and 5173 free, restarted (task pid 70988), reload, Settings: kirohome=/tmp/ql-kk-s2/kiro, repo=/tmp/ql-kk-s2/origin (it2-scenario-2-step-8.png).
+
+Done 10 probe (new valid address from Settings):
+  /tmp/ql-kk-s2/origin2 = clone of the repo + ops-team, tag v100.0.0. Set the address in Settings and pressed Save.
+  Within 1 s Teams listed data-team, ops-team, platform-team; the pages never left (app class "app").
+  kirokit tab: "▸ git clone -- /tmp/ql-kk-s2/origin2 .../repo", "done.", "▸ kirokit sync --latest-tag", "checked out v100.0.0 at bd22b66".
+  Settings status after completion still read "Saved. Cloning the new repository; follow it in the kirokit tab."
+== done 10 probe: new address saved in Settings ==
+{
+  "repoUrl": "/tmp/ql-kk-s2/origin2",
+  "kiroHome": "/tmp/ql-kk-s2/kiro"
+}
+.
+..
+repo
+repo.old-1792281511
+settings.json
+repo origin: /tmp/ql-kk-s2/origin2
+repo tag: v100.0.0
+data-team
+ops-team
+platform-team
+kept aside: /tmp/ql-kk-s2/home/Library/Application Support/kirokit-desktop/repo.old-1792281511 -> /Users/mavogel/Developer/projects/kiro-cli-kit v0.2.0
+
+Judge note (Skills page Used by), catalog from origin2: confluence-mcp platform-team; context7-mcp platform-team; mcp-remote platform-team; pipeline-mcp data-team, ops-team; snowflake-mcp data-team, ops-team; example-mcp and jira-mcp no agent yet. Matches the mcpVersion keys in teams/*/agents/*/agent.json.tmpl (devops: context7-mcp, mcp-remote).

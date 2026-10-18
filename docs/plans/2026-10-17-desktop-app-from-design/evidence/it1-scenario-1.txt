@@ -1,0 +1,57 @@
+# Scenario 1 at 5ebc94b
+$ rm -rf /tmp/ql-kk-s1 && mkdir -p /tmp/ql-kk-s1/home && go build -o /tmp/ql-kk-s1/kirokit ./cmd/kirokit
+[exit 0]
+
+$ env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install platform-team
+installed platform-team into /tmp/ql-kk-s1/home
+[exit 0]
+
+$ env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install data-team
+uninstalled platform-team from /tmp/ql-kk-s1/home
+installed data-team into /tmp/ql-kk-s1/home
+[exit 0]
+
+$ ls /tmp/ql-kk-s1/home/.kirokit-installed
+data-team.json
+[exit 0]
+
+$ env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit install data-team
+installed data-team into /tmp/ql-kk-s1/home
+[exit 0]
+
+$ cd / && env KIROKIT_REPO=/Users/mavogel/Developer/projects/kiro-cli-kit /tmp/ql-kk-s1/kirokit render platform-team --out /tmp/ql-kk-s1/out
+rendered platform-team -> /tmp/ql-kk-s1/out
+[exit 0]
+
+$ git clone -q /Users/mavogel/Developer/projects/kiro-cli-kit /tmp/ql-kk-s1/clone
+[exit 0]
+
+$ env KIRO_HOME=/tmp/ql-kk-s1/home /tmp/ql-kk-s1/kirokit sync --latest-tag --repo /tmp/ql-kk-s1/clone; ls /tmp/ql-kk-s1/home/.kirokit-installed
+updated 5ebc94b -> 9a919bf
+checked out v0.2.0 at 9a919bf
+data-team.json
+[exit 0]
+
+$ /tmp/ql-kk-s1/kirokit sync --kb-agent x
+kirokit sync: --kb-agent needs a team
+[exit 1]
+
+$ go test ./... 2>&1 | tail -20
+?   	github.com/mavogel/kirokit/cmd/kirokit	[no test files]
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	(cached)
+ok  	github.com/mavogel/kirokit/internal/backup	(cached)
+ok  	github.com/mavogel/kirokit/internal/externalskills	(cached)
+ok  	github.com/mavogel/kirokit/internal/golden	(cached)
+ok  	github.com/mavogel/kirokit/internal/install	(cached)
+ok  	github.com/mavogel/kirokit/internal/kiroconfig	(cached)
+ok  	github.com/mavogel/kirokit/internal/manifest	(cached)
+ok  	github.com/mavogel/kirokit/internal/mcpversions	(cached)
+ok  	github.com/mavogel/kirokit/internal/render	(cached)
+ok  	github.com/mavogel/kirokit/internal/scaffold	(cached)
+ok  	github.com/mavogel/kirokit/internal/sopswrap	(cached)
+[exit 0]
+
+# probe: empty KIROKIT_REPO from / (should behave as unset)
+$ cd / && env KIROKIT_REPO= /tmp/ql-kk-s1/kirokit render platform-team --out /tmp/ql-kk-s1/out2
+kirokit render: platform-team: manifest: read teams/platform-team/manifest.yaml: open teams/platform-team/manifest.yaml: no such file or directory
+[exit 1]

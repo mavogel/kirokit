@@ -1,0 +1,17 @@
+Scenario 3 at 65af338: pre-cloned repo and settings.json under /tmp/ql-kk-s3/home, task desktop:dev (task pid 73176), Chrome DevTools at 1280x800
+Step 1: app answered on :34115.
+Step 2: Teams: "data-team not installed 2 agents 1 skill 2 prompts 1 steering", "platform-team not installed 2 agents 2 skills 3 prompts 2 steerings".
+  Agents: godev (data-team, tools read write glob knowledge shell @pipeline-mcp, none), javadev (@snowflake-mcp, needs key),
+  devops (platform-team, @atlassian @context7, needs key), platformdev (@confluence-mcp, needs key).
+  Install and sync: "Nothing is installed yet."
+  Skills and MCP versions: confluence-mcp 2.1.0 platform-team; context7-mcp 4.4.2 platform-team; example-mcp 1.0.0 no agent yet;
+  jira-mcp 1.4.2 no agent yet; mcp-remote 0.15.1 platform-team; pipeline-mcp 3.0.0 data-team; snowflake-mcp 0.9.1 data-team
+  (= env/mcp-versions.yaml; Used by now names platform-team for mcp-remote and context7-mcp: judge note fixed) (it2-scenario-3-skills.png).
+Step 3: Show terminal -> dock 220 px, main 580 px; dragging the separator up 150 px -> dock 370, main 430, aria-valuenow 370.
+Step 4: zsh tab: `command -v kirokit` -> /Users/mavogel/Developer/projects/kiro-cli-kit/desktop/build/dev-bin/kirokit
+  while desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit exists from this run's task desktop:build (judge note on dev-mode BundledCLI fixed).
+  echo -> R=/tmp/ql-kk-s3/home/Library/Application Support/kirokit-desktop/repo H=/tmp/ql-kk-s3/kiro
+Step 4a: dragged to 270 px; xterm renders 12 rows; `stty size` -> "12 130".
+Step 5: `kirokit install data-team` -> "installed data-team into /tmp/ql-kk-s3/kiro"; Teams card "data-team installed", Install and sync row "data-team installed 9 18 Oct 2026, 02:00 Sync Uninstall".
+Step 6: `kirokit uninstall data-team` -> "uninstalled data-team from /tmp/ql-kk-s3/kiro"; Teams showed both "not installed" at the first check after the line appeared; Install and sync (visible) "Nothing is installed yet."
+Step 7: Hide terminal -> dock hidden; Show terminal -> zsh tab still ends with the install/uninstall lines (it2-scenario-3-step-7.png).
