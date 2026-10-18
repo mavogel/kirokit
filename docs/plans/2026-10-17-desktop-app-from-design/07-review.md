@@ -52,7 +52,7 @@ Releases gain a macOS job after the CLI release: build, zip without AppleDouble 
 ## Built, slice by slice
 
 <!-- ql:slices -->
-7 slices · 24 tasks · 29 commits · 77 files · +7287 −42
+7 slices · 24 tasks · 30 commits · 77 files · +7287 −42
 
 **Slice 1 · One team stays installed and kirokit runs from any folder** · T1, T2, T3, T4, T5 · 18 files · +778 −41
 

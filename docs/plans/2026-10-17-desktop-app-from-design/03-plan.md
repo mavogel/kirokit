@@ -3,7 +3,7 @@ type: plan
 status: approved
 approved: true
 review_digest: 5c341b06c6748e812981853b64b88ed659c7cc12402e2fd65fedb7cbff48c166
-review_basis: afff20a323ec0efd48d2b23a4c739a86390e36a2f22a3c4c2cba149d0c6dbfa0
+review_basis: b86cb712d143df583ee1344ec3639f73b0121874484ed6b568931edae16bc576
 ---
 
 # The kirokit desktop app, built from the approved design

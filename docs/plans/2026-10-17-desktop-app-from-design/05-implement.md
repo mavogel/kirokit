@@ -327,6 +327,7 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 - T7 (amended): Scenario 2 now clones first, because the pages stay hidden until a clone exists; nothing you approved changes.
 - T20 (judged): a failed clone from Settings left its address stored and the status stuck on cloning, so the address is now stored only after a clone succeeds and the failure shows beside it; nothing you approved changes.
 - T8 (amended): Scenario 2 now creates the new address's origin first, because saving an address clones it; nothing you approved changes.
+- Plan (agreed): ok fine I approve the review (accepts my two review answers in the decisions list)
 
 ## Plan amended
 
@@ -383,5 +384,11 @@ Amended by the agent on 2026-10-17; changed 04-outline.md.
 Scenario 2 now creates the new address's origin first, because saving an address clones it; nothing you approved changes.
 
 Amended by the agent on 2026-10-18; changed 04-outline.md.
+
+### Plan · agreed
+
+ok fine I approve the review (accepts my two review answers in the decisions list)
+
+Agreed with the user on 2026-10-18; changed 03-plan.md.
 
 ## Restart
