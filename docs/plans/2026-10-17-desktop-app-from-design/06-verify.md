@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-Round 3: checking after 1 fix round.
+Taken as it stood after 3 rounds (the rounds did not settle): 1 item left open.
 <!-- /ql:summary -->
 
 ## How it is checked
@@ -27,8 +27,8 @@ Round 3: checking after 1 fix round.
   - State: fail
   - Result: 0 of 13 points failed
 - **Fix rounds** · one fresh fixer per round
-  - State: running
-  - Result: 1 round
+  - State: done
+  - Result: 2 rounds
 <!-- /ql:lanes -->
 
 ## Done means, checked
@@ -121,7 +121,9 @@ Round 3: checking after 1 fix round.
 ## Fix rounds
 
 <!-- ql:fix-rounds -->
-None so far.
+- Round 1 · fixed The window matches the design and remembers its settings · 26 min · $7.35
+- Round 2 · nothing recorded as fixed · 26 min · $8.02
+- Your choice after round 2: accept
 <!-- /ql:fix-rounds -->
 
 ## Second opinion
@@ -305,6 +307,8 @@ None so far.
 **Result:** fail
 
 ### Iteration 3
+
+**Revision:** 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2
 
 **Assignment:** bd5d8774-78e2-463c-b8e1-c9e07909c299
 **Judge:** fresh helper
