@@ -103,3 +103,48 @@ func TestSaveSettings_WritesPrivateFile(t *testing.T) {
 		t.Errorf("settings.json mode = %v, want 0600", info.Mode().Perm())
 	}
 }
+
+// The clone lives in <app folder>/repo until a folder is saved; a saved folder
+// moves where Clone and every page look, and survives a restart.
+func TestRepoDir_DefaultsThenFollowsSettings(t *testing.T) {
+	app, data, home := newTestApp(t)
+	if got, want := app.repoDir(), filepath.Join(data, "repo"); got != want {
+		t.Errorf("default repoDir = %q, want %q", got, want)
+	}
+
+	dir := filepath.Join(home, "work", "kk")
+	if err := app.SetRepoDir(dir + "/"); err != nil {
+		t.Fatalf("SetRepoDir: %v", err)
+	}
+	if got := NewAppAt(data).repoDir(); got != dir {
+		t.Errorf("repoDir after restart = %q, want %q", got, dir)
+	}
+
+	if err := app.SetRepoDir(""); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := app.repoDir(), filepath.Join(data, "repo"); got != want {
+		t.Errorf("repoDir after reset = %q, want %q", got, want)
+	}
+}
+
+func TestRepoDir_RefusesUnsafeFolders(t *testing.T) {
+	app, _, home := newTestApp(t)
+	busy := filepath.Join(home, "docs")
+	if err := os.MkdirAll(busy, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(busy, "a.txt"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, bad := range []string{"repo", "/", home, busy} {
+		if err := app.SetRepoDir(bad); err == nil || !strings.HasPrefix(err.Error(), "RepoDir: ") {
+			t.Errorf("SetRepoDir(%q) err = %v, want a RepoDir: message", bad, err)
+		}
+		err := app.SaveSettings(Settings{KiroHome: filepath.Join(home, "kiro"), RepoDir: bad})
+		if err == nil || !strings.HasPrefix(err.Error(), "RepoDir: ") {
+			t.Errorf("SaveSettings RepoDir %q err = %v, want a RepoDir: message", bad, err)
+		}
+	}
+}

@@ -89,13 +89,21 @@ async function installTeam(team) {
   await runCommand(['install', team], 'install:' + team);
 }
 
-async function startClone(address) {
-  view.welcome = { address: address.trim(), error: '', busy: true };
+async function startClone(address, dir = '') {
+  const typed = { address: address.trim(), dir: dir.trim() };
+  view.welcome = { ...typed, error: '', dirError: '', busy: true };
   draw();
   try {
+    try {
+      await api.setRepoDir(typed.dir);
+    } catch (e) {
+      view.welcome = { ...typed, error: '', dirError: message(e).replace(/^RepoDir: /, ''), busy: false };
+      draw();
+      return;
+    }
     await api.clone(address);
   } catch (e) {
-    view.welcome = { address: address.trim(), error: message(e), busy: false };
+    view.welcome = { ...typed, error: message(e), dirError: '', busy: false };
     draw();
   }
 }
@@ -145,6 +153,8 @@ async function loadCatalog() {
     view.loaded = true;
     // The address field starts from the saved one; typing replaces it.
     if (!view.welcome.address) view.welcome = { ...view.welcome, address: st.settings.repoUrl || '' };
+    if (!view.welcome.busy && !view.welcome.dirError) view.welcome = { ...view.welcome, dir: st.settings.repoDir || '' };
+    view.defaultRepoDir = st.env.defaultRepoDir || '';
     view.catalog = await api.catalog();
     view.error = '';
   } catch (e) {

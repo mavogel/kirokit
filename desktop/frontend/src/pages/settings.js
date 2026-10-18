@@ -1,11 +1,12 @@
 import * as api from '../api.js';
 
-// SaveSettings refuses with one "KiroHome: ..." or "RepoURL: ..." line per bad
+// SaveSettings refuses with one "KiroHome: ...", "RepoURL: ..." or "RepoDir: ..." line per bad
 // field. Anything else is a failure that belongs to no field.
 export function parseFieldErrors(message) {
-  const found = { kiroHome: '', repoUrl: '', other: '' };
+  const found = { kiroHome: '', repoUrl: '', repoDir: '', other: '' };
   for (const line of String(message).split('\n')) {
     if (line.startsWith('KiroHome: ')) found.kiroHome = line.slice('KiroHome: '.length);
+    else if (line.startsWith('RepoDir: ')) found.repoDir = line.slice('RepoDir: '.length);
     else if (line.startsWith('RepoURL: ')) found.repoUrl = line.slice('RepoURL: '.length);
     else if (line.trim()) found.other = line.trim();
   }
@@ -20,7 +21,7 @@ export function parseFieldErrors(message) {
 // started).
 export async function saveAndMaybeClone(save, clone, saved, form) {
   const changed = form.repoUrl !== '' && form.repoUrl !== saved.repoUrl;
-  await save({ repoUrl: changed ? saved.repoUrl : form.repoUrl, kiroHome: form.kiroHome });
+  await save({ repoUrl: changed ? saved.repoUrl : form.repoUrl, kiroHome: form.kiroHome, repoDir: form.repoDir });
   if (changed) await clone(form.repoUrl);
   return changed;
 }
@@ -44,6 +45,8 @@ export function initSettings(onUpdate, onClone) {
   const repo = document.getElementById('repo');
   const homeErr = document.getElementById('kirohome-error');
   const repoErr = document.getElementById('repo-error');
+  const dir = document.getElementById('repodir');
+  const dirErr = document.getElementById('repodir-error');
   const status = document.getElementById('save-status');
 
   const show = (input, errEl, message) => {
@@ -55,7 +58,9 @@ export function initSettings(onUpdate, onClone) {
   const envNote = document.getElementById('env-note');
   const saved = { repoUrl: '' }; // the address Settings last held
   let edited = false;
+  let dirEdited = false;
   home.addEventListener('input', () => { edited = true; });
+  dir.addEventListener('input', () => { dirEdited = true; });
 
   // Shows the saved values, or the default Kiro home before anything is saved.
   // The window opens before the login shell has been read, so until it has
@@ -65,6 +70,7 @@ export function initSettings(onUpdate, onClone) {
     try {
       const st = await api.state();
       if (!edited) home.value = st.settings.kiroHome || st.env.defaultKiroHome;
+      if (!dirEdited) dir.value = st.settings.repoDir || st.env.defaultRepoDir || '';
       saved.repoUrl = st.settings.repoUrl || '';
       if (!repo.value) repo.value = st.settings.repoUrl;
       envNote.textContent = st.env.note || '';
@@ -78,9 +84,10 @@ export function initSettings(onUpdate, onClone) {
     status.textContent = '';
     show(home, homeErr, '');
     show(repo, repoErr, '');
+    show(dir, dirErr, '');
     let cloning = false;
     try {
-      const form = { repoUrl: repo.value.trim(), kiroHome: home.value.trim() };
+      const form = { repoUrl: repo.value.trim(), kiroHome: home.value.trim(), repoDir: dir.value.trim() };
       const changed = await saveAndMaybeClone(
         api.saveSettings,
         async (address) => {
@@ -102,8 +109,10 @@ export function initSettings(onUpdate, onClone) {
       }
       show(home, homeErr, err.kiroHome);
       show(repo, repoErr, err.repoUrl);
+      show(dir, dirErr, err.repoDir);
       status.textContent = err.other;
       if (err.kiroHome) home.focus();
+      else if (err.repoDir) dir.focus();
       else if (err.repoUrl) repo.focus();
     }
   });

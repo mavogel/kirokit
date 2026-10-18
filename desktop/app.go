@@ -34,6 +34,8 @@ type EnvStatus struct {
 	// DefaultKiroHome is the Kiro home folder used until Settings saves one:
 	// the login shell's KIRO_HOME once captured, else ~/.kiro.
 	DefaultKiroHome string `json:"defaultKiroHome"`
+	// DefaultRepoDir is the clone folder used until Settings saves one.
+	DefaultRepoDir string `json:"defaultRepoDir"`
 	// Ready is false until the login shell has been read.
 	Ready bool `json:"ready"`
 	// Note explains a fallback, such as a login shell that was too slow.
@@ -116,11 +118,21 @@ func (a *App) State() AppState {
 	return AppState{
 		Settings: a.loadSettings(),
 		Cloned:   err == nil,
-		Env:      EnvStatus{DefaultKiroHome: defaultKiroHome(env, ready), Ready: ready, Note: note},
+		Env:      EnvStatus{DefaultKiroHome: defaultKiroHome(env, ready), DefaultRepoDir: a.defaultRepoDir(), Ready: ready, Note: note},
 	}
 }
 
-func (a *App) repoDir() string { return filepath.Join(a.dataDir, "repo") }
+// defaultRepoDir is where the clone lives until Settings names another folder.
+func (a *App) defaultRepoDir() string { return filepath.Join(a.dataDir, "repo") }
+
+// repoDir is the folder the repository is cloned into: the saved Settings
+// value, else the default.
+func (a *App) repoDir() string {
+	if p := a.loadSettings().RepoDir; p != "" {
+		return p
+	}
+	return a.defaultRepoDir()
+}
 
 func homeDir() string {
 	home, err := os.UserHomeDir()

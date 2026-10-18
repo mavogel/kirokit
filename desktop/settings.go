@@ -9,11 +9,13 @@ import (
 	"strings"
 )
 
-// Settings are the two values the person chooses; settings.json beside repo/
-// holds them. An empty RepoURL means no repository is configured yet.
+// Settings are the values the person chooses; settings.json in the app folder
+// holds them. An empty RepoURL means no repository is configured yet; an empty
+// RepoDir means the clone lives in <app folder>/repo.
 type Settings struct {
 	RepoURL  string `json:"repoUrl"`
 	KiroHome string `json:"kiroHome"`
+	RepoDir  string `json:"repoDir"`
 }
 
 // repoURLPattern accepts https://, ssh:// and file:// addresses, scp-style
@@ -35,12 +37,13 @@ func (a *App) loadSettings() Settings {
 	return s
 }
 
-// SaveSettings validates both values and stores them. A refusal names each
-// bad field on its own line as "KiroHome: ..." or "RepoURL: ...", and saves
-// nothing.
+// SaveSettings validates the values and stores them. A refusal names each
+// bad field on its own line as "KiroHome: ...", "RepoURL: ..." or
+// "RepoDir: ...", and saves nothing.
 func (a *App) SaveSettings(s Settings) error {
 	s.RepoURL = strings.TrimSpace(s.RepoURL)
 	s.KiroHome = strings.TrimSpace(s.KiroHome)
+	s.RepoDir = strings.TrimSpace(s.RepoDir)
 
 	var problems []error
 	if msg := checkKiroHome(s.KiroHome); msg != "" {
@@ -51,9 +54,32 @@ func (a *App) SaveSettings(s Settings) error {
 	if s.RepoURL != "" && !repoURLPattern.MatchString(s.RepoURL) {
 		problems = append(problems, errors.New("RepoURL: "+repoURLMessage))
 	}
+	if s.RepoDir != "" {
+		if msg := checkRepoDir(s.RepoDir); msg != "" {
+			problems = append(problems, errors.New("RepoDir: "+msg))
+		} else {
+			s.RepoDir = filepath.Clean(s.RepoDir)
+		}
+	}
 	if len(problems) > 0 {
 		return errors.Join(problems...)
 	}
+	return a.writeSettings(s)
+}
+
+// SetRepoDir stores only the clone folder (empty restores the default), for
+// the first-launch page, which has no other setting to save. A refusal reads
+// "RepoDir: ..." and saves nothing.
+func (a *App) SetRepoDir(dir string) error {
+	dir = strings.TrimSpace(dir)
+	if dir != "" {
+		if msg := checkRepoDir(dir); msg != "" {
+			return errors.New("RepoDir: " + msg)
+		}
+		dir = filepath.Clean(dir)
+	}
+	s := a.loadSettings()
+	s.RepoDir = dir
 	return a.writeSettings(s)
 }
 
@@ -117,6 +143,24 @@ func checkKiroHome(p string) string {
 	clean := filepath.Clean(p)
 	if clean == "/" || clean == filepath.Clean(homeDir()) {
 		return "Choose a folder inside your home folder, not the home folder itself"
+	}
+	return ""
+}
+
+// checkRepoDir refuses a clone folder that is relative, is the root or home
+// folder, or already holds something other than a git checkout, since a new
+// clone sets an existing folder aside.
+func checkRepoDir(p string) string {
+	if !filepath.IsAbs(p) {
+		return "Enter an absolute folder, such as " + filepath.Join(homeDir(), "kirokit", "repo")
+	}
+	clean := filepath.Clean(p)
+	if clean == "/" || clean == filepath.Clean(homeDir()) {
+		return "Choose a folder inside your home folder, not the home folder itself"
+	}
+	entries, err := os.ReadDir(clean)
+	if err == nil && len(entries) > 0 && !exists(filepath.Join(clean, ".git")) {
+		return "That folder already has files in it. Choose a new or empty folder"
 	}
 	return ""
 }

@@ -18,7 +18,7 @@ type cloneResult struct {
 
 const noReleaseMessage = "This repository has no release yet (no v* tag). Ask your team lead to tag one."
 
-// Clone fetches the repository at address into <app folder>/repo and checks
+// Clone fetches the repository at address into the clone folder (<app folder>/repo unless Settings names another) and checks
 // out its newest release tag. A refused address or a command already running
 // comes back as the error; the rest runs in the kirokit tab and ends with
 // clone:done.

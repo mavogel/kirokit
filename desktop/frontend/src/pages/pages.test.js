@@ -151,13 +151,13 @@ test('Saving a different address in Settings clones it; the same one does not', 
   const calls = [];
   const save = async (s) => calls.push(['save', s]);
   const clone = async (a) => calls.push(['clone', a]);
-  const saved = { repoUrl: 'https://example.com/old.git', kiroHome: '/h' };
+  const saved = { repoUrl: 'https://example.com/old.git', kiroHome: '/h', repoDir: '/r' };
 
-  const changed = await saveAndMaybeClone(save, clone, saved, { repoUrl: 'https://example.com/new.git', kiroHome: '/h2' });
+  const changed = await saveAndMaybeClone(save, clone, saved, { repoUrl: 'https://example.com/new.git', kiroHome: '/h2', repoDir: '/r' });
   assert.equal(changed, true);
   // The old address is saved with the home folder; Clone records the new one
   // only once the clone succeeds, so a refused or failed address is never remembered.
-  assert.deepEqual(calls, [['save', { repoUrl: 'https://example.com/old.git', kiroHome: '/h2' }], ['clone', 'https://example.com/new.git']]);
+  assert.deepEqual(calls, [['save', { repoUrl: 'https://example.com/old.git', kiroHome: '/h2', repoDir: '/r' }], ['clone', 'https://example.com/new.git']]);
 
   calls.length = 0;
   assert.equal(await saveAndMaybeClone(save, clone, saved, { ...saved }), false);

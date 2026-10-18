@@ -10,6 +10,10 @@ const app = () => {
 
 export const state = () => app().State();
 
+// Stores only the clone folder (empty restores the default); rejects with a
+// "RepoDir: ..." line when the folder is refused.
+export const setRepoDir = (dir) => app().SetRepoDir(dir);
+
 export const saveSettings = (settings) => app().SaveSettings(settings);
 
 export const catalog = () => app().Catalog();
