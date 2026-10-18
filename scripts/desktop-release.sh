@@ -12,7 +12,7 @@
 # HOMEBREW_TAP_GITHUB_TOKEN when set.
 set -euo pipefail
 
-repo="mavogel/kiro-cli-kit"
+repo="mavogel/kirokit"
 tap="${TAP_REPO:-mavogel/homebrew-tap}"
 
 usage() { echo "usage: desktop-release.sh --version <version> --app <kirokit.app> --out <dir> [--publish]" >&2; }

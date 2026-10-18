@@ -65,7 +65,7 @@ check() { grep -qF -- "$1" "$cask" || { cat "$cask" >&2; fail "cask lacks: $1"; 
 check 'cask "kirokit-desktop" do'
 check 'version "1.2.3"'
 check "sha256 \"$sha\""
-check 'url "https://github.com/mavogel/kiro-cli-kit/releases/download/v1.2.3/kirokit-desktop_1.2.3_darwin_universal.zip"'
+check 'url "https://github.com/mavogel/kirokit/releases/download/v1.2.3/kirokit-desktop_1.2.3_darwin_universal.zip"'
 check 'app "kirokit.app"'
 check 'postflight do'
 check '"/usr/bin/xattr"'
