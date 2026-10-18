@@ -6,14 +6,14 @@ depth: light
 level: engineering
 ui: true
 overrides: []
-stage: review
+stage: shipped
 iterations: 3
 verification_failures: 3
 gate: null
 created: 1792271603793
 startup_owner: 4d42f5beaea5d6a1
 layout: seven
-status: approved
+status: verified
 approved: true
 review_digest: 4e4d5fb372146939e83bc577f2474c4d35e77775ef98cb856252bfaa8648816d
 review_basis: 5bc0fc6289a8b2fa0d4a7d7f3ed845bf37dd1b46ad3df1ec0b75e9206b74708e
@@ -22,6 +22,10 @@ base: 440b841b0183803905935d03e91528a2fe90a2ea
 base_ref: main
 checkpoint_failures: 0
 judge_runs: 3
+shipped: 2026-10-18
+commits: ["445c884","5735b7f","3823e0a","2357174","ee57a68","20c83fa","60fb185","f2ee3d4","48002f1","34d36d9","ded2fd3","70308a7","492219a","421cad0","bd03554","e10d117","1d11c4d","fd79636","223a8b5","f541fc8","72e379a","5ebc94b","65af338","7f82ec4","8ebce7f","0074301","5de9748","0b15b92","a8cb371","5bcef45","026a1c3"]
+touched: [".github/workflows/","AGENTS.md","README.md","Taskfile.yml","cmd/kirokit/","desktop/.gitignore","desktop/app.go","desktop/app_test.go","desktop/build/","desktop/catalog.go","desktop/catalog_test.go","desktop/clone.go"]
+slices: 7
 ---
 
 # Desktop app from design
