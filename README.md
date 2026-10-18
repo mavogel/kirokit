@@ -6,6 +6,8 @@ A `kirokit` Go CLI plus repository layout that lets multiple teams own their own
 
 ## Quickstart
 
+### using the cli
+
 Homebrew installs only the `kirokit` binary. The team configs (`teams/`, `global/`, `env/`) live in this repository, and `kirokit` reads them from the current directory, so clone it and run every command from its root. The example `platform-team` also launches SOPS-secured MCP servers, so install `sops` (`brew install sops`) and have a key that can decrypt its secrets file before starting the agent.
 
 ```bash
@@ -37,6 +39,22 @@ rm -rf $KIRO_HOME
 export KIRO_HOME=$KIRO_HOME_BACKUP
 echo $KIRO_HOME
 ```
+
+### or using the desktop app
+
+<p align="center"><img src="assets/kirokit-desktop.png" width="720" alt="The kirokit desktop app showing two teams with an Install button each, and the terminal dock below"></p>
+
+The macOS app bundles `kirokit`, so there is nothing else to install and no terminal needed.
+
+```bash
+brew install --cask mavogel/tap/kirokit-desktop
+```
+
+1. Open **kirokit**. On first launch, enter your team's repository address (for the example configs, `https://github.com/mavogel/kirokit.git`) and press **Clone**. You can also choose the folder it is cloned into.
+2. On **Teams**, press **Install** on your team. The app first shows what it needs (SOPS, the decryption key, Kiro CLI), then runs `kirokit install <team>`.
+3. Start the agent as above: `kiro-cli chat --agent devops --v3`.
+
+**Install and sync** keeps the installed team up to date, and **Settings** holds the Kiro home folder and the repository. Every button command runs in the terminal dock, so you see exactly what `kirokit` does. [Desktop app](#desktop-app) has the details.
 
 ## Taskfile
 
