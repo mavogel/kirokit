@@ -1,0 +1,44 @@
+## scenario 5 at 0074301 Sun Oct 18 02:30:19 CEST 2026
+--- step 1: task desktop:build
+exit 0
+https://github.com/sponsors/leaanthony
+desktop/build/bin/kirokit.app: replacing existing signature
+built desktop/build/bin/kirokit.app (version 0.2.0-27-g0074301-dirty)
+--- step 2
+x86_64 arm64
+--- step 3
+x86_64 arm64
+--- step 4
+kirokit 0.2.0-27-g0074301-dirty
+commit: 0074301c9c695f1418e4d5cd22136f17f8cbdffd
+built:  2026-10-18T00:30:19Z
+exit 0
+--- step 5
+macos-latest
+--- step 6
+exit 0
+## scenario 6 Sun Oct 18 02:30:29 CEST 2026
+--- step 1
+desktop-release_test: ok
+exit 0
+--- step 2
+zip:    /tmp/ql-kk-s6/kirokit-desktop_0.0.0_darwin_universal.zip
+sha256: f9ced0c175ae11d04f4b4310de325fcedb94d20ace020249d1ac8c281922a341
+cask:   /tmp/ql-kk-s6/Casks/kirokit-desktop.rb (Casks/kirokit-desktop.rb)
+Dry run: nothing was uploaded or pushed (pass --publish to upload and push).
+exit 0
+--- step 3
+Archive:  /tmp/ql-kk-s6/kirokit-desktop_0.0.0_darwin_universal.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  10-18-2026 00:26   kirokit.app/
+        0  10-18-2026 00:26   kirokit.app/Contents/
+        0  10-18-2026 00:26   kirokit.app/Contents/_CodeSignature/
+AppleDouble entries: 0
+--- step 4
+release
+--- probe: missing --version
+desktop-release: --version is required
+usage: desktop-release.sh --version <version> --app <kirokit.app> --out <dir> [--publish]
+exit 1
+## end Sun Oct 18 02:30:31 CEST 2026

@@ -6,9 +6,9 @@ depth: light
 level: engineering
 ui: true
 overrides: []
-stage: implement
-iterations: 0
-verification_failures: 0
+stage: verify
+iterations: 2
+verification_failures: 2
 gate: null
 created: 1792271603793
 startup_owner: 4d42f5beaea5d6a1
@@ -20,6 +20,8 @@ review_basis: 5bc0fc6289a8b2fa0d4a7d7f3ed845bf37dd1b46ad3df1ec0b75e9206b74708e
 branch: ql/desktop-app-from-design
 base: 440b841b0183803905935d03e91528a2fe90a2ea
 base_ref: main
+checkpoint_failures: 0
+judge_runs: 2
 ---
 
 # Desktop app from design

@@ -10,8 +10,8 @@ Round 3: checking after 1 fix round.
 
 <!-- ql:lanes -->
 - **Polish** · a fresh agent · Sonnet 5.5
-  - State: running
-  - Result: done · 1 comment-only simplification (8ebce7f) · 0 tests added · docs: no further change needed · 2 screens compared: 0 captured, 2 stale, 0 not captured
+  - State: done
+  - Result: done · 1 comment-only simplification (8ebce7f) · 0 tests added · docs: no further change needed · 2 screens compared: 2 captured, 0 stale, 0 not captured
 - **Security review** · a fresh agent · read-only
   - State: done
   - Result: done · nothing severe in the change · read Polish's 4 commits once more: nothing new (the git environment helper moved unchanged to `externalskills.WithoutRepoGitEnv` and `sync.go` calls it; the rest is tests and one AGENTS.md line; no new path from outside input to a file, command, query or response)
@@ -36,28 +36,29 @@ Round 3: checking after 1 fix round.
 <!-- ql:proof -->
 | Done means | Proof | |
 |---|---|---|
-| 1. The kirokit desktop app opens a window that matches the design | ![Open the app and compare it with the approved sidebar-layout design in light and dark; I saw the logo, five sections, main pane and dock in both themes again, but the likeness is yours to judge,](evidence/it2-scenario-2-light.png) | yours to confirm |
-| 2. The sidebar collapses to an icon rail and expands again | Carried from iteration 1; the fix only makes Command-B ignore the hidden sidebar, and scenario 2 re-ran the toggle and Command-B (232 -> 60 -> 232 px). | passed |
-| 3. Teams, Agents, and Skills and MCP versions show the repository's real data | Carried from iteration 1; the fix adds agent pins to the catalog but leaves teams and agents as they were, and scenario 3 re-ran them. | passed |
-| 4. A non-engineer installs a team with buttons only | ![Carried from iteration 1; the fix leaves the setup dialog and Install alone, and scenario 4 step 6-7 re-ran them](evidence/it1-scenario-4-step-6.png) | passed |
-| 5. Install writes the same files as `kirokit install` | Carried from iteration 1; the fix changes no install path, and steps 9a and 13 gave `diff -r` exit 0 again. | passed |
-| 6. Install and sync shows the real install state | ![Carried from iteration 1; the Install and sync page is unchanged by the fix](evidence/it1-scenario-4-step-12.png) | passed |
-| 7. A real terminal docks at the bottom, as in VS Code | Carried from iteration 1; the dock code is unchanged by the fix. | passed |
-| 8. Each button press appears in the terminal as its `kirokit` command | ![Carried from iteration 1; the runner and its headers are unchanged by the fix](evidence/it1-scenario-4-step-12.png) | passed |
-| 9. A command typed in the terminal updates the screens | ![Carried from iteration 1; the records poller is unchanged by the fix](evidence/it1-scenario-4-step-9.png) | passed |
-| 10. Settings sets the Kiro home folder and the repository's address | Saving the new address `/tmp/ql-kk-s2/origin2` (v100.0.0, adds ops-team) in Settings cloned it into `repo/` with `▸ git clone -- …` and `▸ kirokit sync --latest-tag` (`checked out v100.0.0`), kept the old clone as `repo.old-1792281511`, and Teams listed ops-team within a second without leaving the pages; Kiro home `/` refused, both values survived a restart,. | passed |
-| 11. Only one team is ever installed at a time, in the app and the CLI | Carried from iteration 1; the CLI is unchanged by the fix, and scenario 1 and scenario 4 steps 9-11 re-ran green. | passed |
-| 12. One command builds the macOS app, and CI builds it too | Carried from iteration 1; the build script and CI workflow are unchanged, and scenario 5 re-ran green. | passed |
-| 13. The kirokit command line keeps working, apart from the one-team rule | Carried from iteration 1; no CLI or golden file changed in the fix, and `go test ./...` exit 0 again. | passed |
-| 14. The app fetches the templates itself, with no git knowledge needed | ![Carried from iteration 1; first launch and Update re-ran in scenario 4 steps 4 and 15](evidence/it1-scenario-4-step-4.png) | passed |
+| 1. The kirokit desktop app opens a window that matches the design | ![Settings after a restart with both values kept](evidence/it3-scenario-2-step-8.png) | yours to confirm |
+| 2. The sidebar collapses to an icon rail and expands again | Carried from iteration 2; the fix touches only the Settings clone path, and scenario 2 re-ran the toggle and Command-B (232 -> 60 -> 232 px). | passed |
+| 3. Teams, Agents, and Skills and MCP versions show the repository's real data | Carried from iteration 2; the fix leaves the catalog alone, and scenario 3 re-ran teams, agents and pins. | passed |
+| 4. A non-engineer installs a team with buttons only | ![Carried from iteration 2; the setup dialog and Install are unchanged, and scenario 4 steps 6-7 re-ran them](evidence/it2-scenario-4-step-6.png) | passed |
+| 5. Install writes the same files as `kirokit install` | Carried from iteration 2; no install path changed, and steps 9a and 13 gave `diff -r` exit 0 again. | passed |
+| 6. Install and sync shows the real install state | Carried from iteration 2; the Install and sync page is unchanged by the fix. | passed |
+| 7. A real terminal docks at the bottom, as in VS Code | Carried from iteration 2; the dock code is unchanged by the fix. | passed |
+| 8. Each button press appears in the terminal as its `kirokit` command | Carried from iteration 2; the runner and its headers are unchanged. | passed |
+| 9. A command typed in the terminal updates the screens | ![Carried from iteration 2; the records poller is unchanged](evidence/it2-scenario-4-step-9.png) | passed |
+| 10. Settings sets the Kiro home folder and the repository's address | Carried from iteration 2; scenario 2 re-ran it at this commit: both values came back after a restart, and a new address is now stored only once its clone succeeds,. | passed |
+| 11. Only one team is ever installed at a time, in the app and the CLI | Carried from iteration 2; the CLI is unchanged, and scenario 1 and scenario 4 steps 9-11 re-ran green. | passed |
+| 12. One command builds the macOS app, and CI builds it too | Carried from iteration 2; the build script and CI workflow are unchanged, and scenario 5 re-ran green. | passed |
+| 13. The kirokit command line keeps working, apart from the one-team rule | Carried from iteration 2; no CLI or golden file changed, and `go test ./...` exit 0 again. | passed |
+| 14. The app fetches the templates itself, with no git knowledge needed | Carried from iteration 2; first launch and Update are unchanged apart from when the address is stored, and scenario 4 steps 4 and 15 re-ran them. | passed |
 | 15. Every kirokit release also ships the macOS app | Cut a real tagged release and check that the GitHub release carries `kirokit-desktop_<version>_darwin_universal.zip`; I saw only the local dry run and the workflow's `desktop` job wiring. | yours to confirm |
-| 16. A separate `kirokit-desktop` Homebrew cask installs the app, and it opens | After a release, run `brew install --cask mavogel/tap/kirokit-desktop` and open the app; I could not reach the tap. The release zip now has no `._*` entries and the app passes `codesign --verify --deep --strict` after a plain `unzip`. | yours to confirm |
+| 16. A separate `kirokit-desktop` Homebrew cask installs the app, and it opens | After a release, run `brew install --cask mavogel/tap/kirokit-desktop` and open the app; I could not reach the tap. The dry-run zip again has 0 `._*` entries. | yours to confirm |
 <!-- /ql:proof -->
 
 ## Open items
 
 <!-- ql:open-items -->
-- **Found while checking:** The Settings status still says a clone is running after it finished. After the successful origin2 clone it kept "Saved. Cloning the new repository; follow it in the kirokit tab." until the next Save.
+- **Found while checking:** When the address clone fails, the Kiro home saved in the same Save gets no confirmation. The status line is emptied and only the address error shows, so a person who changed both fields cannot tell the Kiro home was saved.
+- **Found while checking:** A settings write failure after a good clone reports failure while the new clone is in use. `Clone` then emits `ok:false` with the new `repo/` in place and the old address stored, so a retry renames the working clone again; untested fault path (`desktop/clone.go`).
 - **Only you can confirm:** The cask lands in your tap.
 - **Only you can confirm:** A real tagged release publishes it.
 - **Only you can confirm:** It looks like the approved design.
@@ -71,7 +72,7 @@ Round 3: checking after 1 fix round.
 - desktop-app-build: the manifest holds two captures (1200 wide, light and dark), but they show only the app shell, because the capture tool's browser gets no data from the Wails backend and the tool cannot click to Agents, Install, Skills, Settings, the dock or first launch. The shell (sidebar, heading, "Show terminal" bar) matches the mockup's structure. The full screens were compared by eye in a normal Chrome tab against `task desktop:dev` (see the real pictures below). Two things to look at: the terminal area inside the open dock is only about three lines tall in the browser (no pty there), and the Update button sits tight under its sentence.
 - Settings, repository address (live, Chrome DevTools against `task desktop:dev`): after saving a missing address the page shows "git clone failed (exit 128)…" beside the address field, the field is marked invalid and the status line is empty; after a good address the status reads "Cloned. The new repository is in use." and no field error remains.
 **Pictures:**
-- `evidence/screen-90c555549832049b9c838f77.png` — recorded capture of desktop-app-build (waited for `#app`, build fa23611e, seeded HOME /tmp/ql-kk-polish3/home): the app shell at 1200 wide, light: sidebar, heading, "Show terminal" bar, empty Teams grid (the tool's browser gets no data from the Wails backend); not a full Teams screen
+- `evidence/screen-90c555549832049b9c838f77.png` — recorded capture of desktop-app-build (waited for `#app`, recaptured at HEAD 0074301, seeded HOME /tmp/ql-kk-polish5/home): the app shell at 1200 wide, light: sidebar, heading, "Show terminal" bar, empty Teams grid (the tool's browser gets no data from the Wails backend); not a full Teams screen
 - `evidence/screen-ad4a6efee4437ebfbb4ae63f.png` — recorded capture of desktop-app-build, same shell at 1200 wide, dark, empty grid; not a full Teams screen
 - desktop-app-build (real pictures through Chrome DevTools at http://localhost:34115 in `task desktop:dev`, 1200 wide, light and dark, not recorded in `records/screens.json`): Teams, Agents, Install and sync, Skills and MCP versions, and Settings with the open dock all render with data and match the mockup's structure (sidebar with counts, five sections, Collapse bar, dock with kirokit and zsh tabs). Same two things as before to look at: the dock's terminal area is only a few lines tall in the browser (no pty there), and the Update button sits tight under its sentence. First launch and widths other than 1200 not compared.
 - Settings probe (live, repository address): with a clone of origin A (v99.0.0: data-team, platform-team) in place, Settings saved `/tmp/ql-kk-polish2/origin2` (origin B, v100.0.0: ops-team, platform-team). Within 6 s the app folder held a fresh `repo/` whose `origin` is origin B at v100.0.0, the old clone kept aside as `repo.old-<time>/`, and `settings.json` held the new address. The Teams page then listed ops-team and platform-team (data-team gone). Passes; this is the fix from 65af338 and answers criterion 10.
@@ -90,7 +91,7 @@ Round 3: checking after 1 fix round.
 - `evidence/polish2-teams-neworigin-light-1200.png` — Teams after the new address was cloned (ops-team, platform-team), 1200 wide, light
 - `evidence/polish4-settings-clone-failed.png` — Settings after saving a missing address: "git clone failed (exit 128)…" beside the address field, field marked invalid, status empty (Chrome DevTools, `task desktop:dev`)
 - `evidence/polish4-settings-clone-ok.png` — Settings after a good address: status "Cloned. The new repository is in use.", no field error (Chrome DevTools, `task desktop:dev`)
-**Left alone:** nothing further. The latest commits (7f82ec4, 8ebce7f) were reviewed; the only finding was a comment-only rewrap in `desktop/frontend/src/pages/settings.js`, committed as 8ebce7f.
+**Left alone:** nothing further. The latest commits (7f82ec4, 8ebce7f) were reviewed; the only finding was a comment-only rewrap in `desktop/frontend/src/pages/settings.js`, committed as 8ebce7f. Re-confirmed at HEAD 0074301: the block, the desktop-app-build capture and the Pictures list still hold.
 **Not checked:** the Settings states are not in `records/screens.json` because the capture tool cannot click to Settings; the Settings screenshots were not compared with the mockup beyond reading the DOM; the `writeSettings` failure branch after a successful clone has no test (it needs fault injection); the full suite was not run in this pass.
 
 ### Security
@@ -107,14 +108,14 @@ Round 3: checking after 1 fix round.
 ## Checks
 
 <!-- ql:checks -->
-- all · fa23611e2f1efc9deb21ad741b6221c512e22feee9f62c6b857cb40eb973e369 · `go test ./...` · exit 0 · 0s · reused
-- all · fa23611e2f1efc9deb21ad741b6221c512e22feee9f62c6b857cb40eb973e369 · `go vet ./...` · exit 0 · 0s · reused
-- all · fa23611e2f1efc9deb21ad741b6221c512e22feee9f62c6b857cb40eb973e369 · `golangci-lint run` · exit 0 · 0s · reused
-- all · fa23611e2f1efc9deb21ad741b6221c512e22feee9f62c6b857cb40eb973e369 · `go build ./...` · exit 0 · 0s · reused
-- all · fa23611e2f1efc9deb21ad741b6221c512e22feee9f62c6b857cb40eb973e369 · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0s · reused
-- all · fa23611e2f1efc9deb21ad741b6221c512e22feee9f62c6b857cb40eb973e369 · `cd desktop/frontend && npm ci && npm run build` · exit 0 · 0s · reused
-- all · fa23611e2f1efc9deb21ad741b6221c512e22feee9f62c6b857cb40eb973e369 · `cd desktop && go vet ./... && go test ./...` · exit 0 · 0s · reused
-- all · fa23611e2f1efc9deb21ad741b6221c512e22feee9f62c6b857cb40eb973e369 · `task desktop:build` · exit 0 · 0s · reused
+- all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `go test ./...` · exit 0 · 0s · reused
+- all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `go vet ./...` · exit 0 · 0s · reused
+- all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `golangci-lint run` · exit 0 · 0s · reused
+- all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `go build ./...` · exit 0 · 0s · reused
+- all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0s · reused
+- all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `cd desktop/frontend && npm ci && npm run build` · exit 0 · 0s · reused
+- all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `cd desktop && go vet ./... && go test ./...` · exit 0 · 0s · reused
+- all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `task desktop:build` · exit 0 · 0s · reused
 <!-- /ql:checks -->
 
 ## Fix rounds
@@ -300,5 +301,86 @@ None so far.
 1. Start the app with a scratch home: `mkdir -p /tmp/kk-try/home && env HOME=/tmp/kk-try/home GOPATH="$(go env GOPATH)" GOMODCACHE="$(go env GOMODCACHE)" GOCACHE="$(go env GOCACHE)" task desktop:dev`, then open http://localhost:34115 and clone this repository's path on the first-launch page
 2. In Settings, save a path that does not exist as the repository address; look at the status beside Save and at the kirokit tab
 3. Press Save again without changing anything; nothing runs, and the address stays saved although the app still uses the old clone (the failing point)
+
+**Result:** fail
+
+### Iteration 3
+
+**Assignment:** bd5d8774-78e2-463c-b8e1-c9e07909c299
+**Judge:** fresh helper
+
+- [PASS] check: recorded — all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `go test ./...` · exit 0 · 0s · reused
+- [PASS] check: recorded — all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `go vet ./...` · exit 0 · 0s · reused
+- [PASS] check: recorded — all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `golangci-lint run` · exit 0 · 0s · reused
+- [PASS] check: recorded — all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `go build ./...` · exit 0 · 0s · reused
+- [PASS] check: recorded — all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0s · reused
+- [PASS] check: recorded — all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `cd desktop/frontend && npm ci && npm run build` · exit 0 · 0s · reused
+- [PASS] check: recorded — all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `cd desktop && go vet ./... && go test ./...` · exit 0 · 0s · reused
+- [PASS] check: recorded — all · 85e150dc917da569a178383b1cbc9eca90d60e4a104ff970557f8084f8fef8c2 · `task desktop:build` · exit 0 · 0s · reused
+- [USER] done 1: open the app and compare it with the approved sidebar-layout design in light and dark; I saw the logo, five sections, main pane and dock again, but the likeness is yours to judge — `evidence/it3-scenario-2-step-8.png`, `evidence/it3-scenario-4-step-15.png`
+- [PASS] done 2: carried from iteration 2; the fix touches only the Settings clone path, and scenario 2 re-ran the toggle and Command-B (232 -> 60 -> 232 px) — `evidence/it2-scenario-2.txt`
+- [PASS] done 3: carried from iteration 2; the fix leaves the catalog alone, and scenario 3 re-ran teams, agents and pins — `evidence/it2-scenario-3.txt`
+- [PASS] done 4: carried from iteration 2; the setup dialog and Install are unchanged, and scenario 4 steps 6-7 re-ran them — `evidence/it2-scenario-4-step-6.png`
+- [PASS] done 5: carried from iteration 2; no install path changed, and steps 9a and 13 gave `diff -r` exit 0 again — `evidence/it2-oracle.txt`
+- [PASS] done 6: carried from iteration 2; the Install and sync page is unchanged by the fix — `evidence/it2-scenario-4.txt`
+- [PASS] done 7: carried from iteration 2; the dock code is unchanged by the fix — `evidence/it2-scenario-3.txt`
+- [PASS] done 8: carried from iteration 2; the runner and its headers are unchanged — `evidence/it2-scenario-4.txt`
+- [PASS] done 9: carried from iteration 2; the records poller is unchanged — `evidence/it2-scenario-4-step-9.png`
+- [PASS] done 10: carried from iteration 2; scenario 2 re-ran it at this commit: both values came back after a restart, and a new address is now stored only once its clone succeeds — `evidence/it2-scenario-2.txt`, `evidence/it2-done-10-new-address.png`
+- [PASS] done 11: carried from iteration 2; the CLI is unchanged, and scenario 1 and scenario 4 steps 9-11 re-ran green — `evidence/it2-scenarios-1-5-6.txt`
+- [PASS] done 12: carried from iteration 2; the build script and CI workflow are unchanged, and scenario 5 re-ran green — `evidence/it2-scenarios-1-5-6.txt`
+- [PASS] done 13: carried from iteration 2; no CLI or golden file changed, and `go test ./...` exit 0 again — `evidence/it2-scenarios-1-5-6.txt`
+- [PASS] done 14: carried from iteration 2; first launch and Update are unchanged apart from when the address is stored, and scenario 4 steps 4 and 15 re-ran them — `evidence/it2-scenario-4.txt`
+- [USER] done 15: cut a real tagged release and check that the GitHub release carries `kirokit-desktop_<version>_darwin_universal.zip`; I saw only the local dry run and the workflow's `desktop` job wiring
+- [USER] done 16: after a release, run `brew install --cask mavogel/tap/kirokit-desktop` and open the app; I could not reach the tap. The dry-run zip again has 0 `._*` entries — `evidence/it3-scenarios-5-6.txt`
+- [PASS] scenario 1: all 10 steps as expected (both lines on replace, only `data-team.json`, render from `/`, team-less sync `checked out v0.2.0 at 9a919bf`, `--kb-agent needs a team` exit 1, `go test ./...` exit 0); probe: `install no-such-team` exits 1 and keeps `data-team.json` — `evidence/it3-scenario-1.txt`
+- [FAIL] scenario 2: Step 7 expects a saved confirmation, but its address does not exist, so none shows. Step 1 removes `/tmp/ql-kk-s2`, so `/tmp/ql-kk-s2/origin` is missing; since Save clones a new address, the app now rightly shows "git clone failed (exit 128)…" beside the field with an empty status (Kiro home is saved silently). The scenario was not amended for the clone-on-save behaviour. Everything else held: first-launch page, clone, toggle and Command-B 232 -> 60 -> 232 px, Control-B nothing, dark tokens, `/` refused with nothing saved; a retry Save ran a second `▸ git clone`; with a valid origin created at that path Save showed "Saved. Cloning…" then "Cloned. The new repository is in use." and stored it; after a restart by pid both values were filled in. Amend step 7 (create the origin first, or expect the failure beside the field) — `evidence/it3-scenario-2.txt`, `evidence/it3-scenario-2-step-7-failed.png`
+- [PASS] scenario 3: real teams, four agents with tools and "needs key", the seven pins; dock 220 -> 370 px; `command -v kirokit` printed the dev-bin CLI `task desktop:dev` had just built; `stty size` 12 130 at 12 rows; typed install and uninstall redrew both pages; output kept after hide and show — `evidence/it3-scenario-3.txt`, `evidence/it3-scenario-3-step-5.png`
+- [PASS] scenario 4: all 15 steps, 9a and 13 with `diff -r` exit 0; `-oops` refused beside the field with nothing run; Cancel on the replace dialog ran nothing; Update checked out v99.2.0 and Teams listed qa-team — `evidence/it3-scenario-4.txt`, `evidence/it3-oracle.txt`, `evidence/it3-scenario-4-step-15.png`
+- [PASS] scenario 5: build exit 0, both binaries `x86_64 arm64`, bundled `kirokit version` prints commit 0074301, `macos-latest`, root `go build ./...` exit 0 — `evidence/it3-scenarios-5-6.txt`
+- [PASS] scenario 6: release test ok, dry run names the zip, sha256 and `Casks/kirokit-desktop.rb` and uploads nothing, top level `kirokit.app/` with 0 `._*` entries, `desktop` needs `release`; probe: a missing `--version` exits 1 with usage — `evidence/it3-scenarios-5-6.txt`
+- [PASS] dod T1: carried from iteration 2; the fix touches no `cmd/kirokit` file — `evidence/it1-scenario-1.txt`
+- [PASS] dod T2: carried from iteration 2; the fix touches no `internal/install` file — `evidence/it1-scenario-1.txt`
+- [PASS] dod T3: carried from iteration 2; `install.go` unchanged, scenario 1 re-ran green — `evidence/it1-scenario-1.txt`
+- [PASS] dod T4: carried from iteration 2; `sync.go` unchanged — `evidence/it1-scenario-1.txt`
+- [PASS] dod T5: README states replace-on-install, the migration notes pointing at `scripts/kirokit-sync-setup.sh`, `KIROKIT_REPO` and team-less sync; the rewritten desktop paragraph (old address kept, failure beside the field, Save retries) matches what the app did — `evidence/it3-scenario-2.txt`
+- [PASS] dod T6: carried from iteration 2; module, plists and Taskfile unchanged — `evidence/it1-scenario-5.txt`
+- [PASS] dod T7: toggle and Command-B collapse and expand, Control-B does nothing, dark tokens switch, logo shown; plain B and `aria-current` covered by the 42 passing node tests — `evidence/it3-scenario-2.txt`, `evidence/it3-scenario-1.txt`
+- [PASS] dod T8: values survive a restart, `/` refused beside the field with nothing saved, default Kiro home `~/.kiro` (`/tmp/ql-kk-s2/home/.kiro`), `-oops` refused — `evidence/it3-scenario-2.txt`, `evidence/it3-scenario-4.txt`
+- [PASS] dod T9: the setup dialog found SOPS and Kiro CLI on the captured PATH and the key at `$SOPS_AGE_KEY_FILE`; `Capture|Prereq` tests pass with `-race` — `evidence/it3-scenario-4.txt`, `evidence/it3-scenario-1.txt`
+- [PASS] dod T10: carried from iteration 2; `catalog.go` unchanged — `evidence/it2-scenario-3.txt`
+- [PASS] dod T11: carried from iteration 2; `installs.go` unchanged — `evidence/it1-scenario-3.txt`
+- [PASS] dod T12: Teams badge with Last change, Install page file counts (13, 9), Used by from pins; render-error and no-team-names node tests pass — `evidence/it3-scenario-4.txt`, `evidence/it3-scenario-1.txt`
+- [PASS] dod T13: dock opens, closes and resizes within 120-480 px (220 -> 370 -> 270), both tabs keep output, 12 rows at 270 px matched `stty size` — `evidence/it3-scenario-3.txt`
+- [PASS] dod T14: carried from iteration 2; the terminal package is unchanged — `evidence/it1-scenario-3.txt`
+- [PASS] dod T15: carried from iteration 2; `shell.go` unchanged, and scenario 3 again printed the dev-bin CLI and the app's `KIROKIT_REPO` and `KIRO_HOME` — `evidence/it2-scenario-3.txt`
+- [PASS] dod T16: carried from iteration 2; `runner.go` unchanged — `evidence/it1-scenario-4-step-4.png`
+- [PASS] dod T17: a local origin cloned and checked out the newest `v*` tag; `-oops` refused before any process; `▸ git clone -- <address> <folder>` then `▸ kirokit sync --latest-tag`; a second address renamed the old clone to `repo.old-1792283038`; a failed clone put `repo/` back, kept the address in the field with the error beside it and left the old address stored; Clone tests pass with `-race` — `evidence/it3-scenario-2.txt`
+- [PASS] dod T18: pages hidden until a clone exists; a failed first-launch address stayed in the field with the error beside it and stored nothing; Teams after success; a Settings clone never hid the pages — `evidence/it3-scenario-2.txt`
+- [PASS] dod T19: Install enabled with all three found, `▸ kirokit install platform-team` and its line, the replace dialog names both teams, Cancel ran nothing, Replace printed both lines; disabled-while-running covered by the node tests — `evidence/it3-scenario-4.txt`
+- [PASS] dod T20: Sync ran `sync platform-team --latest-tag`, Uninstall ran `uninstall platform-team`, Update ran team-less `sync --latest-tag`, and the next catalog showed qa-team — `evidence/it3-scenario-4.txt`
+- [PASS] dod T21: carried from iteration 2; the build script is unchanged and scenario 5 re-ran green — `evidence/it1-scenario-5.txt`
+- [PASS] dod T22: carried from iteration 2; `desktop.yaml` is unchanged — `evidence/it1-scenario-5.txt`
+- [PASS] dod T23: carried from iteration 2; the release script is unchanged and scenario 6 re-ran green — `evidence/it2-scenarios-1-5-6.txt`
+- [PASS] dod T24: `release` push-only with `release` and `tag` outputs, `desktop` needs it on a release or dispatch on macos-latest, `gh release upload` and the `kirokit-desktop <version>` cask commit; README and AGENTS.md describe the app — `evidence/it3-scenarios-5-6.txt`
+- [PASS] truth oracle: the app cloned a local origin, installed platform-team through the setup dialog, a typed `kirokit install data-team` in its zsh tab replaced it on both pages, and a plain uninstall plus install of data-team into the same Kiro home gave `diff -r` exit 0 — `evidence/it3-oracle.txt`
+- [PASS] review: the iteration 2 finding is fixed live: a missing address failed beside the field, the old address stayed stored, the same Save retried, and a valid one cloned and was stored; the "Cloning" status now ends. The fix stays inside the Files blocks of T5, T8, T12, T17, T18 and T20 with the T20 deviation; no stack drift; the new Go tests reject storing before the clone, and the node tests reject the old `saved.repoUrl` update and missing `cloneDone`; docs: updated `README.md`
+- [NOTE] review: When the address clone fails, the Kiro home saved in the same Save gets no confirmation. The status line is emptied and only the address error shows, so a person who changed both fields cannot tell the Kiro home was saved — `evidence/it3-scenario-2-step-7-failed.png`
+- [NOTE] review: A settings write failure after a good clone reports failure while the new clone is in use. `Clone` then emits `ok:false` with the new `repo/` in place and the old address stored, so a retry renames the working clone again; untested fault path (`desktop/clone.go`)
+
+**Pictures:**
+
+- `evidence/it3-scenario-2-step-7-failed.png` — Settings after saving a missing address: the git failure beside the field, status empty
+- `evidence/it3-scenario-2-step-7-cloned.png` — Settings after a valid origin at the same address: "Cloned. The new repository is in use."
+- `evidence/it3-scenario-2-step-8.png` — Settings after a restart with both values kept
+- `evidence/it3-scenario-4-step-6.png` — the setup dialog with SOPS, Decryption key and Kiro CLI found
+- `evidence/it3-scenario-4-step-10.png` — the replace dialog naming data-team and platform-team
+- `evidence/it3-scenario-4-step-15.png` — Teams listing qa-team after Update
+
+**Try it:**
+
+1. Start the app with a scratch home: `mkdir -p /tmp/kk-try/home && env HOME=/tmp/kk-try/home GOPATH="$(go env GOPATH)" GOMODCACHE="$(go env GOMODCACHE)" GOCACHE="$(go env GOCACHE)" task desktop:dev`, then open http://localhost:34115 and clone this repository's path on the first-launch page
+2. In Settings, save `/tmp/kk-try/origin` (not there yet) as the repository address: the git failure shows beside the field; press Save again and a second `git clone` runs in the kirokit tab
+3. Run `git clone -q "$PWD" /tmp/kk-try/origin && git -C /tmp/kk-try/origin tag v100.0.0`, press Save again: "Cloned. The new repository is in use."
 
 **Result:** fail

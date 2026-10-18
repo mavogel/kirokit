@@ -164,6 +164,22 @@
 - all · 65af338 · `cd desktop && go vet ./... && go test ./...` · reused: nothing changed since they passed
 - all · 65af338 · `task desktop:build` · reused: nothing changed since they passed
 - T20 · 65af338 · `task desktop:test` · exit 0 · 2.6s
+- all · 0074301 · `go test ./...` · exit 0 · 4s
+- all · 0074301 · `go vet ./...` · exit 0 · 0.1s
+- all · 0074301 · `golangci-lint run` · exit 0 · 0.6s
+- all · 0074301 · `go build ./...` · exit 0 · 0.3s
+- all · 0074301 · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
+- all · 0074301 · `cd desktop/frontend && npm ci && npm run build` · exit 0 · 1.9s
+- all · 0074301 · `cd desktop && go vet ./... && go test ./...` · exit 0 · 6.1s
+- all · 0074301 · `task desktop:build` · exit 0 · 5.6s
+- all · 0074301 · `go test ./...` · reused: nothing changed since they passed
+- all · 0074301 · `go vet ./...` · reused: nothing changed since they passed
+- all · 0074301 · `golangci-lint run` · reused: nothing changed since they passed
+- all · 0074301 · `go build ./...` · reused: nothing changed since they passed
+- all · 0074301 · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since they passed
+- all · 0074301 · `cd desktop/frontend && npm ci && npm run build` · reused: nothing changed since they passed
+- all · 0074301 · `cd desktop && go vet ./... && go test ./...` · reused: nothing changed since they passed
+- all · 0074301 · `task desktop:build` · reused: nothing changed since they passed
 
 ## Decided while building
 
@@ -178,6 +194,7 @@
 - Slice 4 · The build keeps the dist placeholder and the dock markup lives in the page; nothing you approved changes.
 - The Plan · Clone logic, first-launch page, dialogs, docs and a keystroke queue need files no card named; oracle commands now set the repository folder.
 - Slice 2 · Scenario 2 now clones first, because the pages stay hidden until a clone exists; nothing you approved changes.
+- Slice 2 · Scenario 2 now creates the new address's origin first, because saving an address clones it; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checkpoints
@@ -309,6 +326,7 @@ It failed in the program: failure 3 of the 4 after which the checkpoint stays op
 - T17, T18, T19, T20 (amended): Clone logic, first-launch page, dialogs, docs and a keystroke queue need files no card named; oracle commands now set the repository folder.
 - T7 (amended): Scenario 2 now clones first, because the pages stay hidden until a clone exists; nothing you approved changes.
 - T20 (judged): a failed clone from Settings left its address stored and the status stuck on cloning, so the address is now stored only after a clone succeeds and the failure shows beside it; nothing you approved changes.
+- T8 (amended): Scenario 2 now creates the new address's origin first, because saving an address clones it; nothing you approved changes.
 
 ## Plan amended
 
@@ -359,5 +377,11 @@ Amended by the agent on 2026-10-17; changed 04-outline.md.
 Scenario 2 now clones first, because the pages stay hidden until a clone exists; nothing you approved changes.
 
 Amended by the agent on 2026-10-17; changed 04-outline.md.
+
+### T8 · amended
+
+Scenario 2 now creates the new address's origin first, because saving an address clones it; nothing you approved changes.
+
+Amended by the agent on 2026-10-18; changed 04-outline.md.
 
 ## Restart

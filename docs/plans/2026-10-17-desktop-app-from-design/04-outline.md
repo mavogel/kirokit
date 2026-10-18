@@ -518,14 +518,14 @@ A tagged release also builds the macOS app, attaches `kirokit-desktop_<version>_
 
 | Step | Action | Expected |
 |---|---|---|
-| 1 | In a terminal run `rm -rf /tmp/ql-kk-s2 && mkdir -p /tmp/ql-kk-s2/home` then `env HOME=/tmp/ql-kk-s2/home task desktop:dev` in the background and wait for `http://localhost:34115` | the dev server answers |
+| 1 | In a terminal run `rm -rf /tmp/ql-kk-s2 && mkdir -p /tmp/ql-kk-s2/home && git clone -q /Users/mavogel/Developer/projects/kiro-cli-kit /tmp/ql-kk-s2/origin` then `env HOME=/tmp/ql-kk-s2/home task desktop:dev` in the background and wait for `http://localhost:34115` | the dev server answers |
 | 2 | Open `http://localhost:34115` in a browser at 1280 by 800 | the "Set up kirokit" page, because no clone exists yet |
 | 2a | Enter `/Users/mavogel/Developer/projects/kiro-cli-kit` and press Clone | the clone finishes and the page shows the logo, the sidebar with Teams, Agents, Install and sync, Skills and MCP versions, Settings, and the main pane |
 | 3 | Click the sidebar toggle | the sidebar becomes an icon rail and the main pane is wider |
 | 4 | Click the toggle again, then press Command-B twice | expanded, rail, expanded |
 | 5 | Emulate `prefers-color-scheme: dark` | the page background and text switch to the dark tokens |
 | 6 | Open Settings, set Kiro home to `/` and press Save | refused, with a message beside the field, and nothing saved |
-| 7 | Set Kiro home to `/tmp/ql-kk-s2/kiro` and the repository address to `/tmp/ql-kk-s2/origin`, then press Save | a saved confirmation |
+| 7 | Set Kiro home to `/tmp/ql-kk-s2/kiro` and the repository address to `/tmp/ql-kk-s2/origin`, then press Save | the kirokit tab runs the clone of the new address, and the status ends with "Cloned. The new repository is in use." |
 | 8 | Stop `task desktop:dev` and its `wails` and `vite` children by their process ids, check port 34115 is free, run it again with the same `HOME`, reload the page and open Settings | both values are still filled in |
 
 ### Scenario 3: The pages show the clone's real data and follow typed changes

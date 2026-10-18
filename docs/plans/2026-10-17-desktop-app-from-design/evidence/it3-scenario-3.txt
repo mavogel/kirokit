@@ -1,0 +1,13 @@
+Scenario 3 at 0074301 (iteration 3). HOME=/tmp/ql-kk-s3/home, pre-cloned repo + settings.json as written, task desktop:dev (task pid 16838), Chrome DevTools 1280x800.
+step 2  Teams: data-team, platform-team, both "not installed". Agents: godev, javadev (data-team), devops, platformdev (platform-team) with tools
+        (read write glob knowledge shell @server) and "needs key" for javadev, devops, platformdev. Install and sync: "Nothing is installed yet".
+        Skills and MCP versions: confluence-mcp 2.1.0, context7-mcp 4.4.2, example-mcp 1.0.0, jira-mcp 1.4.2, mcp-remote 0.15.1,
+        pipeline-mcp 3.0.0, snowflake-mcp 0.9.1 (the env/mcp-versions.yaml pins).                    PASS
+step 3  Show terminal, drag top edge up: dock 220 -> 370 px, main 580 -> 430 px.                     PASS
+step 4  zsh: `command -v kirokit` -> /Users/mavogel/Developer/projects/kiro-cli-kit/desktop/build/dev-bin/kirokit (the CLI task desktop:dev
+        just built: BundledCLI order prefers dev-bin under wails dev); KIROKIT_REPO=<app folder>/repo, KIRO_HOME=/tmp/ql-kk-s3/kiro.   PASS
+step 4a drag to 270 px: xterm shows 12 rows; `stty size` -> "12 130".                                  PASS
+step 5  `kirokit install data-team` -> "installed data-team into /tmp/ql-kk-s3/kiro"; 2 s later Teams "installed, Last change 18 Oct 2026, 02:26",
+        Install and sync "data-team installed 9 files, Sync, Uninstall".  (evidence/it3-scenario-3-step-5.png)                      PASS
+step 6  `kirokit uninstall data-team` -> "uninstalled data-team from /tmp/ql-kk-s3/kiro"; Teams both "not installed", Install "Nothing is installed yet".  PASS
+step 7  Hide terminal, Show terminal: the zsh tab still holds every earlier line.                     PASS

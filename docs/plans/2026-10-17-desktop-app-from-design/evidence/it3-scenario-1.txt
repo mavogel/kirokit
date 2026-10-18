@@ -1,0 +1,64 @@
+## scenario 1 at 0074301 Sun Oct 18 02:21:27 CEST 2026
+--- step 1: build
+exit 0
+--- step 2: install-platform
+installed platform-team into /tmp/ql-kk-s1/home
+exit 0
+--- step 3: install-data
+uninstalled platform-team from /tmp/ql-kk-s1/home
+installed data-team into /tmp/ql-kk-s1/home
+exit 0
+--- step 4: ls
+data-team.json
+--- step 5: reinstall
+installed data-team into /tmp/ql-kk-s1/home
+exit 0
+--- step 6: render-from-root
+rendered platform-team -> /tmp/ql-kk-s1/out
+exit 0
+--- step 7: clone
+exit 0
+--- step 8: sync-teamless
+updated 0074301 -> 9a919bf
+checked out v0.2.0 at 9a919bf
+exit 0
+data-team.json
+--- step 9: kb-agent
+kirokit sync: --kb-agent needs a team
+exit 1
+--- step probe: empty-repo-env
+kirokit install: manifest: read teams/no-such-team/manifest.yaml: open teams/no-such-team/manifest.yaml: no such file or directory
+exit 1
+data-team.json
+--- step 10: go-test
+?   	github.com/mavogel/kirokit/cmd/kirokit	[no test files]
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	(cached)
+ok  	github.com/mavogel/kirokit/internal/backup	(cached)
+ok  	github.com/mavogel/kirokit/internal/externalskills	(cached)
+ok  	github.com/mavogel/kirokit/internal/golden	(cached)
+ok  	github.com/mavogel/kirokit/internal/install	(cached)
+ok  	github.com/mavogel/kirokit/internal/kiroconfig	(cached)
+ok  	github.com/mavogel/kirokit/internal/manifest	(cached)
+ok  	github.com/mavogel/kirokit/internal/mcpversions	(cached)
+ok  	github.com/mavogel/kirokit/internal/render	(cached)
+ok  	github.com/mavogel/kirokit/internal/scaffold	(cached)
+ok  	github.com/mavogel/kirokit/internal/sopswrap	(cached)
+exit 0
+## desktop frontend + go tests
+✔ height stays within the minimum and maximum (0.443125ms)
+✔ closing and reopening keeps the height and the tab (0.101208ms)
+✔ an unknown tab is ignored (0.062916ms)
+✔ selecting a tab shows the dock and listeners see every change (0.106417ms)
+ℹ tests 42
+ℹ suites 0
+ℹ pass 42
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 147.968416
+node exit 0
+ok  	github.com/mavogel/kirokit/desktop	6.115s
+ok  	github.com/mavogel/kirokit/desktop/terminal	1.278s [no tests to run]
+go desktop exit 0
+## end Sun Oct 18 02:21:35 CEST 2026
