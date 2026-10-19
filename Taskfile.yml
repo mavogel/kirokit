@@ -37,10 +37,10 @@ tasks:
       - cd desktop && go vet ./... && go test ./...
 
   desktop:dev:
-    desc: Open the desktop app in Wails dev mode (Wails v2.14.0)
+    desc: Open the desktop app in Wails dev mode (CLI version pinned by desktop/go.mod)
     cmds:
       - go build -o desktop/build/dev-bin/kirokit ./cmd/kirokit
-      - cd desktop && go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 dev
+      - cd desktop && go tool wails dev
 
   desktop:build:
     desc: Build desktop/build/bin/kirokit.app (universal, macOS 13 or later, CLI bundled; VERSION overrides git describe)

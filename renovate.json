@@ -24,6 +24,14 @@
       "matchStrings": ["version:\\s*(?<currentValue>v\\d+\\.\\d+\\.\\d+)"],
       "depNameTemplate": "golangci/golangci-lint",
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "description": "Guard: any hardcoded wails CLI pin (e.g. `go run ...wails@vX.Y.Z`) must track the module; prefer `go tool wails`",
+      "managerFilePatterns": ["/^Taskfile\\.ya?ml$/", "/^scripts\\/.+\\.sh$/", "/^\\.github\\/workflows\\/.+\\.ya?ml$/"],
+      "matchStrings": ["wailsapp/wails/v2/cmd/wails@(?<currentValue>v\\d+\\.\\d+\\.\\d+)"],
+      "depNameTemplate": "github.com/wailsapp/wails/v2",
+      "datasourceTemplate": "go"
     }
   ],
   "packageRules": [

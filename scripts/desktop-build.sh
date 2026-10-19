@@ -31,7 +31,7 @@ export CGO_CFLAGS="-mmacosx-version-min=13.0"
 export CGO_LDFLAGS="-mmacosx-version-min=13.0"
 
 # -clean empties build/bin, so the CLI is copied in afterwards.
-(cd desktop && go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 build -platform darwin/universal -clean)
+(cd desktop && go tool wails build -platform darwin/universal -clean)
 
 app="desktop/build/bin/kirokit.app"
 mkdir -p "$app/Contents/Resources/bin"
