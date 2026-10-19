@@ -2,7 +2,10 @@
 
 # kirokit
 
-A `kirokit` Go CLI plus repository layout that lets multiple teams own their own [Kiro CLI v3](https://kiro.dev) config sources as templates. Each team's agents, hooks, prompts, skills, and steering docs are rendered deterministically into Kiro's real config layout, MCP server versions are pinned centrally, secrets are injected via [SOPS](https://github.com/getsops/sops) at MCP-launch time (never baked into any committed or rendered file), and the rendering pipeline is locked down with golden-file tests that run in CI.
+> [!NOTE]
+> This tool is and unoffical helper cli for managing and sharing kiro{cli|ide|web|crew} configurations such as agents, skills, steerings etc.
+
+The unoffical `kirokit` Go CLI plus repository layout that lets multiple teams own their own [Kiro CLI v3](https://kiro.dev) config sources as templates. Each team's agents, hooks, prompts, skills, and steering docs are rendered deterministically into Kiro's real config layout, MCP server versions are pinned centrally, secrets are injected via [SOPS](https://github.com/getsops/sops) at MCP-launch time (never baked into any committed or rendered file), and the rendering pipeline is locked down with golden-file tests that run in CI.
 
 ## Quickstart
 
@@ -33,8 +36,15 @@ kirokit install platform-team
 
 # now you have the devops agent from the platform-team
 kiro-cli chat --agent devops --v3
+```
 
-# cleaup and verify KIRO_HOME is still set to the temporary directory
+and see the example skill `jira-triage` in the `devops` agent
+
+<p align="center"><img src="assets/kirokit-cli.png" width="720" alt="The kiro cli startet with the devops agent showing the existende of the jira triage skill"></p>
+
+
+cleanup and verify KIRO_HOME is still set to the temporary directory
+```bash
 echo $KIRO_HOME
 rm -rf $KIRO_HOME
 # reset to the old value
@@ -42,7 +52,9 @@ export KIRO_HOME=$KIRO_HOME_BACKUP
 echo $KIRO_HOME
 ```
 
-### or using the desktop app
+### using the desktop app
+
+For less technial folks, who likes UIs. It does the same job and uses the `cli` under the hood:
 
 <p align="center"><img src="assets/kirokit-desktop.png" width="720" alt="The kirokit desktop app showing two teams with an Install button each, and the terminal dock below"></p>
 
@@ -58,19 +70,9 @@ brew install --cask mavogel/tap/kirokit-desktop
 
 **Install and sync** keeps the installed team up to date, and **Settings** holds the Kiro home folder and the repository. Every button command runs in the terminal dock, so you see exactly what `kirokit` does. [Desktop app](#desktop-app) has the details.
 
-## Taskfile
-
-A [`Taskfile.yml`](https://taskfile.dev) wraps the common Go commands. Install `task` and `golang` via Homebrew (`brew install go go-task`), then:
-
-```bash
-task build   # go build -o kirokit ./cmd/kirokit
-task vet     # go vet ./...
-task lint    # golangci-lint run
-task test    # go test ./... -v (includes every team's golden-file comparisons)
-task ci      # build + vet + lint + test, matching .github/workflows/ci.yaml
-```
-
 ## Directory Layout
+
+This repository has the configs, the `cli` and desktop app. It can be used as a baseline for the configuration as follows:
 
 ```
 teams/<team>/manifest.yaml              # team identity + global steering opt-ins + externalSkills
@@ -233,17 +235,10 @@ Before `render --out <dir>`, `install` or `sync` changes something on disk, the 
 - Backups are not in the install manifest; `uninstall` neither removes nor restores them.
 - Deletion is not backed up: `sync` removes files the team stopped shipping and `uninstall` removes everything the install wrote. Only manifest-listed files are ever removed.
 
-## Installing the CLI
-
-```bash
-brew install --cask mavogel/tap/kirokit
-```
-
-Each release publishes a Homebrew cask to [mavogel/homebrew-tap](https://github.com/mavogel/homebrew-tap) (`brew upgrade --cask kirokit` picks up new versions). The cask covers macOS and Linux (arm64 and amd64). The binaries are not notarized, so on macOS it clears the quarantine attribute after install.
-
 ## Setup (initial download)
 
 ```bash
+brew install --cask mavogel/tap/kirokit
 kirokit setup --source https://github.com/mavogel/kirokit.git --target ~/.kirokit-config
 export KIROKIT_REPO=~/.kirokit-config
 ```
@@ -291,16 +286,3 @@ Options: `--dir` (checkout, default `~/.kirokit-config`), `--interval` (hours, d
 - `KIROKIT_REPO` also works on the command line: with it set, `kirokit sync --latest-tag` (no team) updates a checkout from any folder.
 
 **Migration:** one machine now holds one team, in the app and on the command line alike. A second scheduled sync from `scripts/kirokit-sync-setup.sh` for another team replaces the first team on every run.
-
-## Git Hooks
-
-[Lefthook](https://lefthook.dev) runs checks on every commit (`brew install lefthook gitleaks commitizen uv`, then once per clone):
-
-```bash
-lefthook install
-```
-
-- **pre-commit:** `trailing-whitespace`, `end-of-file-fixer`, `check-yaml`, `check-json` (from [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks), run via `uvx`) and `gitleaks` on the staged changes. The two fixers re-stage what they change but fail the commit, so run it again. They skip `testdata/golden/**` (byte-compared by `kirokit test`) and `*.enc.yaml` (SOPS MAC).
-- **commit-msg:** `cz check` enforces Conventional Commits, which `svu` needs to compute versions. Use `cz commit` for an interactive prompt.
-
-Run everything on demand with `lefthook run pre-commit --all-files`.
