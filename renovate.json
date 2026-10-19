@@ -28,8 +28,8 @@
   ],
   "packageRules": [
     {
-      "description": "Auto-merge minor/patch Go modules and Actions once CI passes",
-      "matchManagers": ["gomod", "github-actions"],
+      "description": "Auto-merge minor/patch Go modules, Actions, npm and the CI golangci-lint pin once CI passes",
+      "matchManagers": ["gomod", "github-actions", "npm", "custom.regex"],
       "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
       "automerge": true
     },
