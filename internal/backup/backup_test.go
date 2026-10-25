@@ -120,6 +120,27 @@ func TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink(t *testing.T) {
 	}
 }
 
+// A file kirokit writes straight into the Kiro home can itself be a symbolic
+// link (a dotfiles-managed settings file); it is backed up as that link too.
+func TestCopyAside_AFileThatIsASymlinkIsBackedUpAsTheLink(t *testing.T) {
+	parent := t.TempDir()
+	real := filepath.Join(parent, "dotfiles-settings.json")
+	put(t, real, "mine", 0o600)
+	file := filepath.Join(parent, "settings.json")
+	testutil.Symlink(t, real, file)
+
+	dst, err := CopyAside(file, "20261025-120000")
+	if err != nil {
+		t.Fatalf("CopyAside of a symlinked file: %v", err)
+	}
+	if got, err := os.Readlink(dst); err != nil || got != real {
+		t.Errorf("backup = %q (%v), want a link to %q", got, err, real)
+	}
+	if read(t, real) != "mine" {
+		t.Error("the file the link points at changed")
+	}
+}
+
 func TestCopyAside_CopiesTheWholeFolderAndLeavesTheSourceUntouched(t *testing.T) {
 	home := t.TempDir()
 	src := filepath.Join(home, "agents")

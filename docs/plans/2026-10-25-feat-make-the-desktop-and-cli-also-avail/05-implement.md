@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 24 of 24 tasks · 7 of 7 slices
 
-Building now: started 25 Oct, 19:12, 1 h 43 min so far.
+Built: started 25 Oct, 19:12.
 <!-- /ql:summary -->
 
 ## Slices
@@ -38,15 +38,14 @@ Delivered 25 Oct, 20:35
 **Verified** · 3
 - Project checks passed · 6 of 6 · recorded
 - Security review · done · nothing severe in the change
-- Independent review of the Done means points · 1 of 8 proved
+- Independent review of the Done means points · 2 of 8 proved
 
-**Left** · 10
+**Left** · 9
 - Done means 1: Linux users install the kirokit CLI with a package, Homebrew or download · missing
 - Done means 2: Windows users install the kirokit CLI with Scoop or a zip and run it in PowerShell · missing
 - Done means 3: The CLI installs a team on Linux and Windows that Kiro CLI can run · missing
 - Done means 4: Linux users install the desktop app from a .deb or .rpm · missing
 - Done means 5: Windows users install the desktop app with a setup .exe · missing
-- Done means 6: The Mac release keeps working exactly as today · failed
 - Done means 7: Every release builds and checks all three platforms automatically · missing
 - Independent review · failed
 - Fix rounds · Fix · not done
@@ -114,6 +113,12 @@ Delivered 25 Oct, 20:35
 - all · daa8ce8 · `task desktop:test` · exit 0 · 2.6s
 - all · daa8ce8 · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since it passed at 20:33
 - T8 · b4865cb · `go test ./internal/dirlink/ ./internal/install/ ./internal/backup/ && GOOS=windows go vet ./internal/...` · exit 0 · 0.3s
+- all · 5be50f4 · `go test ./...` · exit 0 · 0.3s
+- all · 5be50f4 · `golangci-lint run` · exit 0 · 0.5s
+- all · 5be50f4 · `go vet ./...` · exit 0 · 0.2s
+- all · 5be50f4 · `go build ./...` · exit 0 · 0.3s
+- all · 5be50f4 · `task desktop:test` · exit 0 · 9s
+- all · 5be50f4 · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
 
 ## Known limits
 

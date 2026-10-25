@@ -1,0 +1,37 @@
+## tree: 5be50f453a84d5e95ea973953be2fa128db6f38b + unstaged review tests
+ M internal/backup/backup_test.go
+ M internal/install/install_test.go
+
+$ go test ./internal/backup/ ./internal/install/ -run "SymlinkIsBackedUpAsTheLink|AnAgentsFolderThatIsASymlink" -v -count=1
+=== RUN   TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink
+--- PASS: TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink (0.00s)
+=== RUN   TestCopyAside_AFileThatIsASymlinkIsBackedUpAsTheLink
+--- PASS: TestCopyAside_AFileThatIsASymlinkIsBackedUpAsTheLink (0.00s)
+PASS
+ok  	github.com/mavogel/kirokit/internal/backup	0.303s
+=== RUN   TestInstall_AnAgentsFolderThatIsASymlinkStillInstalls
+--- PASS: TestInstall_AnAgentsFolderThatIsASymlinkStillInstalls (0.01s)
+PASS
+ok  	github.com/mavogel/kirokit/internal/install	0.312s
+exit 0
+
+## controlled mutation: isolated copy with internal/backup/backup.go from daa8ce8 (before the fix, the 'p != dir' guard)
+$ go test ./internal/backup/ ./internal/install/ -run "SymlinkIsBackedUpAsTheLink|AnAgentsFolderThatIsASymlink" -count=1
+--- FAIL: TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink (0.00s)
+    backup_test.go:113: CopyAside of a symlinked folder: backup: copy /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink2603008713/001/agents: /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink2603008713/001/agents is neither a file, a folder nor a symbolic link
+--- FAIL: TestCopyAside_AFileThatIsASymlinkIsBackedUpAsTheLink (0.00s)
+    backup_test.go:134: CopyAside of a symlinked file: backup: copy /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/TestCopyAside_AFileThatIsASymlinkIsBackedUpAsTheLink784192618/001/settings.json: /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/TestCopyAside_AFileThatIsASymlinkIsBackedUpAsTheLink784192618/001/settings.json is neither a file, a folder nor a symbolic link
+FAIL
+FAIL	github.com/mavogel/kirokit/internal/backup	0.190s
+--- FAIL: TestInstall_AnAgentsFolderThatIsASymlinkStillInstalls (0.01s)
+    install_test.go:667: Install into a Kiro home with a symlinked agents folder: install: backup: copy /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/TestInstall_AnAgentsFolderThatIsASymlinkStillInstalls3714457451/002/agents: /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/TestInstall_AnAgentsFolderThatIsASymlinkStillInstalls3714457451/002/agents is neither a file, a folder nor a symbolic link
+FAIL
+FAIL	github.com/mavogel/kirokit/internal/install	0.212s
+FAIL
+exit 
+(go test exited 1: the three tests fail on the pre-fix code and pass on the judged commit)
+
+$ go test ./internal/backup/ ./internal/install/ -count=1 && GOOS=windows go vet ./internal/backup/ ./internal/install/
+ok  	github.com/mavogel/kirokit/internal/backup	0.122s
+ok  	github.com/mavogel/kirokit/internal/install	0.231s
+exit 0

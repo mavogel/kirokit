@@ -1,0 +1,7 @@
+## tree: judged commit 5be50f4 + unstaged review tests (test files only); macOS arm64; sops sops 3.13.3 (latest)
+$ KIROKIT_REQUIRE_SOPS=1 go test ./cmd/kirokit/commands/ -run TestInstall_SopsLaunch -v -count=1
+=== RUN   TestInstall_SopsLaunchReachesTheServerUnchanged
+--- PASS: TestInstall_SopsLaunchReachesTheServerUnchanged (0.19s)
+PASS
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	0.434s
+exit 0

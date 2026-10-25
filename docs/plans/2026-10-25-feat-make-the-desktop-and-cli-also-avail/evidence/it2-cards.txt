@@ -1,0 +1,52 @@
+## tree: judged commit 5be50f4 (HEAD unmoved) + this review's unstaged test files; macOS arm64
+$ go test -count=1 ./internal/sopswrap/ && GOOS=windows go vet ./internal/sopswrap/
+ok  	github.com/mavogel/kirokit/internal/sopswrap	0.113s
+exit 0
+
+$ go test -count=1 -v ./internal/sopswrap/ -run "RoundTrip|Cmd" | grep -E "^(---|ok)"
+--- PASS: TestShellQuote_RoundTripsThroughRealShell (0.01s)
+--- PASS: TestBuildWrapperFor_CmdJoinsPlainTokens (0.00s)
+--- PASS: TestBuildWrapperFor_CmdRefusesWhatCmdExeCannotPass (0.00s)
+--- PASS: TestBuildWrapperFor_CmdKeepsASecretsPathWithSpacesAsItsOwnArgument (0.00s)
+ok  	github.com/mavogel/kirokit/internal/sopswrap	0.112s
+exit 0
+
+$ go test -count=1 ./internal/install/ && GOOS=windows go vet ./internal/install/
+ok  	github.com/mavogel/kirokit/internal/install	0.285s
+exit 0
+
+$ go test -count=1 ./internal/externalskills/ ./internal/render/
+ok  	github.com/mavogel/kirokit/internal/externalskills	7.457s
+ok  	github.com/mavogel/kirokit/internal/render	0.327s
+exit 0
+
+$ go test -count=1 -v ./internal/externalskills/ -run CollectionLockVerifiesOnWindows | grep -E "^(---|ok)"
+--- PASS: TestFetch_CollectionLockVerifiesOnWindowsWithoutExecuteBits (0.19s)
+ok  	github.com/mavogel/kirokit/internal/externalskills	0.320s
+exit 0
+
+$ go test -count=1 ./internal/dirlink/ ./internal/install/ ./internal/backup/ && GOOS=windows go vet ./internal/...
+ok  	github.com/mavogel/kirokit/internal/dirlink	0.106s
+ok  	github.com/mavogel/kirokit/internal/install	0.257s
+ok  	github.com/mavogel/kirokit/internal/backup	0.120s
+exit 0
+
+$ go test -count=1 -v ./internal/dirlink/ ./internal/backup/ ./internal/install/ | grep -E "^--- SKIP|^ok"
+ok  	github.com/mavogel/kirokit/internal/dirlink	0.126s
+ok  	github.com/mavogel/kirokit/internal/backup	0.163s
+--- SKIP: TestInstall_WindowsRefusesAnArgumentCmdExeCannotPassAndWritesNothing (0.00s)
+ok  	github.com/mavogel/kirokit/internal/install	0.326s
+exit 0
+
+$ cd desktop && go test -count=1 ./terminal/ && GOOS=windows GOARCH=amd64 go vet ./terminal/ && GOOS=windows GOARCH=arm64 go vet ./terminal/
+ok  	github.com/mavogel/kirokit/desktop/terminal	0.119s
+exit 0
+
+$ ls internal/sopswrap/sopswrap_windows_test.go internal/dirlink/dirlink_windows_test.go internal/backup/backup_windows_test.go desktop/terminal/terminal_windows_test.go && GOOS=windows go test -c -o /dev/null ./internal/sopswrap/ && GOOS=windows go test -c -o /dev/null ./internal/backup/ && GOOS=windows go test -c -o /dev/null ./internal/install/ && echo "Windows-only tests compile here; they run only on a Windows host"
+desktop/terminal/terminal_windows_test.go
+internal/backup/backup_windows_test.go
+internal/dirlink/dirlink_windows_test.go
+internal/sopswrap/sopswrap_windows_test.go
+Windows-only tests compile here; they run only on a Windows host
+exit 0
+

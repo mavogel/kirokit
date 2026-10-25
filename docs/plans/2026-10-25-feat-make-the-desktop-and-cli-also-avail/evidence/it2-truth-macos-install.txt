@@ -1,0 +1,28 @@
+## tree: judged commit 5be50f4 (HEAD unmoved); base = main eaa4b31; macOS 27.0.1 arm64
+== case: fresh  (KIRO_HOME has a space; templates from the judged tree for both binaries)
+-- base (main) output:
+installed platform-team into <case>/kiro home
+exit 0
+-- judged commit output:
+installed platform-team into <case>/kiro home
+exit 0
+RESULT fresh: output and every installed file/link (content hash) identical to base (13 entries)
+== case: existing  (KIRO_HOME has a space; templates from the judged tree for both binaries)
+-- base (main) output:
+installed platform-team into <case>/kiro home
+exit 0
+-- judged commit output:
+installed platform-team into <case>/kiro home
+exit 0
+RESULT existing: output and every installed file/link (content hash) identical to base (14 entries)
+== case: symlinked  (KIRO_HOME has a space; templates from the judged tree for both binaries)
+-- base (main) output:
+installed platform-team into <case>/kiro home
+exit 0
+-- judged commit output:
+installed platform-team into <case>/kiro home
+exit 0
+RESULT symlinked: output and every installed file/link (content hash) identical to base (15 entries)
+-- judged commit, symlinked case, links:
+./kiro home/<stamp>-agents.backup -> <case>/dotfiles-agents
+./kiro home/agents -> <case>/dotfiles-agents

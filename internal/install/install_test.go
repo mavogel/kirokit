@@ -652,6 +652,36 @@ func TestInstall_AChangedAgentWithAKnowledgeBaseIsBackedUpWithItsPreviousKnowled
 	}
 }
 
+// A Kiro home whose agents folder is a symbolic link (a dotfiles manager
+// linking ~/.kiro/agents) installs as it did before this change: the backup is
+// the link, the folder stays a link, and the new agent lands in the folder it
+// points at.
+func TestInstall_AnAgentsFolderThatIsASymlinkStillInstalls(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	dotfiles := filepath.Join(t.TempDir(), "kiro-agents")
+	mustWrite(t, filepath.Join(dotfiles, "agent1.json"), `{"name": "my-own-agent"}`)
+	testutil.Symlink(t, dotfiles, filepath.Join(kiroHome, "agents"))
+
+	if err := Install(roots, team, kiroHome, nil); err != nil {
+		t.Fatalf("Install into a Kiro home with a symlinked agents folder: %v", err)
+	}
+
+	matches, _ := filepath.Glob(filepath.Join(kiroHome, "*-agents.backup"))
+	if len(matches) != 1 {
+		t.Fatalf("agents backups = %v, want one", matches)
+	}
+	if got, err := os.Readlink(matches[0]); err != nil || got != dotfiles {
+		t.Errorf("agents backup = %q (%v), want a link to %q", got, err, dotfiles)
+	}
+	if !dirlink.Is(filepath.Join(kiroHome, "agents")) {
+		t.Error("the agents folder is no longer a link")
+	}
+	if got, _ := os.ReadFile(filepath.Join(dotfiles, "agent1.json")); strings.Contains(string(got), "my-own-agent") || !strings.Contains(string(got), "test-mcp") {
+		t.Errorf("agent1.json in the linked folder = %s, want the installed agent", got)
+	}
+}
+
 func TestBackupChangedFolders_ARootLevelFileIsBackedUpAsItself(t *testing.T) {
 	kiroHome := t.TempDir()
 	mustWrite(t, filepath.Join(kiroHome, "settings.json"), "mine")
