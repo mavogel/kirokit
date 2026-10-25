@@ -56,17 +56,15 @@ function castCues(cast, texts) {
   let t = 0;
   let prev = 0;
   for (const [time, kind, data] of events) {
-    const delta = relative ? time : time - prev;
-    prev = relative ? prev : time;
-    t += Math.min(delta, IDLE_LIMIT);
+    t += Math.min(relative ? time : time - prev, IDLE_LIMIT);
+    prev = time;
     if (kind !== 'o') continue;
-    for (const text of texts) if (!(text in found) && data.includes(text)) found[text] = t;
+    for (const text of texts.filter((x) => !(x in found) && data.includes(x))) found[text] = t;
   }
-  for (const text of texts) {
-    if (!(text in found)) {
-      console.error(`caption: cli.cast never shows "${text}"`);
-      process.exit(1);
-    }
+  const missing = texts.find((x) => !(x in found));
+  if (missing) {
+    console.error(`caption: cli.cast never shows "${missing}"`);
+    process.exit(1);
   }
   return { found, duration: t + LAST_FRAME };
 }

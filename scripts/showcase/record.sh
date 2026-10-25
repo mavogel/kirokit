@@ -66,7 +66,9 @@ for port in 34115 5173; do
 done
 
 rm -rf "${demo:?}"
-mkdir -p "$demo"/{bin,home,kiro,work} "$out"
+# Fails if anything recreated the folder in between; only this user can enter it.
+mkdir -m 700 "$demo" || fail "could not create $demo"
+mkdir "$demo"/{bin,home,kiro,work} "$out"
 
 # --- 2. build ---------------------------------------------------------------
 step=build

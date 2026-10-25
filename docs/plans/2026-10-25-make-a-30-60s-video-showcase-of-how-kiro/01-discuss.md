@@ -7,7 +7,7 @@ depth: light
 level: engineering
 ui: false
 overrides: []
-stage: outline
+stage: verify
 iterations: 0
 verification_failures: 0
 gate: null

@@ -3,9 +3,9 @@
 ## Summary
 
 <!-- ql:summary -->
-8 of 11 tasks · 2 of 3 slices
+11 of 11 tasks · 3 of 3 slices
 
-Building now: started 25 Oct, 11:07, 29 min so far.
+Built: started 25 Oct, 11:07.
 <!-- /ql:summary -->
 
 ## Slices
@@ -15,13 +15,28 @@ Building now: started 25 Oct, 11:07, 29 min so far.
 |---|---|---|---|
 | 1 | The CLI part records itself from one script | After this slice, `scripts/showcase/record.sh --keep` builds the CLI, types the install-and-chat story into a real Kiro session and leaves `cli.cast` and `cli.gif` in `/tmp/kirokit-demo/out`. | done |
 | 2 | One command makes the checked GIF and MP4 | After this slice, `task showcase` records the app in Wails dev mode too, renders captions and frames, composes the MP4 and the GIF, and only writes them to `assets/` when the privacy, size and length checks pass. | done |
-| 3 | The README opens with the showcase and commits keep media intact | After this slice, the README shows the looping GIF right under the intro with a link to the MP4, CONTRIBUTING names `task showcase`, and the pre-commit fixers leave GIF and MP4 bytes alone. | next |
+| 3 | The README opens with the showcase and commits keep media intact | After this slice, the README shows the looping GIF right under the intro with a link to the MP4, CONTRIBUTING names `task showcase`, and the pre-commit fixers leave GIF and MP4 bytes alone. | done |
 <!-- /ql:slices -->
 
 ## Delivered
 
 <!-- ql:delivered -->
-Written when the last task is ticked.
+Delivered 25 Oct, 11:37
+
+**Built** · 3
+- The CLI part records itself from one script · slice 1 · 3 tasks
+- One command makes the checked GIF and MP4 · slice 2 · 5 tasks
+- The README opens with the showcase and commits keep media intact · slice 3 · 3 tasks
+
+**Verified** · 0
+- None
+
+
+**Left** · 4
+- Security review · Security review · not done
+- Project checks · Project checks · not done
+- Independent review · Review · not done
+- Fix rounds · Fix · not done
 <!-- /ql:delivered -->
 
 ## Decided while building
