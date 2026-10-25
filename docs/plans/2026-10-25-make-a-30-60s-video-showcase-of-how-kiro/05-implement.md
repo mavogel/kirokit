@@ -115,7 +115,7 @@ None recorded.
 - T8 (tactical): `record.sh` calls `checks.sh` as a command rather than sourcing it, so each check stays runnable on its own with the same messages; nothing you approved changes
 - T11 (amended): T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase
 - Plan (amended): task showcase leaves the project check list: every run records new media into assets/, so QualityLayer records it as 'files changed while the check ran' and never as fresh proof. It stays proved by the T8 slice check and Scenarios 1-3.
-- Plan (tactical): verification round 1 was recorded while 7 files changed, 7 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes
+- Plan (tactical): verification round 1 is rerun because the files that changed after it are its fix (fresh-page rendering in `caption.mjs`, the run-ownership guard in `record.sh`, the clearer `checks.sh length` message, the reviewer's tests plus one regression test, and the media re-recorded without the torn frame), which can change its D1, Done 3 and Scenario 1 verdicts; the pre-commit whitespace fixers also now skip `docs/plans/*/evidence/**` so captured proof is committed byte-for-byte; nothing you approved changes
 
 ## Plan amended
 
