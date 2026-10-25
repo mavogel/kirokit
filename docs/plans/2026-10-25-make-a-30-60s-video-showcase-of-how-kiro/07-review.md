@@ -48,7 +48,7 @@ What a reader of the repository sees:
 ## Built, slice by slice
 
 <!-- ql:slices -->
-3 slices · 11 tasks · 14 commits · 17 files · +1214 −3
+3 slices · 11 tasks · 15 commits · 17 files · +1214 −3
 
 **Slice 1 · The CLI part records itself from one script** · T1, T2, T3 · 6 files · +333 −0
 
@@ -83,10 +83,10 @@ What a reader of the repository sees:
 ## What was asked for, and how each point was proved
 
 <!-- ql:proof -->
-- **1. A 30–60 second showcase autoplays at the top of the GitHub README.** Only you can confirm: it looks right on the rendered GitHub page · waits for your confirmation
+- **1. A 30–60 second showcase autoplays at the top of the GitHub README.** Only you can confirm: it looks right on the rendered GitHub page · confirmed by you: Confirmed in the App
 - **2. The CLI part shows a team's config installed and its agent starting.** Scenario 1: One command records the real CLI and app into both files, after slice 2 · passed · `evidence/it2-scenario-1-step-4-install.png`
 - **3. The app part shows the same job done with buttons.** Scenario 1: One command records the real CLI and app into both files, after slice 2 · passed · `evidence/it2-done-3-border-scan.txt`
-- **4. A viewer can follow every step without sound.** Only you can confirm: the pacing feels right · waits for your confirmation
+- **4. A viewer can follow every step without sound.** Only you can confirm: the pacing feels right · confirmed by you: Confirmed in the App
 - **5. No private details are on screen.** Scenario 2: Private details stop the run before anything is published, after slice 2 · Scenario 3: An interrupted run leaves no trace, after slice 2 · passed · `evidence/it2-scenario-2.txt`
 - **6. The video can be made again with one command when the UI changes.** Scenario 1: One command records the real CLI and app into both files, after slice 2 · Scenario 3: An interrupted run leaves no trace, after slice 2 · Scenario 5: The README opens with the showcase, after slice 3 · passed · `evidence/it2-fresh-run.txt`
 - **7. The README GIF is small enough for GitHub to show it reliably.** Scenario 1: One command records the real CLI and app into both files, after slice 2 · Scenario 4: Committing the media keeps its bytes, after slice 3 · passed · `evidence/it2-scenario-1.txt`
@@ -185,12 +185,12 @@ None: the build passed its checks.
 - Still awaiting your answer: Two recorder tests broke when an unrelated dev server held port 5173. Their port probe only bound 127.0.0.1, so a vite on `[::1]:5173` slipped past it and `record.sh`'s own lsof preflight then failed them; the probe now asks lsof the same way `record.sh` does, and the two tests skip instead (test-only, unstaged).
 - Still awaiting your answer: The GIF still shows a Kiro session resume id. The CLI clip ends on `Resume with: kiro-cli --resume-id sess_…` for an empty chat session. It is not a credential, but the privacy check does not consider it.
 - Still awaiting your answer: The recorder tests are still outside `task ci` and CI. They run with `node --test scripts/showcase/`, as CONTRIBUTING says.
-- Still awaiting your confirmation: The pacing feels right.
-- Still awaiting your confirmation: It looks right on the rendered GitHub page.
+- The pacing feels right: confirmed · 25 Oct, 12:48
+- It looks right on the rendered GitHub page: confirmed · 25 Oct, 12:48
 <!-- /ql:review-items -->
 
 ## Ship
 
 <!-- ql:ship -->
-Not shipped yet. Branch `feat/make-30-60s-video-how`.
+Approved · 25 Oct, 12:48. Branch `feat/make-30-60s-video-how`.
 <!-- /ql:ship -->

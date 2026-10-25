@@ -14,8 +14,8 @@ Passed after 2 judge runs and 1 fix round.
 - **Unverified:** Two recorder tests broke when an unrelated dev server held port 5173. Their port probe only bound 127.0.0.1, so a vite on `[::1]:5173` slipped past it and `record.sh`'s own lsof preflight then failed them; the probe now asks lsof the same way `record.sh` does, and the two tests skip instead (test-only, unstaged)
 - **Unverified:** The GIF still shows a Kiro session resume id. The CLI clip ends on `Resume with: kiro-cli --resume-id sess_…` for an empty chat session. It is not a credential, but the privacy check does not consider it
 - **Unverified:** The recorder tests are still outside `task ci` and CI. They run with `node --test scripts/showcase/`, as CONTRIBUTING says
-- **Only you can confirm:** The pacing feels right
-- **Only you can confirm:** It looks right on the rendered GitHub page
+- **Only you can confirm:** The pacing feels right · confirmed · 25 Oct, 12:48
+- **Only you can confirm:** It looks right on the rendered GitHub page · confirmed · 25 Oct, 12:48
 <!-- /ql:open-items -->
 
 ## How it is checked
@@ -45,10 +45,10 @@ Passed after 2 judge runs and 1 fix round.
 <!-- ql:proof -->
 | Done means | Proof | |
 |---|---|---|
-| 1. A 30–60 second showcase autoplays at the top of the GitHub README | Does the GIF loop by itself right under the intro on github.com, with both screenshots below? `README.md:10-11` is unchanged since iteration 1 and sits above `## Quickstart`; the re-recorded GIF is 36.4 s with a NETSCAPE loop block,; push the branch and open the repository page to confirm. | yours to confirm |
+| 1. A 30–60 second showcase autoplays at the top of the GitHub README | Does the GIF loop by itself right under the intro on github.com, with both screenshots below? `README.md:10-11` is unchanged since iteration 1 and sits above `## Quickstart`; the re-recorded GIF is 36.4 s with a NETSCAPE loop block,; push the branch and open the repository page to confirm. | confirmed by you |
 | 2. The CLI part shows a team's config installed and its agent starting | ![The re-recorded GIF shows `kirokit install platform-team` printing `installed platform-team into /tmp/kirokit-demo/kiro`, `kiro-cli chat --agent devops --v3` starting, and `/jir` listing `/jira-search` and `/jira-triage (file prompt)`,](evidence/it2-scenario-1-step-4-install.png) | passed |
 | 3. The app part shows the same job done with buttons | The committed media show the real app (Wails dev) clone, Install and the dock's `installed platform-team into` inside one complete rounded frame; sampled every 0.5 s from 2.5 to 32.5 s, the bottom, left and right border pixels are always the frame colour (≈`#3a3450` after H.264), never clip content as with D1; a fresh run's `frame.png` has all four borders and a rounded bottom-left corner,,. | passed |
-| 4. A viewer can follow every step without sound | ![Does each caption stay long enough to read without sound? The re-recorded cut has four numbered captions plus title and end cards; caption 2 starts at 5.27 s of a 20.18 s CLI clip and caption 4 at 6.59 s of an 11.41 s app clip, and every caption render is now complete (20 of 20),; watch the GIF and judge the pacing](evidence/it2-scenario-1-contact.png) | yours to confirm |
+| 4. A viewer can follow every step without sound | ![Does each caption stay long enough to read without sound? The re-recorded cut has four numbered captions plus title and end cards; caption 2 starts at 5.27 s of a 20.18 s CLI clip and caption 4 at 6.59 s of an 11.41 s app clip, and every caption render is now complete (20 of 20),; watch the GIF and judge the pacing](evidence/it2-scenario-1-contact.png) | confirmed by you |
 | 5. No private details are on screen | `strings` on both committed files finds no home path, user name or git email; the fresh run's privacy check on its cast, dock text and captions exits 0; the frames show only `/tmp/kirokit-demo` paths and the public GitHub slug,. | passed |
 | 6. The video can be made again with one command when the UI changes | A fresh `record.sh --keep` of the judged tree (exported with `git archive`) recorded the real CLI and app and rebuilt both files, exit 0; CONTRIBUTING's "Showcase video" names `task showcase`,. | passed |
 | 7. The README GIF is small enough for GitHub to show it reliably | The committed GIF is 2453580 bytes (gate 8 MiB, well under ~10 MB), 1000×700, 12 fps, loops forever. | passed |

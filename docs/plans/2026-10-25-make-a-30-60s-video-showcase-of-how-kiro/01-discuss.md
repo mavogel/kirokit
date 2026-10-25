@@ -7,15 +7,15 @@ depth: light
 level: engineering
 ui: false
 overrides: []
-stage: review
+stage: shipped
 iterations: 2
 verification_failures: 0
-gate: review
+gate: null
 created: 1792920764667
 startup_owner: 05d9f7946b007a3e
 layout: seven
 profile: full
-status: approved
+status: verified
 approved: true
 review_digest: c80b954b03a0e6af52851af7bc4cdc4f035bb837053fca444ffef100e3d785f6
 review_basis: eb80c35fbca3aaa62e52feebf61d64e10151fec40679bd9c8c517a0d01da67c0
@@ -23,6 +23,10 @@ branch: feat/make-30-60s-video-how
 base: 87afcb06ba72f010cc64b27864d0edcf93c65ae1
 base_ref: main
 judge_runs: 0
+shipped: 2026-10-25
+commits: ["2c83013","b1325db","f3b04e1","17dea85","2aeef7a","62a5c28","3fe8fee","ce12d13","daf307d","2457a48","ec70a9d","d0b9ca0","9217cbe","43be8d5","023bfd3"]
+touched: ["AGENTS.md","CONTRIBUTING.md","README.md","Taskfile.yml","assets/kirokit-showcase.gif","assets/kirokit-showcase.mp4","lefthook.yml","scripts/showcase/"]
+slices: 3
 ---
 
 # Showcase video of kirokit CLI and app for the README

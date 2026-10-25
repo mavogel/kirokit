@@ -34,9 +34,8 @@ Delivered 25 Oct, 11:37
 - Independent review · done · 6 of 6 points · 2 yours to confirm
 - Independent review of the Done means points · 6 of 8 proved
 
-**Left** · 2
-- Done means 1: A 30–60 second showcase autoplays at the top of the GitHub README · yours to confirm in Review
-- Done means 4: A viewer can follow every step without sound · yours to confirm in Review
+**Left** · 0
+- None
 <!-- /ql:delivered -->
 
 ## Decided while building

@@ -4,7 +4,7 @@ Task: `docs/plans/2026-10-25-make-a-30-60s-video-showcase-of-how-kiro/`
 
 ## Why the change
 
-Visitors to the repository had to read a long README to understand kirokit; a 35-second looping GIF at the top now shows the CLI and the desktop app doing the job, and `task showcase` records it again from the real tools whenever the UI changes.
+Visitors to the repository had to read a long README to understand kirokit; a 36-second looping GIF at the top now shows the CLI and the desktop app doing the job, and `task showcase` records it again from the real tools whenever the UI changes.
 
 ## What a reviewer must know
 
@@ -39,14 +39,14 @@ What a reader of the repository sees:
  CONTRIBUTING.md
 +  "Showcase video": tools, `task showcase`, what it refuses to publish, `node --test scripts/showcase/`
  assets/
-+  kirokit-showcase.gif   2.3 MB, 35 s
-+  kirokit-showcase.mp4   0.8 MB, 35 s
++  kirokit-showcase.gif   2.3 MB, 36 s
++  kirokit-showcase.mp4   0.8 MB, 36 s
 ```
 
 ## Built, slice by slice
 
 <!-- ql:slices -->
-3 slices · 11 tasks · 14 commits · 17 files · +1214 −3
+3 slices · 11 tasks · 15 commits · 17 files · +1214 −3
 
 **Slice 1 · The CLI part records itself from one script** · T1, T2, T3 · 6 files · +333 −0
 
@@ -81,10 +81,10 @@ What a reader of the repository sees:
 ## What was asked for, and how each point was proved
 
 <!-- ql:proof -->
-- **1. A 30–60 second showcase autoplays at the top of the GitHub README.** Only you can confirm: it looks right on the rendered GitHub page · waits for your confirmation
+- **1. A 30–60 second showcase autoplays at the top of the GitHub README.** Only you can confirm: it looks right on the rendered GitHub page · confirmed by you: Confirmed in the App
 - **2. The CLI part shows a team's config installed and its agent starting.** Scenario 1: One command records the real CLI and app into both files, after slice 2 · passed · `evidence/it2-scenario-1-step-4-install.png`
 - **3. The app part shows the same job done with buttons.** Scenario 1: One command records the real CLI and app into both files, after slice 2 · passed · `evidence/it2-done-3-border-scan.txt`
-- **4. A viewer can follow every step without sound.** Only you can confirm: the pacing feels right · waits for your confirmation
+- **4. A viewer can follow every step without sound.** Only you can confirm: the pacing feels right · confirmed by you: Confirmed in the App
 - **5. No private details are on screen.** Scenario 2: Private details stop the run before anything is published, after slice 2 · Scenario 3: An interrupted run leaves no trace, after slice 2 · passed · `evidence/it2-scenario-2.txt`
 - **6. The video can be made again with one command when the UI changes.** Scenario 1: One command records the real CLI and app into both files, after slice 2 · Scenario 3: An interrupted run leaves no trace, after slice 2 · Scenario 5: The README opens with the showcase, after slice 3 · passed · `evidence/it2-fresh-run.txt`
 - **7. The README GIF is small enough for GitHub to show it reliably.** Scenario 1: One command records the real CLI and app into both files, after slice 2 · Scenario 4: Committing the media keeps its bytes, after slice 3 · passed · `evidence/it2-scenario-1.txt`
@@ -120,7 +120,7 @@ Security review, Project checks, Code review and Fix rounds ran: 6 of 6 points o
 #### 1. The showcase plays and reads well
 - Do: open `assets/kirokit-showcase.gif` (or the MP4) and watch it once without sound.
 - Run: `open assets/kirokit-showcase.gif`
-- Expect: about 35 s: title card; `kirokit install platform-team`; Kiro starting and `/jir` listing `/jira-search` and `/jira-triage`; the app cloning the repo and installing `platform-team` with the dock printing `installed platform-team into /tmp/kirokit-demo/home/.kiro`; the end card with both `brew install` lines. Every clip sits in a complete rounded frame with a numbered caption below.
+- Expect: about 36 s: title card; `kirokit install platform-team`; Kiro starting and `/jir` listing `/jira-search` and `/jira-triage`; the app cloning the repo and installing `platform-team` with the dock printing `installed platform-team into /tmp/kirokit-demo/home/.kiro`; the end card with both `brew install` lines. Every clip sits in a complete rounded frame with a numbered caption below.
 - Saw: frames at each caption match, and the frame border is present at every 0.5 s sample — `evidence/it2-scenario-1-contact.png`, `evidence/it2-done-3-border-scan.txt`
 
 #### 2. One command records it again
