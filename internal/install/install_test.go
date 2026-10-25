@@ -2,11 +2,15 @@ package install
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/mavogel/kirokit/internal/sopswrap"
 )
 
 func mustWrite(t *testing.T, path, content string) {
@@ -66,8 +70,39 @@ func TestInstall_WritesSecretsFileAtExpectedPathAndBakesItIntoAgentArgs(t *testi
 	if err != nil {
 		t.Fatalf("expected installed agents/agent1.json: %v", err)
 	}
-	if !strings.Contains(string(agentJSON), wantSecretsDst) {
-		t.Errorf("installed agent1.json = %s, want it to reference the installed secrets path %s", agentJSON, wantSecretsDst)
+	// Rendered paths use forward slashes on every OS, which sops, Kiro and
+	// file:// resources accept on Windows too.
+	if !strings.Contains(string(agentJSON), `"`+filepath.ToSlash(wantSecretsDst)+`"`) {
+		t.Errorf("installed agent1.json = %s, want it to reference the installed secrets path %s", agentJSON, filepath.ToSlash(wantSecretsDst))
+	}
+	if strings.Contains(string(agentJSON), `\\`) {
+		t.Errorf("installed agent1.json = %s, want no backslash in its paths", agentJSON)
+	}
+}
+
+func TestLaunchShellFor_CmdOnlyOnWindows(t *testing.T) {
+	for goos, want := range map[string]sopswrap.Shell{"windows": sopswrap.Cmd, "linux": sopswrap.POSIX, "darwin": sopswrap.POSIX} {
+		if got := launchShellFor(goos); got != want {
+			t.Errorf("launchShellFor(%q) = %v, want %v", goos, got, want)
+		}
+	}
+}
+
+func TestInstall_WindowsRefusesAnArgumentCmdExeCannotPassAndWritesNothing(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("cmd.exe launches are written only on Windows")
+	}
+	roots, team, _ := setupFixture(t)
+	mustWrite(t, filepath.Join(roots.TeamsRoot, team, "agents", "agent1", "agent.json.tmpl"),
+		`{"mcpServers": {"test-mcp": {"command": {{ sopsCommand }}, "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/fixture-team/agent1/secrets.enc.yaml" .KiroHome) "test-mcp-server" "--header" "Authorization: x" }}}}}`)
+	kiroHome := filepath.Join(t.TempDir(), "kiro")
+
+	err := Install(roots, team, kiroHome, nil)
+	if !errors.Is(err, sopswrap.ErrUnsafeForCmd) || !strings.Contains(err.Error(), "fixture-team/agent1") {
+		t.Fatalf("Install error = %v, want a cmd.exe refusal naming fixture-team/agent1", err)
+	}
+	if _, statErr := os.Stat(kiroHome); !os.IsNotExist(statErr) {
+		t.Errorf("KIRO_HOME was written after a refused install: %v", statErr)
 	}
 }
 

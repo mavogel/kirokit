@@ -2,6 +2,7 @@ package render
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"slices"
@@ -9,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/mavogel/kirokit/internal/scaffold"
+	"github.com/mavogel/kirokit/internal/sopswrap"
 )
 
 // setupFixture builds a minimal team tree (one agent, one hook, one
@@ -168,6 +170,78 @@ func TestRenderTeam_SopsArgsJSONProducesValidJSONArgsArray(t *testing.T) {
 		if server.Args[i] != want[i] {
 			t.Errorf("args[%d] = %q, want %q", i, server.Args[i], want[i])
 		}
+	}
+}
+
+// renderSopsAgent renders the fixture with agent1 launching test-mcp-server
+// with args through sopsArgsJSON, and returns the rendered args.
+func renderSopsAgent(t *testing.T, opts Options, args ...string) ([]string, string, error) {
+	t.Helper()
+	teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+	quoted := make([]string, len(args))
+	for i, a := range args {
+		b, _ := json.Marshal(a) //nolint:errchkjson // a string always marshals
+		quoted[i] = string(b)
+	}
+	content := `{"mcpServers": {"test-mcp": {"command": {{ sopsCommand }}, "args": {{ sopsArgsJSON (printf "%s/s.enc.yaml" .KiroHome) "test-mcp-server" ` + strings.Join(quoted, " ") + ` }}}}}`
+	if err := os.WriteFile(filepath.Join(teamsRoot, "fixture-team", "agents", "agent1", "agent.json.tmpl"), []byte(content), 0o600); err != nil {
+		t.Fatalf("overwrite fixture: %v", err)
+	}
+	outDir := filepath.Join(t.TempDir(), "out")
+	if err := RenderTeamWith(teamsRoot, "fixture-team", globalRoot, envVersionsPath, outDir, opts); err != nil {
+		return nil, outDir, err
+	}
+	data, err := os.ReadFile(filepath.Join(outDir, "agents", "agent1.json"))
+	if err != nil {
+		t.Fatalf("expected agents/agent1.json: %v", err)
+	}
+	var decoded struct {
+		MCPServers map[string]struct {
+			Args []string `json:"args"`
+		} `json:"mcpServers"`
+	}
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("rendered output is not valid JSON: %v\ncontent: %s", err, data)
+	}
+	return decoded.MCPServers["test-mcp"].Args, outDir, nil
+}
+
+func TestRenderTeamWith_CmdLaunchShellJoinsPlainArguments(t *testing.T) {
+	args, _, err := renderSopsAgent(t, Options{KiroHome: "C:/Users/a/.kiro", LaunchShell: sopswrap.Cmd}, "--header", "Authorization:${X}")
+	if err != nil {
+		t.Fatalf("RenderTeamWith: %v", err)
+	}
+	want := []string{"exec-env", "C:/Users/a/.kiro/s.enc.yaml", "test-mcp-server --header Authorization:${X}"}
+	if !slices.Equal(args, want) {
+		t.Errorf("args = %q, want %q", args, want)
+	}
+}
+
+func TestRenderTeamWith_POSIXMatchesRenderTeam(t *testing.T) {
+	args, _, err := renderSopsAgent(t, Options{}, "--header", "Authorization: ${X}")
+	if err != nil {
+		t.Fatalf("RenderTeamWith: %v", err)
+	}
+	want := []string{"exec-env", DefaultKiroHomeSentinel + "/s.enc.yaml", "test-mcp-server --header 'Authorization: ${X}'"}
+	if !slices.Equal(args, want) {
+		t.Errorf("args = %q, want %q", args, want)
+	}
+}
+
+func TestRenderTeamWith_CmdRefusesAnArgumentAndNamesTheAgent(t *testing.T) {
+	_, outDir, err := renderSopsAgent(t, Options{LaunchShell: sopswrap.Cmd}, "--header", "Authorization: x")
+	if err == nil {
+		t.Fatal("RenderTeamWith accepted an argument cmd.exe cannot pass")
+	}
+	want := `render: fixture-team/agent1: argument "Authorization: x" cannot pass through sops exec-env on Windows (cmd.exe): use a form without spaces or quotes, such as Authorization:${VAR}`
+	if err.Error() != want {
+		t.Errorf("error = %q\nwant    %q", err.Error(), want)
+	}
+	if !errors.Is(err, sopswrap.ErrUnsafeForCmd) {
+		t.Errorf("error does not wrap sopswrap.ErrUnsafeForCmd")
+	}
+	if _, statErr := os.Stat(outDir); !os.IsNotExist(statErr) {
+		t.Errorf("output folder exists after a refused render: %v", statErr)
 	}
 }
 

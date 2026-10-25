@@ -1,0 +1,9 @@
+# gitleaks reads this file for the lefthook pre-commit scan. It keeps every
+# default rule and allows exactly one file: the test-only age key the SOPS
+# launch test decrypts with (see testdata/sops/age-test-key.txt).
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "test-only age key for cmd/kirokit/commands/install_sops_test.go"
+paths = ['''^testdata/sops/age-test-key\.txt$''']

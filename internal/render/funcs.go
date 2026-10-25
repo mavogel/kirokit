@@ -16,7 +16,7 @@ func FuncMap(ctx *Context) template.FuncMap {
 		"globalSteering": globalSteeringFunc(ctx),
 		"jsonString":     jsonStringFunc,
 		"sopsCommand":    sopsCommandFunc,
-		"sopsArgsJSON":   sopsArgsJSONFunc,
+		"sopsArgsJSON":   sopsArgsJSONFunc(ctx.LaunchShell),
 	}
 }
 
@@ -58,13 +58,19 @@ func sopsCommandFunc() string {
 }
 
 // sopsArgsJSONFunc returns the already-JSON-array-formatted
-// ["exec-env", "<secretsFilePath>", "<shell-quoted command>"] string,
-// ready to paste directly into a template's "args" field.
-func sopsArgsJSONFunc(secretsFilePath, realCommand string, realArgs ...string) (string, error) {
-	_, args := sopswrap.BuildWrapper(secretsFilePath, realCommand, realArgs)
-	b, err := json.Marshal(args)
-	if err != nil {
-		return "", fmt.Errorf("sopsArgsJSON: %w", err)
+// ["exec-env", "<secretsFilePath>", "<command for shell>"] string, ready to
+// paste directly into a template's "args" field. An argument the shell cannot
+// pass fails with a *sopswrap.UnsafeArgError.
+func sopsArgsJSONFunc(shell sopswrap.Shell) func(secretsFilePath, realCommand string, realArgs ...string) (string, error) {
+	return func(secretsFilePath, realCommand string, realArgs ...string) (string, error) {
+		_, args, err := sopswrap.BuildWrapperFor(shell, secretsFilePath, realCommand, realArgs)
+		if err != nil {
+			return "", err
+		}
+		b, err := json.Marshal(args)
+		if err != nil {
+			return "", fmt.Errorf("sopsArgsJSON: %w", err)
+		}
+		return string(b), nil
 	}
-	return string(b), nil
 }

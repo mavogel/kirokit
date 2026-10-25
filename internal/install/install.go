@@ -10,11 +10,13 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
 	"github.com/mavogel/kirokit/internal/backup"
 	"github.com/mavogel/kirokit/internal/render"
+	"github.com/mavogel/kirokit/internal/sopswrap"
 )
 
 // Roots are the shared repository-relative paths Install needs to render a
@@ -63,7 +65,22 @@ func Check(roots Roots, team, kiroHome string) error {
 		return fmt.Errorf("install: %w", err)
 	}
 	defer func() { _ = os.RemoveAll(scratch) }()
-	return render.RenderTeam(roots.TeamsRoot, team, roots.GlobalRoot, roots.EnvVersionsPath, filepath.Join(scratch, "rendered"), kiroHome)
+	return render.RenderTeamWith(roots.TeamsRoot, team, roots.GlobalRoot, roots.EnvVersionsPath, filepath.Join(scratch, "rendered"), renderOptions(kiroHome))
+}
+
+// renderOptions bakes kiroHome in with forward slashes, which Windows, sops
+// and file:// resources accept (macOS and Linux paths do not change), and
+// builds MCP launches for the shell sops uses on this OS.
+func renderOptions(kiroHome string) render.Options {
+	return render.Options{KiroHome: filepath.ToSlash(kiroHome), LaunchShell: launchShellFor(runtime.GOOS)}
+}
+
+// launchShellFor is the shell sops exec-env runs commands with on goos.
+func launchShellFor(goos string) sopswrap.Shell {
+	if goos == "windows" {
+		return sopswrap.Cmd
+	}
+	return sopswrap.POSIX
 }
 
 // Install renders team with KiroHome=kiroHome and copies the rendered
@@ -79,7 +96,7 @@ func Install(roots Roots, team, kiroHome string, kb *KnowledgeBase) error {
 	defer func() { _ = os.RemoveAll(scratch) }()
 
 	renderedDir := filepath.Join(scratch, "rendered")
-	if err := render.RenderTeam(roots.TeamsRoot, team, roots.GlobalRoot, roots.EnvVersionsPath, renderedDir, kiroHome); err != nil {
+	if err := render.RenderTeamWith(roots.TeamsRoot, team, roots.GlobalRoot, roots.EnvVersionsPath, renderedDir, renderOptions(kiroHome)); err != nil {
 		return err
 	}
 
