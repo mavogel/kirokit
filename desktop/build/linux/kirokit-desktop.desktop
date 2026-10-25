@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=kirokit
+Comment=Install your team's Kiro agents
+Exec=kirokit-desktop
+Icon=kirokit-desktop
+Terminal=false
+Categories=Development;
+StartupWMClass=kirokit
