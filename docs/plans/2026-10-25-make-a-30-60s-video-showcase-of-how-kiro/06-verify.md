@@ -3,9 +3,9 @@
 ## Summary
 
 <!-- ql:summary -->
-6 of 8 points assessed · 6 passed
+6 of 8 points assessed · 6 passed · 1 fix round
 
-Round 2: checking after 0 fix rounds.
+Passed after 2 judge runs and 1 fix round.
 <!-- /ql:summary -->
 
 ## Open items
@@ -37,7 +37,7 @@ Round 2: checking after 0 fix rounds.
   - Why it runs here: Not run: Second opinion is off in Settings, though it would run here because the change crosses a trust boundary: the person's SOPS age key — creates a symlink to (or when set) inside, It never reads, copies or prints the key, The link is removed in the, the Plan says it is risky: the recording drives outside tools (a logged-in, a GitHub clone over the network, Chrome via a new dev-only dependency) and links the and slice 2 is marked risky; say "get a second opinion" to have one.
 - **Fix rounds** · the build session
   - State: done
-  - Result: done · none needed
+  - Result: done · 1 round
 <!-- /ql:lanes -->
 
 ## Done means, checked
@@ -158,6 +158,8 @@ Not run: Second opinion is off in Settings, though it would run here because the
 **Result:** fail
 
 ### Iteration 2
+
+**Revision:** edcfda46a819f781066181c888086a1ea88de819242744e3481b5075d6fc8157
 
 **Assignment:** de0cd579-eed6-41e0-8214-89ffbdd2a182
 **Judge:** fresh helper
