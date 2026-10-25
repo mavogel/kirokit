@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 23 of 24 tasks · 6 of 7 slices
 
-Building now: started 25 Oct, 19:12, 1 h 19 min so far.
+Building now: started 25 Oct, 19:12, 1 h 22 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -32,6 +32,12 @@ Written when the last task is ticked.
 
 <!-- ql:decisions -->
 - Slice 2 · "renormalize changes nothing" is checked with `git ls-files --eol` (no index entry is CRLF) instead of `git add --renormalize .`, which would stage files; T6 also adds `internal/testutil` (execute-bit and symlink skips shared by the CLI tests); nothing you approved changes.
+- Slice 4 · `withToolFoldersFor` keeps the person's own PATH entries as they are (no de-duplication), exactly as before on macOS; nothing you approved changes.
+- Slice 4 · The non-zsh shell test checks `$KIROKIT_BIN` instead of `command -v kirokit`, because Debian's `/etc/profile` resets PATH for a login `sh` (the case the Settings note already describes); nothing you approved changes.
+- Slice 5 · The Windows app is built as `kirokit-desktop-<arch>.exe` and installed as `kirokit-desktop.exe`; the installers carry Wails' default product version 0.0.0 in their Windows "Apps" entry (the file names carry the release version); nothing you approved changes.
+- Slice 5 · The smoke step relies on the app's own 60-second limit plus a 5-minute step limit, since macOS runners have no `timeout`; nothing you approved changes.
+- Slice 6 · The Linux app has one prebuilt build per architecture, and `KIROKIT_SKIP_LINUX_ARM64_APP` leaves arm64 out of pull-request snapshots (GoReleaser filters architectures only when splitting by target, and the Plan splits by OS); nothing you approved changes.
+- Slice 6 · The dry run merges the snapshot parts too; their recorded context (`Snapshot: true`, `Skips: publish, announce`) keeps the merge from publishing, and the tap and bucket get placeholder tokens; the artifact actions are pinned at upload-artifact v7.0.2 and download-artifact v8.0.2; nothing you approved changes.
 - Slice 2 · `skills fetch` also refuses a symbolic link that git's index records (mode 120000), since a Windows checkout writes one as a plain file the old file-mode check cannot see; nothing you approved changes.
 - Slice 2 · T8 also edits `internal/install/install_test.go` (accepts a junction, checks the `file://` path, covers reinstall and a real folder at the mount) and adds `internal/backup/backup_windows_test.go`; the knowledge-base `file://` source uses forward slashes like every other rendered path; nothing you approved changes.
 - Slice 2 · The `main` ruleset requires a check named `build-vet-lint-test`, so the OS matrix runs as `test (<os>)` and a job keeping that name passes only when all three pass; nothing you approved changes.
@@ -73,6 +79,7 @@ Written when the last task is ticked.
 - T21 · bc3d87e · `actionlint .github/workflows/desktop.yaml` · exit 0 · 0.1s
 - T23 · 0ce9b53 · `actionlint` · exit 0 · 0.3s
 - T19 · 0ce9b53 · `(cd desktop && go test -run Smoke ./...) && task desktop:build && KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit` · exit 0 · 6.9s
+- T24 · b302fc8 · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.2s
 
 ## Known limits
 

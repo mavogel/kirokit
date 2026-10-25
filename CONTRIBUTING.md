@@ -10,7 +10,7 @@ Please read through this document before submitting any issues or pull requests 
 Use the GitHub issue tracker to report bugs or suggest features. Check existing open, or recently closed, issues first to make sure somebody else hasn't already reported it. Please include as much of the following as you can:
 
 * A reproducible test case or series of steps
-* The output of `kirokit version` and `go version`
+* The output of `kirokit version` and `go version`, and your system (macOS, Linux distribution, Windows version)
 * The team and template involved, and any modifications you've made relevant to the bug
 * Anything unusual about your environment (OS, `KIRO_HOME`, `KIROKIT_REPO`, `kiro-cli` version)
 
@@ -60,6 +60,10 @@ task build
 
 Run `kirokit` from the repository root: it resolves `teams/`, `global/` and `env/` relative to the working directory, or relative to `KIROKIT_REPO` when that is set.
 
+The CLI builds and tests on macOS, Linux and Windows alike. For the desktop app on Linux, install `libgtk-3-dev` and `libwebkit2gtk-4.1-dev` (Debian/Ubuntu names); on Windows, install [NSIS](https://nsis.sourceforge.io) (`makensis`) and run the tasks from Git Bash. The repository's `.gitattributes` checks every text file out with LF, so goldens, lock hashes and SOPS files stay byte-exact on Windows; keep it that way.
+
+On a Mac with Docker or OrbStack, `scripts/linux-docker.sh <command>` runs a command in a container that mirrors CI's Ubuntu runner (Go, Node, Task, sops, WebKitGTK 4.1, NSIS), for example `scripts/linux-docker.sh task desktop:test` or `scripts/linux-docker.sh env GOOS=windows task desktop:build` (which builds the Windows setup programs). `LINUX_DOCKER_ARCH=amd64` picks amd64 on Apple silicon.
+
 
 ## Repository layout
 
@@ -90,7 +94,7 @@ task ci             # build + vet + lint + test, matching .github/workflows/ci.y
 task desktop:test   # desktop frontend build + node tests, then vet and test the desktop module
 ```
 
-CI additionally runs `node scripts/sync-agent-assets.mjs --check`. `task ci` must pass before you open a pull request. If you touch `desktop/`, run `task desktop:test` as well (see `.github/workflows/desktop.yaml`).
+CI runs build, vet and tests on Ubuntu, Windows and macOS (lint and `node scripts/sync-agent-assets.mjs --check` on Ubuntu), with sops installed and `KIROKIT_REQUIRE_SOPS=1`, so the SOPS launch test (`cmd/kirokit/commands/install_sops_test.go`) runs everywhere; locally it skips without `sops`. The Desktop workflow runs `task desktop:test`, `task desktop:build` and a smoke start (`KIROKIT_DESKTOP_SMOKE=1` makes the app quit once its page has loaded) on all three, and with the GoReleaser Pro key also each system's part of the release as a snapshot. `task ci` must pass before you open a pull request. If you touch `desktop/`, run `task desktop:test` as well. Tests that need a Unix shell, zsh or execute bits skip on Windows; give a Windows counterpart where the behaviour exists there.
 
 Add or extend tests for changed behaviour. For bug fixes, a test that fails before your change and passes after it is the best evidence.
 
@@ -117,6 +121,7 @@ Rendered output is locked down by golden files in `testdata/golden/`, compared b
 * Rendering uses the fixed `KiroHome` sentinel `/kiro-home`, so goldens match on every machine. Only `install` bakes in the real `$KIRO_HOME`.
 * MCP server versions come from `env/mcp-versions.yaml` via `mcpVersion`; an undefined key must fail the render.
 * **Secrets never appear in plaintext** in templates, rendered files, or goldens. MCP servers that need them launch via `sopsCommand`/`sopsArgsJSON` (`sops exec-env`) with a `.KiroHome`-absolute secrets path.
+* Arguments of a `sopsArgsJSON` command must also pass `cmd.exe` on Windows: no spaces, tabs, `"` or `& | < > ^ % ! ( )` (write headers as `Authorization:${VAR}`). `go test ./internal/golden` renders every team for Windows and fails on such an argument.
 
 ### External skills
 
