@@ -1,0 +1,5 @@
+Spike 3 (2026-10-25): captions and assembly
+- Captions: playwright-core screenshot of an HTML pill (system font, white on violet, transparent background) -> 1280x96 PNG, ~9 KB each.
+- ffmpeg 9.0.2 (no drawtext): scale/pad each clip onto 1280x800 (bg #13111f), overlay caption PNG, xfade 0.5 s, libx264 crf 24 -> showcase.mp4 684 KB, 37.3 s.
+- GIF: fps=12, scale=960, palettegen max_colors=128 stats_mode=diff + paletteuse bayer 4 diff_mode=rectangle -> 1.69 MB, 37.25 s.
+- Layout finding: a caption at the bottom of the app clip covers the terminal dock (see spike-compose-frames.png).

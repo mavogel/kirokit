@@ -1,0 +1,7 @@
+Spike 2 (2026-10-25): desktop app in a browser via Wails dev + playwright-core 1.63.0 (channel chrome, headless)
+- HOME=<throwaway /tmp folder> with GOCACHE/GOMODCACHE/GOPATH/npm cache pointed at the real ones; go tool wails dev printed "Using DevServer URL: http://localhost:34115" (a native dev window also opens).
+- Decryption-key row: a symlink <throwaway HOME>/Library/Application Support/sops/age/keys.txt -> the real key file (not copied, not read).
+- Playwright: viewport 1180x760, deviceScaleFactor 2, recordVideo 1180x760.
+  welcome visible -> typed https://github.com/mavogel/kirokit.git -> Clone -> Teams visible after ~3 s (git clone + kirokit sync --latest-tag: "checked out v0.4.1") -> Install platform-team -> setup dialog: SOPS found, Decryption key found (throwaway path), Kiro CLI found, "Everything is ready" -> Install -> dock "installed platform-team into <throwaway HOME>/.kiro", card badge "installed". Total ~13 s, webm 853 KB.
+- One console 404 (a missing resource) did not affect the flow.
+- See spike-app-steps.png. git status afterwards: unchanged apart from this task folder.
