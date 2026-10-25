@@ -6,7 +6,7 @@ Task: `docs/plans/2026-10-25-make-a-30-60s-video-showcase-of-how-kiro/`
 
 ## Why the change
 
-Visitors to the repository had to read a long README to understand kirokit; a 35-second looping GIF at the top now shows the CLI and the desktop app doing the job, and `task showcase` records it again from the real tools whenever the UI changes.
+Visitors to the repository had to read a long README to understand kirokit; a 36-second looping GIF at the top now shows the CLI and the desktop app doing the job, and `task showcase` records it again from the real tools whenever the UI changes.
 
 ## What a reviewer must know
 
@@ -41,23 +41,22 @@ What a reader of the repository sees:
  CONTRIBUTING.md
 +  "Showcase video": tools, `task showcase`, what it refuses to publish, `node --test scripts/showcase/`
  assets/
-+  kirokit-showcase.gif   2.3 MB, 35 s
-+  kirokit-showcase.mp4   0.8 MB, 35 s
++  kirokit-showcase.gif   2.3 MB, 36 s
++  kirokit-showcase.mp4   0.8 MB, 36 s
 ```
 
 ## Built, slice by slice
 
 <!-- ql:slices -->
-3 slices · 11 tasks · 13 commits · 17 files · +1214 −3
+3 slices · 11 tasks · 14 commits · 17 files · +1214 −3
 
-**Slice 1 · The CLI part records itself from one script** · T1, T2, T3 · 7 files · +805 −0
+**Slice 1 · The CLI part records itself from one script** · T1, T2, T3 · 6 files · +333 −0
 
 - `scripts/showcase/.gitignore` · T1 · new · +1 −0
 - `scripts/showcase/cli-drive.sh` · T2 · new · +66 −0
 - `scripts/showcase/package-lock.json` · T1 · new · +26 −0
 - `scripts/showcase/package.json` · T1 · new · +9 −0
 - `scripts/showcase/record.sh` · T3, T5, T7, T8 · new · +226 −0
-- `scripts/showcase/showcase.test.mjs` · T3, T5, T6, T7, T8, T11 · new · +472 −0
 - `scripts/showcase/tmux.conf` · T1 · new · +5 −0
 
 **Slice 2 · One command makes the checked GIF and MP4** · T4, T5, T6, T7, T8 · 4 files · +380 −0
@@ -75,6 +74,10 @@ What a reader of the repository sees:
 - `assets/kirokit-showcase.gif` · T10 · new · +0 −0
 - `assets/kirokit-showcase.mp4` · T10 · new · +0 −0
 - `lefthook.yml` · T9 · +10 −1
+
+**Decided by the agent** · 1 file · +472 −0
+
+- `scripts/showcase/showcase.test.mjs` · new · +472 −0
 <!-- /ql:slices -->
 
 ## What was asked for, and how each point was proved
@@ -119,7 +122,7 @@ Security review, Project checks, Code review and Fix rounds ran: 6 of 6 points o
 #### 1. The showcase plays and reads well
 - Do: open `assets/kirokit-showcase.gif` (or the MP4) and watch it once without sound.
 - Run: `open assets/kirokit-showcase.gif`
-- Expect: about 35 s: title card; `kirokit install platform-team`; Kiro starting and `/jir` listing `/jira-search` and `/jira-triage`; the app cloning the repo and installing `platform-team` with the dock printing `installed platform-team into /tmp/kirokit-demo/home/.kiro`; the end card with both `brew install` lines. Every clip sits in a complete rounded frame with a numbered caption below.
+- Expect: about 36 s: title card; `kirokit install platform-team`; Kiro starting and `/jir` listing `/jira-search` and `/jira-triage`; the app cloning the repo and installing `platform-team` with the dock printing `installed platform-team into /tmp/kirokit-demo/home/.kiro`; the end card with both `brew install` lines. Every clip sits in a complete rounded frame with a numbered caption below.
 - Saw: frames at each caption match, and the frame border is present at every 0.5 s sample — `evidence/it2-scenario-1-contact.png`, `evidence/it2-done-3-border-scan.txt`
 
 #### 2. One command records it again
@@ -173,7 +176,7 @@ None: the build passed its checks.
 - T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase. (slice 3)
 - Task showcase leaves the project check list: every run records new media into assets/, so QualityLayer records it as 'files changed while the check ran' and never as fresh proof. It stays proved by the T8 slice check and Scenarios 1-3. (the Plan, while building)
 - Verification round 1 is rerun because the files that changed after it are its fix (fresh-page rendering in `caption.mjs`, the run-ownership guard in `record.sh`, the clearer `checks.sh length` message, the reviewer's tests plus one regression test, and the media re-recorded without the torn frame), which can change its D1, Done 3 and Scenario 1 verdicts; the pre-commit whitespace fixers also now skip `docs/plans/*/evidence/` so captured proof is committed byte-for-byte; nothing you approved changes. (the Plan, while building)
-- Verification round 2 was recorded while 1 file changed, 1 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes. (the Plan, while building)
+- Verification round 2 is kept because the only file that changed during it is `scripts/showcase/showcase.test.mjs`, edited by that reviewer itself (two added tests and a port probe matching `record.sh`), which cannot change any verdict about the recorder or the media; nothing you approved changes. (the Plan, while building)
 <!-- /ql:made-for-you -->
 
 ## Settled with you

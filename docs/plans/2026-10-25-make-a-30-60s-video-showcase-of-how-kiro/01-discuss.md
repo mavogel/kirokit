@@ -10,7 +10,7 @@ overrides: []
 stage: review
 iterations: 2
 verification_failures: 0
-gate: null
+gate: review
 created: 1792920764667
 startup_owner: 05d9f7946b007a3e
 layout: seven
