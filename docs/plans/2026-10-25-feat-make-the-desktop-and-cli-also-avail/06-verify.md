@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 8 of 8 points assessed · 2 passed · 1 fix round
 
-Unverified after 2 judge runs: 17 items remain unresolved. No acceptance recorded.
+Taken as it stood after 2 rounds: 17 items left open.
 <!-- /ql:summary -->
 
 ## Open items

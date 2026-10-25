@@ -63,7 +63,7 @@ macOS:   unchanged (tar.gz, DMGs, both casks)
 ## Built, slice by slice
 
 <!-- ql:slices -->
-7 slices · 24 tasks · 18 commits · 88 files · +3503 −344
+7 slices · 24 tasks · 19 commits · 88 files · +3503 −344
 
 **Slice 1 · Windows MCP servers get their SOPS secrets** · T1, T2, T3, T4, T5 · 17 files · +697 −41
 
@@ -208,7 +208,7 @@ None recorded.
 ## How it was verified
 
 <!-- ql:checked -->
-No acceptance recorded; 17 items remain unverified for Review. Lanes that ran: Security review, Project checks, Code review and Fix rounds.
+Taken as it stood with 17 items still open; lanes that ran: Security review, Project checks, Code review and Fix rounds.
 <!-- /ql:checked -->
 
 ## Try it yourself

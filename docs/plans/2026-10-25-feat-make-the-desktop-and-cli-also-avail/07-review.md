@@ -65,7 +65,7 @@ macOS:   unchanged (tar.gz, DMGs, both casks)
 ## Built, slice by slice
 
 <!-- ql:slices -->
-7 slices · 24 tasks · 18 commits · 88 files · +3503 −344
+7 slices · 24 tasks · 19 commits · 88 files · +3503 −344
 
 **Slice 1 · Windows MCP servers get their SOPS secrets** · T1, T2, T3, T4, T5 · 17 files · +697 −41
 
@@ -210,7 +210,7 @@ None recorded.
 ## How it was verified
 
 <!-- ql:checked -->
-No acceptance recorded; 17 items remain unverified for Review. Lanes that ran: Security review, Project checks, Code review and Fix rounds.
+Taken as it stood with 17 items still open; lanes that ran: Security review, Project checks, Code review and Fix rounds.
 <!-- /ql:checked -->
 
 ## Try it yourself
@@ -254,7 +254,7 @@ No acceptance recorded; 17 items remain unverified for Review. Lanes that ran: S
 ## Accepted with open items
 
 <!-- ql:accepted -->
-No acceptance recorded. These items remain unverified for Review:
+The author accepted this build as it stood, without another judge run. What was left open:
 
 - T10: Push this task's branch and open a pull request, so CI and Desktop run on the windows-latest, ubuntu-latest and macos-latest runners. The Windows runtime proof (the SOPS launch test through cmd.exe, the ConPTY terminal tests, the app smoke start) can only run there, and the build may not push.
 - [MISSING] done 1: No Linux release exists to install from. environment: the branch is still not on GitHub, no CI or release run exists and no `GORELEASER_KEY` is set here, so no `.deb`, `.rpm`, tar.gz or Linux cask was produced; nothing in this round touches the release config — `evidence/it2-blocker-ci.txt`, `evidence/it1-static-cross-os.txt`
