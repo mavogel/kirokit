@@ -8,8 +8,8 @@ level: engineering
 ui: false
 overrides: []
 stage: verify
-iterations: 0
-verification_failures: 0
+iterations: 1
+verification_failures: 1
 gate: null
 created: 1792920764667
 startup_owner: 05d9f7946b007a3e
@@ -22,6 +22,7 @@ review_basis: eb80c35fbca3aaa62e52feebf61d64e10151fec40679bd9c8c517a0d01da67c0
 branch: feat/make-30-60s-video-how
 base: 87afcb06ba72f010cc64b27864d0edcf93c65ae1
 base_ref: main
+judge_runs: 1
 ---
 
 # Showcase video of kirokit CLI and app for the README

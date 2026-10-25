@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 11 of 11 tasks · 3 of 3 slices
 
-Building now: started 25 Oct, 11:07, 1 h 11 min so far.
+Built: started 25 Oct, 11:07.
 <!-- /ql:summary -->
 
 ## Slices
@@ -55,7 +55,7 @@ Delivered 25 Oct, 11:37
 - Slice 2 · `record.sh` calls `checks.sh` as a command rather than sourcing it, so each check stays runnable on its own with the same messages; nothing you approved changes.
 - Slice 3 · T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase.
 - The Plan · Task showcase leaves the project check list: every run records new media into assets/, so QualityLayer records it as 'files changed while the check ran' and never as fresh proof. It stays proved by the T8 slice check and Scenarios 1-3.
-- The Plan · Verification round 1 was recorded while 7 files changed, 7 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes.
+- The Plan · Verification round 1 is rerun because the files that changed after it are its fix (fresh-page rendering in `caption.mjs`, the run-ownership guard in `record.sh`, the clearer `checks.sh length` message, the reviewer's tests plus one regression test, and the media re-recorded without the torn frame), which can change its D1, Done 3 and Scenario 1 verdicts; the pre-commit whitespace fixers also now skip `docs/plans/*/evidence/` so captured proof is committed byte-for-byte; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -95,6 +95,12 @@ Delivered 25 Oct, 11:37
 - all · 3fe8fee · `task build` · reused: nothing changed since it passed at 11:41
 - all · 3fe8fee · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since it passed at 11:41
 - all · 3fe8fee · `lefthook run pre-commit` · reused: nothing changed since it passed at 11:41
+- all · ec70a9d · `go test ./...` · exit 0 · 3.8s
+- all · ec70a9d · `golangci-lint run` · exit 0 · 0.7s
+- all · ec70a9d · `go vet ./...` · exit 0 · 0.1s
+- all · ec70a9d · `task build` · exit 0 · 0.4s
+- all · ec70a9d · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.2s
+- all · ec70a9d · `lefthook run pre-commit` · exit 0 · 0.1s
 
 ## Known limits
 

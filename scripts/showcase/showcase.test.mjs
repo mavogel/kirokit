@@ -155,6 +155,18 @@ test('length: a file that is not media fails with the check\'s message', { skip:
   assert.match(r.stderr, new RegExp(`showcase: length: cannot read the length of ${f}`));
 });
 
+// ffprobe reads a still image with exit 0 but prints "N/A" for its length: an
+// exit-status-only guard would hand "N/A" to awk and report "is N/A s".
+test('length: a still image without a length fails with the check\'s message', { skip: !has('ffmpeg') }, (t) => {
+  const dir = scratch(t);
+  const still = join(dir, 'still.png');
+  const r0 = run('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=red:s=16x16', '-frames:v', '1', still]);
+  assert.equal(r0.status, 0, r0.stderr);
+  const r = checks(dir, ['length', still]);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, new RegExp(`showcase: length: cannot read the length of ${still}`));
+});
+
 test('an unknown check prints the usage', (t) => {
   const dir = scratch(t);
   const r = checks(dir, ['speed', 'x']);
@@ -320,11 +332,10 @@ test('caption: every render paints the whole frame and every caption', { skip: !
 
 // --- app-drive.mjs ----------------------------------------------------------
 
+// The same test record.sh's preflight uses, so a listener on any address
+// (vite binds [::1]:5173) counts as busy.
 async function portFree(port) {
-  return new Promise((resolve) => {
-    const s = createServer().once('error', () => resolve(false))
-      .listen(port, '127.0.0.1', () => s.close(() => resolve(true)));
-  });
+  return spawnSync('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN']).status !== 0;
 }
 
 test('app-drive: no output folder prints the usage', () => {
@@ -418,6 +429,28 @@ test('record.sh: a second run leaves a live run\'s folder alone', { skip: demoBu
   assert.equal(r.status, 1);
   assert.match(r.stderr, new RegExp(`showcase: preflight: another showcase run \\(pid ${process.pid}\\) is using /tmp/kirokit-demo`));
   assert.equal(readFileSync('/tmp/kirokit-demo/out/clip.txt', 'utf8'), 'in progress\n');
+});
+
+// The run-ownership guard must only refuse a live run: a folder left by a run
+// that has ended (crashed, or kept with --keep) is replaced, and once this run
+// owns it, a later failure still removes it.
+test('record.sh: a dead run\'s folder is taken over and removed when the run fails', { skip: demoBusy() || !hasChrome }, async (t) => {
+  if (!(await portFree(34115)) || !(await portFree(5173))) return t.skip('a dev server port is in use');
+  const dir = scratch(t);
+  const key = file(dir, 'keys.txt', 'not a key\n');
+  const dead = spawnSync('sh', ['-c', 'echo $$']).stdout.toString().trim();
+  mkdirSync('/tmp/kirokit-demo/out', { recursive: true });
+  t.after(() => rmSync('/tmp/kirokit-demo', { recursive: true, force: true }));
+  writeFileSync('/tmp/kirokit-demo/pid', `${dead}\n`);
+  writeFileSync('/tmp/kirokit-demo/out/clip.txt', 'left over\n');
+  // A failing go stops the run in its build step, right after it took the folder.
+  const path = stubPath(t);
+  writeFileSync(join(path.split(':')[0], 'go'), '#!/bin/sh\nexit 1\n');
+  const r = record(t, { PATH: path, SOPS_AGE_KEY_FILE: key });
+  assert.equal(r.status, 1);
+  assert.doesNotMatch(r.stderr, /another showcase run/);
+  assert.match(r.stderr, /showcase: build: /);
+  assert.equal(existsSync('/tmp/kirokit-demo'), false);
 });
 
 test('record.sh: a busy dev-server port fails preflight', { skip: demoBusy() || !hasChrome }, async (t) => {
