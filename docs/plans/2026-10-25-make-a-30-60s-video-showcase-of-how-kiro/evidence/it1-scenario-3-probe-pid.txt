@@ -1,0 +1,40 @@
+## step 1 (before)
+key inode+mtime: 237292720 1791887658
+6e41e70719904e9101cbf1c075766df316557980 assets/kirokit-cli.png
+cf243f2d7a4121613a31f83de1b622b679368a12 assets/kirokit-desktop.png
+fcf2436fdaec742696be597df26aee0f5df73575 assets/kirokit-showcase.gif
+e32ddaf31d3d12c4bb46dbdad22bf409b1686bf5 assets/kirokit-showcase.mp4
+a62df599ecfa296c3edd21a2217409968f3035ec assets/logo.png
+0c13b099457aed5cf4d5f548c39856f4cd42d619 assets/logo.svg
+started record.sh pid 22703
+/private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/a36255e7-a40f-4912-a07b-2ab11f9d3f4d/scratchpad/s3.sh: child setpgid (24609 to 24609): Operation not permitted
+showcase: cli: recording the terminal
+showcase: cli: cli.gif ready
+showcase: app: starting the app in Wails dev mode
+showcase: app: recording the app
+  PID  PGID COMMAND
+22703 22703 bash scripts/showcase/record.sh
+24999 22703 node ~/Developer/projects/kirokit/scripts/showcase/app-drive.mjs /tmp/kirokit-demo/out
+## step 2: kill -INT 22703  (script only)
+record.sh exit 130 after 9 s
+--- record.sh output after the signal:
+showcase: cli: recording the terminal
+showcase: cli: cli.gif ready
+showcase: app: starting the app in Wails dev mode
+showcase: app: recording the app
+## step 3 (after)
+$ ls /tmp/kirokit-demo
+ls: /tmp/kirokit-demo: No such file or directory
+$ ps for wails dev / vite / dev app (by reading, nothing killed)
+$ listeners on 34115 / 5173
+(end listeners)
+key inode+mtime: 237292720 1791887658
+6e41e70719904e9101cbf1c075766df316557980 assets/kirokit-cli.png
+cf243f2d7a4121613a31f83de1b622b679368a12 assets/kirokit-desktop.png
+fcf2436fdaec742696be597df26aee0f5df73575 assets/kirokit-showcase.gif
+e32ddaf31d3d12c4bb46dbdad22bf409b1686bf5 assets/kirokit-showcase.mp4
+a62df599ecfa296c3edd21a2217409968f3035ec assets/logo.png
+0c13b099457aed5cf4d5f548c39856f4cd42d619 assets/logo.svg
+IDENTICAL: key inode+mtime and assets/ unchanged
+$ git status --short assets/
+(end status)

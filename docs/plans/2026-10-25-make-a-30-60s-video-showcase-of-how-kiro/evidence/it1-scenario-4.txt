@@ -1,0 +1,47 @@
+# Scenario 4 in an isolated temp repo (git init in scratch), committed media from 3fe8fee staged
+## judged: lefthook.yml from 3fe8fee
+$ shasum assets/*  (before)
+fcf2436fdaec742696be597df26aee0f5df73575  assets/kirokit-showcase.gif
+e32ddaf31d3d12c4bb46dbdad22bf409b1686bf5  assets/kirokit-showcase.mp4
+$ lefthook run pre-commit
+┃  check-yaml ❯ 
+│  check-json (skip) no files for inspection
+┃  gitleaks ❯ 
+12:03PM INF 0 commits scanned.
+12:03PM INF scanned ~1858 bytes (1.86 KB) in 38.8ms
+12:03PM INF no leaks found
+  ────────────────────────────────────
+summary: (done in 1.10 seconds)
+✔️ trailing-whitespace (0.84 seconds)
+✔️ end-of-file-fixer (0.06 seconds)
+✔️ check-yaml (0.10 seconds)
+✔️ gitleaks (0.08 seconds)
+exit 0
+$ shasum assets/*  (after)
+fcf2436fdaec742696be597df26aee0f5df73575  assets/kirokit-showcase.gif
+e32ddaf31d3d12c4bb46dbdad22bf409b1686bf5  assets/kirokit-showcase.mp4
+=> identical
+
+# control: the pre-change lefthook.yml (87afcb0) with the same staged media
+## control: lefthook.yml from 87afcb0
+$ shasum assets/*  (before)
+fcf2436fdaec742696be597df26aee0f5df73575  assets/kirokit-showcase.gif
+e32ddaf31d3d12c4bb46dbdad22bf409b1686bf5  assets/kirokit-showcase.mp4
+$ lefthook run pre-commit
+┃  check-yaml ❯ 
+│  check-json (skip) no files for inspection
+┃  gitleaks ❯ 
+12:03PM INF 0 commits scanned.
+12:03PM INF scanned ~1729 bytes (1.73 KB) in 30.8ms
+12:03PM INF no leaks found
+  ────────────────────────────────────
+summary: (done in 0.22 seconds)
+✔️ check-yaml (0.06 seconds)
+✔️ gitleaks (0.04 seconds)
+🥊 trailing-whitespace (0.06 seconds)
+🥊 end-of-file-fixer (0.05 seconds)
+exit 1
+$ shasum assets/*  (after)
+29ddec2e80d64a82bfda43cdcd522ca9375b78db  assets/kirokit-showcase.gif
+4185a9204f2d948946da2b7ee79ac1a87a5101cf  assets/kirokit-showcase.mp4
+=> CHANGED

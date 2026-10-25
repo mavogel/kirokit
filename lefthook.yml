@@ -11,6 +11,8 @@
 #   - **/*.enc.yaml       SOPS files carry a MAC over their exact content
 #   - teams/*/external/** vendored external skills are pinned by a content hash
 #                         in skills.lock.yaml and are not ours to reformat or lint
+#   - docs/plans/*/evidence/**
+#                         captured command output and screenshots, kept byte-for-byte as proof
 
 pre-commit:
   jobs:
@@ -23,6 +25,7 @@ pre-commit:
         - "testdata/golden/**"
         - "**/*.enc.yaml"
         - "teams/*/external/**"
+        - "docs/plans/*/evidence/**"
       stage_fixed: true
 
     - name: end-of-file-fixer
@@ -34,6 +37,7 @@ pre-commit:
         - "testdata/golden/**"
         - "**/*.enc.yaml"
         - "teams/*/external/**"
+        - "docs/plans/*/evidence/**"
       stage_fixed: true
 
     - name: check-yaml

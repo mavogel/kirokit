@@ -1,0 +1,48 @@
+# Scenario 5 at 3fe8fee
+$ grep -nE 'kirokit-showcase|^## |kirokit-cli.png|kirokit-desktop.png|jira-search' README.md | head -12
+10:<p align="center"><a href="assets/kirokit-showcase.mp4"><img src="assets/kirokit-showcase.gif" width="800" alt="kirokit in 35 seconds: kirokit install platform-team in a terminal, kiro-cli chat starting with the devops agent and listing the jira-search skill, then the desktop app cloning the config repository and installing platform-team from a button while its terminal dock shows each command"></a></p>
+11:<p align="center"><sub>Sharper version: <a href="assets/kirokit-showcase.mp4">kirokit-showcase.mp4</a></sub></p>
+13:## Quickstart
+44:and type `/jir` to see the example skill `jira-search` and the prompt `jira-triage` in the `devops` agent
+46:<p align="center"><img src="assets/kirokit-cli.png" width="720" alt="The kiro cli started with the devops agent, listing the jira-search skill and the jira-triage prompt"></p>
+62:<p align="center"><img src="assets/kirokit-desktop.png" width="720" alt="The kirokit desktop app showing two teams with an Install button each, and the terminal dock below"></p>
+76:## Directory Layout
+104:## manifest.yaml Reference
+134:## External Skills
+155:## Central env/mcp-versions.yaml
+167:## Secrets via SOPS
+199:## Testing and verify by rendering upfront
+$ sed -n 1,13p README.md (intro → showcase → Quickstart)
+<p align="center"><img src="assets/logo.svg" width="120" alt="kirokit"></p>
+
+# kirokit
+
+> [!NOTE]
+> This tool is and unoffical helper cli for managing and sharing kiro{cli|ide|web|crew} configurations such as agents, skills, steerings etc.
+
+The unoffical `kirokit` Go CLI plus repository layout that lets multiple teams own their own [Kiro CLI v3](https://kiro.dev) config sources as templates. Each t
+
+<p align="center"><a href="assets/kirokit-showcase.mp4"><img src="assets/kirokit-showcase.gif" width="800" alt="kirokit in 35 seconds: kirokit install platform-
+<p align="center"><sub>Sharper version: <a href="assets/kirokit-showcase.mp4">kirokit-showcase.mp4</a></sub></p>
+
+## Quickstart
+$ grep -n -A3 '### Showcase video' CONTRIBUTING.md
+97:### Showcase video
+98-
+99-The README's showcase (`assets/kirokit-showcase.gif`, with the sharper `assets/kirokit-showcase.mp4`) is recorded from the real CLI and desktop app. When the CLI output or the app's UI changes, record it again on a Mac:
+100-
+102:brew install tmux asciinema agg ffmpeg node
+103:task showcase   # scripts/showcase/record.sh; --keep leaves /tmp/kirokit-demo for inspection
+$ git show 87afcb0:README.md | grep -n 'kirokit-cli.png\|kirokit-desktop.png'  (screenshots before)
+43:<p align="center"><img src="assets/kirokit-cli.png" width="720" alt="The kiro
+59:<p align="center"><img src="assets/kirokit-desktop.png" width="720" alt="The 
+$ ls teams/platform-team/{skills,prompts} (skill vs prompt names)
+
+teams/platform-team/prompts:
+confluence-search.md.tmpl
+create-steering.md.tmpl
+jira-triage.md.tmpl
+
+teams/platform-team/skills:
+confluence-lookup
+jira-search

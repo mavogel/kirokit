@@ -1,0 +1,12 @@
+
+added 1 package in 282ms
+showcase: cli: recording the terminal
+showcase: cli: cli.gif ready
+showcase: app: starting the app in Wails dev mode
+showcase: app: recording the app
+showcase: app: app.webm ready
+caption: 7 images, CLI 20.11 s, app 11.35 s
+showcase: compose: composing showcase.mp4 and showcase.gif
+showcase: compose: showcase.mp4 and showcase.gif ready
+showcase: publish: wrote assets/kirokit-showcase.gif (2.5M) and assets/kirokit-showcase.mp4 (804K)
+showcase: kept /tmp/kirokit-demo

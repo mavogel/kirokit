@@ -1,0 +1,31 @@
+✔ privacy: a home path fails naming the file (22.994959ms)
+✔ privacy: the public clone address and brew tap pass although they hold the user name (25.161917ms)
+✔ privacy: the user name anywhere else fails (24.310958ms)
+✔ privacy: the git email fails, whatever its case (23.240292ms)
+✔ privacy: every file is checked, and the failing one is named (28.795583ms)
+✔ privacy: a missing file or no file at all fails instead of passing (30.043667ms)
+✔ size: the GIF may be exactly 8 MiB and the MP4 exactly 4 MiB, one byte more fails (29.839333ms)
+✔ length: 30 and 60 s pass, just outside fails naming the file (309.936042ms)
+✔ an unknown check prints the usage (5.584875ms)
+✔ caption: a missing recording exits naming the file (257.04475ms)
+✔ caption: a cast that never ends the session fails instead of guessing a length (255.66675ms)
+✔ caption: app marks without a step fail naming it (253.705292ms)
+✔ caption: a caption shorter than 2.5 s fails the run (252.850833ms)
+✔ caption: cue times follow the rendered CLI clip and the clone wait is cut (1124.149916ms)
+✔ caption: an asciicast v2 (absolute times) gives the same cues as v3 (2010.040584ms)
+✔ app-drive: no output folder prints the usage (253.829375ms)
+✔ app-drive: without a dev server it stops at the welcome step (720.209375ms)
+✔ cli-drive: no session prints the usage (4.647167ms)
+✔ cli-drive: a shell without kirokit times out naming the awaited text (32677.507709ms)
+✔ record.sh: an unknown flag prints the usage (9.772208ms)
+✔ record.sh: a missing tool fails preflight and leaves no work folder (84.049708ms)
+✔ record.sh: a missing age key fails preflight naming its path (79.086083ms)
+✔ record.sh: a busy dev-server port fails preflight (139.780791ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 38764.245625

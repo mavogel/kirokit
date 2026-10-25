@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 11 of 11 tasks · 3 of 3 slices
 
-Built: started 25 Oct, 11:07.
+Building now: started 25 Oct, 11:07, 1 h 11 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -28,12 +28,16 @@ Delivered 25 Oct, 11:37
 - One command makes the checked GIF and MP4 · slice 2 · 5 tasks
 - The README opens with the showcase and commits keep media intact · slice 3 · 3 tasks
 
-**Verified** · 2
+**Verified** · 3
 - Project checks passed · 7 of 7 · recorded
 - Security review · done · nothing severe in the change
+- Independent review of the Done means points · 5 of 8 proved
 
-**Left** · 2
-- Independent review · Review · not done
+**Left** · 5
+- Done means 1: A 30–60 second showcase autoplays at the top of the GitHub README · yours to confirm in Review
+- Done means 3: The app part shows the same job done with buttons · failed
+- Done means 4: A viewer can follow every step without sound · yours to confirm in Review
+- Independent review · failed
 - Fix rounds · Fix · not done
 <!-- /ql:delivered -->
 
@@ -51,6 +55,7 @@ Delivered 25 Oct, 11:37
 - Slice 2 · `record.sh` calls `checks.sh` as a command rather than sourcing it, so each check stays runnable on its own with the same messages; nothing you approved changes.
 - Slice 3 · T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase.
 - The Plan · Task showcase leaves the project check list: every run records new media into assets/, so QualityLayer records it as 'files changed while the check ran' and never as fresh proof. It stays proved by the T8 slice check and Scenarios 1-3.
+- The Plan · Verification round 1 was recorded while 7 files changed, 7 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -110,6 +115,7 @@ None recorded.
 - T8 (tactical): `record.sh` calls `checks.sh` as a command rather than sourcing it, so each check stays runnable on its own with the same messages; nothing you approved changes
 - T11 (amended): T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase
 - Plan (amended): task showcase leaves the project check list: every run records new media into assets/, so QualityLayer records it as 'files changed while the check ran' and never as fresh proof. It stays proved by the T8 slice check and Scenarios 1-3.
+- Plan (tactical): verification round 1 was recorded while 7 files changed, 7 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes
 
 ## Plan amended
 

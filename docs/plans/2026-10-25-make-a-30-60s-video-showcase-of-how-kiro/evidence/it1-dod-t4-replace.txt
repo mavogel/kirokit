@@ -1,0 +1,14 @@
+$ KIRO_HOME=<home>/.kiro kirokit install data-team   (another team installed first)
+installed data-team into <tmp>/home/.kiro
+wails dev pid/pgid 32343
+dev server up
+$ node scripts/showcase/app-drive.mjs <out>
+app-drive exit 0 after 13 s
+{"welcome":1.09,"clone":3.48,"teams":5.8,"install":7.31,"setup":7.44,"installing":9.27,"installed":9.36,"end":11.86}
+dock/page text mentioning replace, uninstall or installed:
+uninstalled data-team from <tmp>/home/.kiro
+installed platform-team into <tmp>/home/.kiro
+install records after the run:
+platform-team.json
+frames from 7.31 s - 0.1 s, 0.1 s apart: it1-dod-t4-replace-frames.png
+cleaned ok
