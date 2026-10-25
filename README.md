@@ -3,7 +3,7 @@
 # kirokit
 
 > [!NOTE]
-> This tool is and unoffical helper cli for managing and sharing kiro{cli|ide|web|crew} configurations such as agents, skills, steerings etc.
+> This tool is an unofficial helper CLI for managing and sharing kiro{cli|ide|web|crew} configurations such as agents, skills, steerings etc.
 
 The unoffical `kirokit` Go CLI plus repository layout that lets multiple teams own their own [Kiro CLI v3](https://kiro.dev) config sources as templates. Each team's agents, hooks, prompts, skills, and steering docs are rendered deterministically into Kiro's real config layout, MCP server versions are pinned centrally, secrets are injected via [SOPS](https://github.com/getsops/sops) at MCP-launch time (never baked into any committed or rendered file), and the rendering pipeline is locked down with golden-file tests that run in CI.
 
