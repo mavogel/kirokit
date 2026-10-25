@@ -6,6 +6,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -64,6 +65,9 @@ func TestKnowledgeBaseRenderedIntoAgentJSONMatchesGolden(t *testing.T) {
 
 	goldenPath := filepath.Join("..", "..", "testdata", "golden", "platform-team", "installed-with-kb", "agents", "devops.json")
 	if *updateKnowledgeBaseGolden {
+		if runtime.GOOS == "windows" {
+			t.Skip("regenerate this golden on macOS or Linux: it holds their launch form")
+		}
 		if err := os.MkdirAll(filepath.Dir(goldenPath), 0o755); err != nil {
 			t.Fatalf("mkdir: %v", err)
 		}
@@ -77,7 +81,13 @@ func TestKnowledgeBaseRenderedIntoAgentJSONMatchesGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read golden %s: %v\nrun: go test ./internal/golden -run KnowledgeBaseRenderedIntoAgentJSON -update-kb-golden", goldenPath, err)
 	}
-	if got != string(want) {
-		t.Errorf("installed devops.json with a knowledge base differs from %s\n--- got ---\n%s\n--- want ---\n%s\nIf the change is intended, regenerate with -update-kb-golden and review the diff.", goldenPath, got, want)
+	expected := string(want)
+	if runtime.GOOS == "windows" {
+		// The golden holds the macOS/Linux launch; a Windows install writes the
+		// same tokens unquoted, the form sops passes to cmd.exe.
+		expected = strings.ReplaceAll(expected, "'Authorization:${ATLASSIAN_AUTH}'", "Authorization:${ATLASSIAN_AUTH}")
+	}
+	if got != expected {
+		t.Errorf("installed devops.json with a knowledge base differs from %s\n--- got ---\n%s\n--- want ---\n%s\nIf the change is intended, regenerate with -update-kb-golden and review the diff.", goldenPath, got, expected)
 	}
 }

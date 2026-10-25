@@ -65,15 +65,16 @@ macOS:   unchanged (tar.gz, DMGs, both casks)
 ## Built, slice by slice
 
 <!-- ql:slices -->
-7 slices · 24 tasks · 20 commits · 88 files · +3503 −344
+7 slices · 24 tasks · 22 commits · 89 files · +3516 −351
 
-**Slice 1 · Windows MCP servers get their SOPS secrets** · T1, T2, T3, T4, T5 · 17 files · +697 −41
+**Slice 1 · Windows MCP servers get their SOPS secrets** · T1, T2, T3, T4, T5 · 18 files · +701 −44
 
 - `.gitleaks.toml` · T5 · new · +9 −0
 - `cmd/kirokit/commands/install_sops_test.go` · T5 · new · +181 −0
+- `internal/golden/knowledgebase_test.go` · T4, T6, T15, T17, T18, T24 · +2 −1
 - `internal/golden/windows_launch_test.go` · T3 · new · +33 −0
 - `internal/install/install.go` · T4, T8 · +24 −6
-- `internal/install/install_test.go` · T4, T6 · +104 −16
+- `internal/install/install_test.go` · T4, T6 · +106 −18
 - `internal/render/context.go` · T2 · +4 −0
 - `internal/render/funcs.go` · T2 · +15 −9
 - `internal/render/render.go` · T2 · +32 −2
@@ -87,14 +88,14 @@ macOS:   unchanged (tar.gz, DMGs, both casks)
 - `testdata/sops/age-test-key.txt` · T5 · new · +6 −0
 - `testdata/sops/secrets.enc.yaml` · T5 · new · +16 −0
 
-**Slice 2 · The CLI works on a Windows checkout, and CI tests it on three systems** · T6, T7, T8, T9, T10 · 25 files · +732 −49
+**Slice 2 · The CLI works on a Windows checkout, and CI tests it on three systems** · T6, T7, T8, T9, T10 · 25 files · +736 −52
 
 - `.gitattributes` · T6 · new · +19 −0
 - `.github/workflows/ci.yaml` · T10 · +50 −2
 - `cmd/kirokit/commands/root.go` · T9 · +3 −0
 - `cmd/kirokit/commands/setup.go` · T9 · +4 −3
 - `cmd/kirokit/commands/setup_test.go` · T9 · +17 −0
-- `cmd/kirokit/commands/skills_test.go` · T6 · +3 −2
+- `cmd/kirokit/commands/skills_test.go` · T6 · +5 −4
 - `cmd/kirokit/commands/sync_test.go` · T6 · +1 −1
 - `cmd/kirokit/commands/version_test.go` · T9 · +18 −0
 - `internal/backup/backup.go` · T8 · +18 −5
@@ -110,8 +111,8 @@ macOS:   unchanged (tar.gz, DMGs, both casks)
 - `internal/externalskills/lock.go` · T7 · +20 −1
 - `internal/externalskills/lock_test.go` · T6, T7 · +56 −6
 - `internal/externalskills/verify.go` · T7 · +17 −1
-- `internal/render/externalskills_test.go` · T6 · +2 −1
-- `internal/testutil/testutil.go` · T6 · new · +33 −0
+- `internal/render/externalskills_test.go` · T6 · +3 −2
+- `internal/testutil/testutil.go` · T6 · new · +34 −0
 - `scripts/linux-docker.Dockerfile` · T10 · new · +29 −0
 - `scripts/linux-docker.sh` · T10 · new · +35 −0
 
@@ -127,7 +128,7 @@ macOS:   unchanged (tar.gz, DMGs, both casks)
 - `desktop/terminal/terminal_windows.go` · T11 · new · +236 −0
 - `desktop/terminal/terminal_windows_test.go` · T11 · new · +154 −0
 
-**Slice 4 · The app finds its folders, tools, CLI and shell on each OS** · T13, T14, T15, T16, T17, T18 · 17 files · +748 −92
+**Slice 4 · The app finds its folders, tools, CLI and shell on each OS** · T13, T14, T15, T16, T17, T18 · 17 files · +753 −93
 
 - `desktop/app.go` · T13, T15 · +13 −5
 - `desktop/clone_test.go` · T18 · +8 −4
@@ -141,10 +142,10 @@ macOS:   unchanged (tar.gz, DMGs, both casks)
 - `desktop/prereq.go` · T13 · +4 −15
 - `desktop/prereq_test.go` · T13, T18 · +14 −6
 - `desktop/runner_test.go` · T18 · +13 −10
-- `desktop/settings.go` · T17 · +18 −5
-- `desktop/settings_test.go` · T17, T18 · +25 −0
+- `desktop/settings.go` · T17 · +19 −5
+- `desktop/settings_test.go` · T17, T18 · +27 −1
 - `desktop/shell.go` · T14, T15 · +25 −26
-- `desktop/shell_test.go` · T15, T18 · +128 −13
+- `desktop/shell_test.go` · T15, T18 · +130 −13
 - `desktop/testtools_test.go` · T18 · new · +54 −0
 
 **Slice 5 · The app builds, packages and starts on Linux and Windows** · T19, T20, T21 · 14 files · +391 −32
@@ -325,5 +326,5 @@ The author accepted this build as it stood, without another judge run. What was 
 ## Ship
 
 <!-- ql:ship -->
-Not shipped yet. Branch `feat/feat-make-desktop-cli-also`.
+Opened as pull request #21. Branch `feat/feat-make-desktop-cli-also`.
 <!-- /ql:ship -->
