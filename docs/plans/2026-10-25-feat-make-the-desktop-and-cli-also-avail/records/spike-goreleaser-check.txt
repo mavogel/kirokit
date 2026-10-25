@@ -1,0 +1,100 @@
+# Spike: draft multi-OS .goreleaser.yaml (partial by goos, windows zip, nfpms, scoops, extra_files), scratch copy, 2026-10-25T17:48:35Z
+$ goreleaser check
+  • by using this software you agree with its EULA, available at https://goreleaser.com/eula
+  • running goreleaser v2.19.0
+  • checking                                  path=.goreleaser.yaml
+  • 1 configuration file(s) validated
+  • thanks for using GoReleaser Pro!
+exit 0
+
+$ git diff --no-index (draft vs. repo)
+diff --git 1/Users/mavogel/Developer/projects/kirokit/.goreleaser.yaml 2/.goreleaser.yaml
+index 3409910..dfce14c 100644
+--- 1/Users/mavogel/Developer/projects/kirokit/.goreleaser.yaml
++++ 2/.goreleaser.yaml
+@@ -1,5 +1,8 @@
+ version: 2
+
++partial:
++  by: goos
++
+ project_name: kirokit
+
+ before:
+@@ -15,6 +18,7 @@ builds:
+     goos:
+       - darwin
+       - linux
++      - windows
+     goarch:
+       - amd64
+       - arm64
+@@ -38,6 +42,14 @@ builds:
+     prebuilt:
+       path: desktop/build/bin/prebuilt/kirokit_{{ .Os }}_{{ .Arch }}/kirokit
+
++  - id: kirokit-desktop-linux
++    builder: prebuilt
++    binary: kirokit-desktop
++    goos: [linux]
++    goarch: [amd64, arm64]
++    prebuilt:
++      path: desktop/build/bin/prebuilt/kirokit-desktop_{{ .Os }}_{{ .Arch }}/kirokit-desktop
++
+ # Wraps the universal binary in kirokit.app. The Wails Info.plist, icon and the
+ # bundled CLI come from the built app, so the bundle matches `task desktop:build`.
+ app_bundles:
+@@ -69,6 +81,47 @@ archives:
+     formats:
+       - tar.gz
+     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
++    format_overrides:
++      - goos: windows
++        formats: [zip]
++
++nfpms:
++  - id: kirokit
++    ids: [kirokit]
++    package_name: kirokit
++    formats: [deb, rpm]
++    maintainer: mavogel
++    description: Render, test, and install multi-team Kiro CLI v3 configs
++    license: Apache-2.0
++  - id: kirokit-desktop
++    ids: [kirokit-desktop-linux]
++    package_name: kirokit-desktop
++    file_name_template: "kirokit-desktop_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
++    formats: [deb, rpm]
++    maintainer: mavogel
++    description: Desktop app to install and sync Kiro CLI team configs
++    license: Apache-2.0
++    contents:
++      - src: desktop/build/bin/prebuilt/kirokit_linux_{{ .Arch }}/kirokit
++        dst: /usr/lib/kirokit-desktop/kirokit
++      - src: desktop/build/linux/kirokit-desktop.desktop
++        dst: /usr/share/applications/kirokit-desktop.desktop
++    overrides:
++      deb:
++        dependencies: [libgtk-3-0, libwebkit2gtk-4.1-0]
++      rpm:
++        dependencies: [gtk3, webkit2gtk4.1]
++
++scoops:
++  - name: kirokit
++    ids: [default]
++    repository:
++      owner: mavogel
++      name: scoop-bucket
++      token: "{{ .Env.SCOOP_BUCKET_GITHUB_TOKEN }}"
++    homepage: https://github.com/mavogel/kirokit
++    description: Render, test, and install multi-team Kiro CLI v3 configs
++    license: Apache-2.0
+
+ checksum:
+   name_template: "checksums.txt"
+@@ -133,3 +186,5 @@ release:
+     owner: mavogel
+     name: kirokit
+   mode: append
++  extra_files:
++    - glob: ./desktop/build/bin/installers/*-setup.exe

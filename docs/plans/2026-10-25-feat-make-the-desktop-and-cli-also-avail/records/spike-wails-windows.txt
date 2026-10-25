@@ -1,0 +1,53 @@
+# Spike: Wails v2.17 Windows cross-build from macOS, scratch copy, 2026-10-25T17:48:33Z
+$ go tool wails build -platform windows/arm64 -s -o kirokit-desktop.exe
+Wails CLI v2.17.0
+
+
+# Build Options
+
+Platform(s)        | windows/arm64
+Compiler           | /opt/homebrew/Cellar/go/1.27.3/libexec/bin/go
+Skip Bindings      | false
+Build Mode         | production
+Devtools           | false
+Frontend Directory | /private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/48a65fab-8906-4c47-b932-b96c4f3edc8a/scratchpad/spike/repo/desktop/frontend
+Obfuscated         | false
+Install Scope      | machine
+Skip Frontend      | true
+Compress           | false
+Package            | true
+Clean Bin Dir      | false
+LDFlags            |
+Tags               | []
+Race Detector      | false
+Output File        | kirokit-desktop.exe
+
+
+# Building target: windows/arm64
+
+  • Generating bindings: 2026/10/25 18:48:35 KnownStructs: install.Record	main.Agent	main.AppState	main.Catalog	main.Check	main.EnvStatus	main.Settings	main.Skill	main.Team
+Not found: time.Time
+
+Done.
+  • Generating application assets: Done.
+  • Compiling application: Done.
+ INFO  Wails is now using the new Go WebView2Loader. If you encounter any issues with it, please report them to https://github.com/wailsapp/wails/issues/2004. You could also use the old legacy loader with `-tags native_webview2loader`, but keep in mind this will be deprecated in the near future.
+Built '/private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/48a65fab-8906-4c47-b932-b96c4f3edc8a/scratchpad/spike/repo/desktop/build/bin/kirokit-desktop.exe' in 1.623s.
+
+exit
+$ find build -type f (generated assets)
+build/appicon.png
+build/darwin/Info.dev.plist
+build/darwin/Info.plist
+build/windows/icon.ico
+build/windows/info.json
+build/windows/installer/project.nsi
+build/windows/installer/tmp/MicrosoftEdgeWebview2Setup.exe
+build/windows/installer/wails_tools.nsh
+build/windows/wails.exe.manifest
+$ grep wails.files build/windows/installer/project.nsi
+74:OutFile "..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" # Name of the installer's file.
+77:    InstallDir "$LOCALAPPDATA\Programs\${INFO_PRODUCTNAME}"
+79:    InstallDir "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}"
+82:  InstallDir "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}"
+97:    !insertmacro wails.files

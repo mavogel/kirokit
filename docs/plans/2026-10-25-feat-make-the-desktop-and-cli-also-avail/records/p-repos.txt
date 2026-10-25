@@ -1,0 +1,5 @@
+# Probe 2026-10-25T17:53:01Z
+$ gh repo view mavogel/kirokit --json visibility
+{"visibility":"PUBLIC"}
+$ gh repo view mavogel/scoop-bucket --json name,visibility,defaultBranchRef
+{"defaultBranchRef":{"name":"main"},"name":"scoop-bucket","visibility":"PUBLIC"}

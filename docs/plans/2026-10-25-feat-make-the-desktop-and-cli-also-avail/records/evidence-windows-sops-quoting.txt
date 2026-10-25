@@ -1,0 +1,68 @@
+# Evidence: how a sops exec-env command string reaches the MCP server on Windows (2026-10-25T17:53:43Z)
+
+## sops main: cmd/sops/subcommand/exec/exec_windows.go
+13:func BuildCommand(command string) *exec.Cmd {
+14-	return exec.Command("cmd.exe", "/C", command)
+15-}
+16-
+
+## Go go1.27.3: $GOROOT/src/syscall/exec_windows.go (os/exec builds the Windows command line with this; no cmd.exe special case)
+48:func appendEscapeArg(b []byte, s string) []byte {
+49-	if len(s) == 0 {
+50-		return append(b, `""`...)
+51-	}
+52-
+53-	needsBackslash := false
+54-	hasSpace := false
+55-	for i := 0; i < len(s); i++ {
+56-		switch s[i] {
+57-		case '"', '\\':
+58-			needsBackslash = true
+59-		case ' ', '\t':
+60-			hasSpace = true
+61-		}
+62-	}
+63-
+64-	if !needsBackslash && !hasSpace {
+65-		// No special handling required; normal case.
+66-		return append(b, s...)
+67-	}
+68-	if !needsBackslash {
+69-		// hasSpace is true, so we need to quote the string.
+70-		b = append(b, '"')
+71-		b = append(b, s...)
+72-		return append(b, '"')
+73-	}
+74-
+75-	if hasSpace {
+76-		b = append(b, '"')
+77-	}
+78-	slashes := 0
+79-	for i := 0; i < len(s); i++ {
+80-		c := s[i]
+81-		switch c {
+82-		default:
+83-			slashes = 0
+84-		case '\\':
+85-			slashes++
+86-		case '"':
+87-			for ; slashes > 0; slashes-- {
+88-				b = append(b, '\\')
+
+## geelen/mcp-remote README: documented no-space header form
+**Note:** Cursor, Codex-Cli and Claude Desktop (Windows) have a bug where spaces inside `args` aren't escaped when it invokes `npx`, which ends up mangling these values. You can work around it using:
+
+```jsonc
+{
+  // rest of config...
+  "args": [
+    "mcp-remote",
+    "https://remote.mcp.server/sse",
+    "--header",
+    "Authorization:${AUTH_HEADER}" // note no spaces around ':'
+  ],
+  "env": {
+    "AUTH_HEADER": "Bearer <auth-token>" // spaces OK in env vars
+  }
+},
+```
