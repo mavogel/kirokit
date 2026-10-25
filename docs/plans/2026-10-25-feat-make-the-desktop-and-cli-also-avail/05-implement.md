@@ -3,9 +3,9 @@
 ## Summary
 
 <!-- ql:summary -->
-10 of 24 tasks · 2 of 7 slices
+13 of 24 tasks · 3 of 7 slices
 
-Building now: started 25 Oct, 19:12, 31 min so far.
+Building now: started 25 Oct, 19:12, 44 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -15,8 +15,8 @@ Building now: started 25 Oct, 19:12, 31 min so far.
 |---|---|---|---|
 | 1 | Windows MCP servers get their SOPS secrets | After this slice, `kirokit install` on Windows writes a `sops exec-env` launch that `cmd.exe` runs unchanged, and refuses an argument it cannot pass. | done |
 | 2 | The CLI works on a Windows checkout, and CI tests it on three systems | After this slice, a Windows checkout keeps goldens, lock hashes and SOPS files byte-exact, the CLI's own tests run there, and CI runs build, vet and tests on Ubuntu, Windows and macOS. | done |
-| 3 | The desktop terminal runs on Windows | After this slice, the desktop module compiles for Windows: both tabs run on a ConPTY pseudo console there, and env capture and child processes use Windows process handling. | next |
-| 4 | The app finds its folders, tools, CLI and shell on each OS | After this slice, the app on Linux and Windows keeps its data where each OS expects, finds sops, kiro-cli and its bundled CLI, opens the right shell named after itself, and shows OS-correct setup hints. | after 3 |
+| 3 | The desktop terminal runs on Windows | After this slice, the desktop module compiles for Windows: both tabs run on a ConPTY pseudo console there, and env capture and child processes use Windows process handling. | done |
+| 4 | The app finds its folders, tools, CLI and shell on each OS | After this slice, the app on Linux and Windows keeps its data where each OS expects, finds sops, kiro-cli and its bundled CLI, opens the right shell named after itself, and shows OS-correct setup hints. | task 2 of 6 |
 | 5 | The app builds, packages and starts on Linux and Windows | After this slice, `task desktop:build` builds the app on each OS (Linux with WebKitGTK 4.1, Windows with an NSIS setup carrying `bin\kirokit.exe`), the app has a smoke start, and the Desktop workflow proves the build starts on all three runners. | after 4 |
 | 6 | One release ships every OS from three runners | After this slice, GoReleaser builds Windows CLI zips, Linux `.deb` and `.rpm` for the CLI and the app, a Scoop manifest and the Windows setup files, and the release workflow builds on macOS, Linux and Windows runners and pushes the tag only after all of them succeed. | after 5 |
 | 7 | The docs tell every OS how to install and what to expect | After this slice, README and CONTRIBUTING describe installing and running kirokit and its app on macOS, Linux and Windows, including prerequisites and the unsigned-app warnings. | after 6 |
@@ -57,6 +57,12 @@ Written when the last task is ticked.
 - T10 · f73c655 · `actionlint && scripts/linux-docker.sh env KIROKIT_REQUIRE_SOPS=1 go test ./...` · exit 0 · 2.9s
 - T11 · 3718d63 · `cd desktop && go test ./terminal/ && GOOS=windows GOARCH=amd64 go vet ./terminal/ && GOOS=windows GOARCH=arm64 go vet ./terminal/` · exit 0 · 3.5s
 - T12 · 3718d63 · `cd desktop && go test ./... && GOOS=windows GOARCH=amd64 go build ./... && GOOS=windows GOARCH=arm64 go build ./... && GOOS=linux go vet ./...` · exit 0 · 4.1s
+- T13 · b9daa54 · `cd desktop && go test -run 'Platform|Prereq|DataDir' ./...` · exit 0 · 0.6s
+- T14 · b9daa54 · `cd desktop && go test -run 'Capture|Lookup|ToolFolders|DefaultShell|TerminalEnv' ./...` · exit 0 · 1s
+- T15 · b9daa54 · `cd desktop && go test -run 'BundledCLI|ResolveCLI|Shell|State' ./...` · exit 0 · 0.8s
+- T16 · b9daa54 · `cd desktop/frontend && node --test "src/**/*.test.js"` · exit 0 · 0.4s
+- T17 · b9daa54 · `cd desktop && go test -run Settings ./...` · exit 0 · 0.6s
+- T18 · b9daa54 · `task desktop:test && scripts/linux-docker.sh task desktop:test && cd desktop && GOOS=windows go vet ./...` · exit 0 · 14.4s
 
 ## Known limits
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	goruntime "runtime"
 	"strings"
 	"sync"
 
@@ -40,6 +41,8 @@ type EnvStatus struct {
 	Ready bool `json:"ready"`
 	// Note explains a fallback, such as a login shell that was too slow.
 	Note string `json:"note"`
+	// Shell names the shell tab's shell: zsh, bash, PowerShell.
+	Shell string `json:"shell"`
 }
 
 // AppState is what the shell renders at start and after a change.
@@ -49,10 +52,11 @@ type AppState struct {
 	Env      EnvStatus `json:"env"`
 }
 
-// NewApp returns an App that keeps its clone and settings in
-// ~/Library/Application Support/kirokit-desktop.
+// NewApp returns an App that keeps its clone and settings in kirokit-desktop
+// in the user's config folder: ~/Library/Application Support on macOS,
+// ~/.config on Linux, %AppData% on Windows.
 func NewApp() *App {
-	return NewAppAt(filepath.Join(homeDir(), "Library", "Application Support", "kirokit-desktop"))
+	return NewAppAt(dataDirFor(userConfigDir()))
 }
 
 // NewAppAt returns an App whose data folder is dir.
@@ -114,11 +118,15 @@ func (a *App) State() AppState {
 	a.mu.Lock()
 	env, ready := a.env, a.envReady
 	a.mu.Unlock()
-	note := strings.TrimSpace(env.Note + " " + shellNote(a.shellPath()))
+	shell := a.shellPath()
+	note := strings.TrimSpace(env.Note + " " + shellNote(shell))
 	return AppState{
 		Settings: a.loadSettings(),
 		Cloned:   err == nil,
-		Env:      EnvStatus{DefaultKiroHome: defaultKiroHome(env, ready), DefaultRepoDir: a.defaultRepoDir(), Ready: ready, Note: note},
+		Env: EnvStatus{
+			DefaultKiroHome: defaultKiroHome(env, ready), DefaultRepoDir: a.defaultRepoDir(), Ready: ready, Note: note,
+			Shell: shellNameFor(goruntime.GOOS, shell),
+		},
 	}
 }
 

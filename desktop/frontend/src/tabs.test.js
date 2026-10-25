@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createDock, MIN_HEIGHT, MAX_HEIGHT, TABS } from './tabs.js';
+import { createDock, MIN_HEIGHT, MAX_HEIGHT, TABS, shellLabel } from './tabs.js';
+
+test('the shell tab is named after the shell the app reports, zsh until it does', () => {
+  assert.equal(shellLabel({ env: { shell: 'PowerShell' } }), 'PowerShell');
+  assert.equal(shellLabel({ env: { shell: 'bash' } }), 'bash');
+  assert.equal(shellLabel({ env: { shell: '' } }), 'zsh');
+  assert.equal(shellLabel({ env: {} }), 'zsh');
+  assert.equal(shellLabel(undefined), 'zsh');
+});
 
 test('the dock starts closed on the kirokit tab', () => {
   const dock = createDock();

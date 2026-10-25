@@ -76,6 +76,31 @@ func TestSaveSettings_RepoURL(t *testing.T) {
 	}
 }
 
+func TestSettings_WindowsDrivePaths(t *testing.T) {
+	for _, ok := range []string{`C:\repos\team`, `C:/repos/team`, `d:\x`} {
+		if !repoURLPattern.MatchString(ok) {
+			t.Errorf("address %q refused, want accepted", ok)
+		}
+	}
+	for _, bad := range []string{`C:`, `C:repo`, `-C:\x`, `C:\a b`, `CD:\x`} {
+		if repoURLPattern.MatchString(bad) {
+			t.Errorf("address %q accepted, want refused", bad)
+		}
+	}
+	for _, tc := range []struct {
+		goos, path string
+		want       bool
+	}{
+		{"windows", `C:\`, true}, {"windows", `C:/`, true}, {"windows", `D:\`, true}, {"windows", `C:\\`, true},
+		{"windows", `C:\Users\alex\.kiro`, false}, {"windows", `\`, true},
+		{"linux", "/", true}, {"darwin", "/", true}, {"linux", "/home/alex", false},
+	} {
+		if got := isRootFolderFor(tc.goos, tc.path); got != tc.want {
+			t.Errorf("isRootFolderFor(%q, %q) = %v, want %v", tc.goos, tc.path, got, tc.want)
+		}
+	}
+}
+
 // Both fields are reported together so the page can mark each one.
 func TestSaveSettings_ReportsBothFields(t *testing.T) {
 	app, _, _ := newTestApp(t)

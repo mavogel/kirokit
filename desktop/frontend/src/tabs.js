@@ -3,6 +3,10 @@
 // renders it. Each tab keeps its own xterm.js, so switching loses no output.
 
 export const TABS = ['kirokit', 'shell'];
+
+// shellLabel names the shell tab after the shell the app runs there (zsh,
+// bash, PowerShell), as State() reports it; zsh until the state arrives.
+export const shellLabel = (state) => state?.env?.shell || 'zsh';
 export const MIN_HEIGHT = 120;
 export const MAX_HEIGHT = 480;
 const DEFAULT_HEIGHT = 220;

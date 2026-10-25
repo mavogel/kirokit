@@ -80,10 +80,11 @@ func (l *eventLog) waitExit(t *testing.T) termExit {
 	return l.exits[len(l.exits)-1]
 }
 
-func runnerApp(t *testing.T, script string) (*App, *eventLog, string) {
+// runnerApp's bundled kirokit runs script: sh off Windows, cmd on Windows.
+func runnerApp(t *testing.T, script, cmd string) (*App, *eventLog, string) {
 	t.Helper()
 	a, _, home, _ := shellApp(t, "/bin/sh")
-	cli := writeScript(t, t.TempDir(), "kirokit", script)
+	cli := writeTool(t, t.TempDir(), "kirokit", script, cmd)
 	t.Setenv("KIROKIT_DESKTOP_CLI", cli)
 	if err := a.SaveSettings(Settings{KiroHome: filepath.Join(home, "kh")}); err != nil {
 		t.Fatal(err)
@@ -94,7 +95,8 @@ func runnerApp(t *testing.T, script string) (*App, *eventLog, string) {
 }
 
 func TestRunner_HeaderThenOutputThenExit(t *testing.T) {
-	a, log, kiroHome := runnerApp(t, `echo "args=$*"; echo "repo=$KIROKIT_REPO home=$KIRO_HOME"; exit 4`)
+	a, log, kiroHome := runnerApp(t, `echo "args=$*"; echo "repo=$KIROKIT_REPO home=$KIRO_HOME"; exit 4`,
+		"echo args=%*\necho repo=%KIROKIT_REPO% home=%KIRO_HOME%\nexit /b 4")
 
 	id, err := a.Run([]string{"install", "data-team"})
 	if err != nil {
@@ -120,7 +122,7 @@ func TestRunner_HeaderThenOutputThenExit(t *testing.T) {
 }
 
 func TestRunner_RefusesASecondCommandWhileOneRuns(t *testing.T) {
-	a, log, _ := runnerApp(t, `echo ready; read line; echo "got $line"`)
+	a, log, _ := runnerApp(t, `echo ready; read line; echo "got $line"`, "echo ready\nset /p line=\necho got %line%")
 
 	id, err := a.Run([]string{"sync"})
 	if err != nil {
@@ -142,7 +144,7 @@ func TestRunner_RefusesASecondCommandWhileOneRuns(t *testing.T) {
 }
 
 func TestRunner_WriteForAnotherRunIsIgnored(t *testing.T) {
-	a, log, _ := runnerApp(t, `echo ready; read line; echo "got [$line]"`)
+	a, log, _ := runnerApp(t, `echo ready; read line; echo "got [$line]"`, "echo ready\nset /p line=\necho got [%line%]")
 
 	id, err := a.Run(nil)
 	if err != nil {
@@ -156,7 +158,7 @@ func TestRunner_WriteForAnotherRunIsIgnored(t *testing.T) {
 }
 
 func TestRunner_MissingCLINamesTheOverride(t *testing.T) {
-	a, _, _ := runnerApp(t, "")
+	a, _, _ := runnerApp(t, "", "")
 	t.Setenv("KIROKIT_DESKTOP_CLI", "")
 	t.Chdir(t.TempDir())
 
@@ -167,8 +169,8 @@ func TestRunner_MissingCLINamesTheOverride(t *testing.T) {
 }
 
 func TestRunner_AnyProgramShowsItsOwnName(t *testing.T) {
-	a, log, _ := runnerApp(t, "")
-	prog := writeScript(t, t.TempDir(), "git", `echo from-git`)
+	a, log, _ := runnerApp(t, "", "")
+	prog := writeTool(t, t.TempDir(), "git", `echo from-git`, `echo from-git`)
 
 	if _, err := a.runProgram("git", prog, []string{"clone", "x"}); err != nil {
 		t.Fatal(err)
@@ -182,7 +184,8 @@ func TestRunner_AnyProgramShowsItsOwnName(t *testing.T) {
 // A sync can bring a new team or pin, so the cached catalog is rendered again
 // when it ends; any other command leaves the cache alone.
 func TestRunner_SyncEndRendersTheCatalogAgain(t *testing.T) {
-	a, log, _ := runnerApp(t, `d="$KIROKIT_REPO/teams/new-$1"; mkdir -p "$d"; printf 'team: new-%s\nglobalSteerings: []\n' "$1" > "$d/manifest.yaml"`)
+	a, log, _ := runnerApp(t, `d="$KIROKIT_REPO/teams/new-$1"; mkdir -p "$d"; printf 'team: new-%s\nglobalSteerings: []\n' "$1" > "$d/manifest.yaml"`,
+		"mkdir \"%KIROKIT_REPO%\\teams\\new-%1\"\n(echo team: new-%1& echo globalSteerings: [])> \"%KIROKIT_REPO%\\teams\\new-%1\\manifest.yaml\"")
 	repo := a.repoDir()
 	write(t, filepath.Join(repo, "teams", "t1", "manifest.yaml"), "team: t1\nglobalSteerings: []\n")
 	write(t, filepath.Join(repo, "env", "mcp-versions.yaml"), "x-mcp: \"1\"\n")
@@ -217,7 +220,7 @@ func TestRunner_SyncEndRendersTheCatalogAgain(t *testing.T) {
 func TestRunner_EndChecksTheInstallRecords(t *testing.T) {
 	fixture := t.TempDir()
 	installFixture(t, fixture)
-	a, log, _ := runnerApp(t, `cp -R "`+fixture+`/." "$KIRO_HOME"`)
+	a, log, _ := runnerApp(t, `cp -R "`+fixture+`/." "$KIRO_HOME"`, `xcopy /E /I /Y /Q "`+fixture+`" "%KIRO_HOME%"`)
 	a.poller = newInstallPoller(a.kiroHome, a.emit, time.Hour)
 	t.Cleanup(a.poller.Stop)
 

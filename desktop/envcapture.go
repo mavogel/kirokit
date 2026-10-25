@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -28,49 +29,20 @@ type EnvCapture struct {
 // Getenv returns a captured variable, empty when unset.
 func (e EnvCapture) Getenv(name string) string { return e.Vars[name] }
 
-// Lookup resolves an executable on the captured PATH.
+// Lookup resolves an executable on the captured PATH (with PATHEXT on Windows).
 func (e EnvCapture) Lookup(name string) (string, bool) {
-	for _, dir := range filepath.SplitList(e.Getenv("PATH")) {
-		if dir == "" {
-			continue
-		}
-		p := filepath.Join(dir, name)
-		if info, err := os.Stat(p); err == nil && !info.IsDir() && info.Mode().Perm()&0o111 != 0 {
-			return p, true
-		}
-	}
-	return "", false
-}
-
-// toolFolders are where Homebrew and per-user installs put sops and kiro-cli.
-func toolFolders(home string) []string {
-	return []string{"/opt/homebrew/bin", "/opt/homebrew/sbin", "/usr/local/bin", filepath.Join(home, ".local", "bin")}
-}
-
-// withToolFolders appends the tool folders missing from path, so a login shell
-// without startup files still finds Homebrew's tools.
-func withToolFolders(path, home string) string {
-	have := map[string]bool{}
-	var parts []string
-	for _, p := range filepath.SplitList(path) {
-		if p != "" {
-			have[p] = true
-			parts = append(parts, p)
-		}
-	}
-	for _, dir := range toolFolders(home) {
-		if !have[dir] {
-			parts = append(parts, dir)
-		}
-	}
-	return strings.Join(parts, ":")
+	return lookupFor(runtime.GOOS, filepath.SplitList(e.Getenv("PATH")), e.Getenv("PATHEXT"), name)
 }
 
 // Capture runs shell as a login shell, reads the environment it prints after
 // captureMarker and returns it. When the shell fails or takes longer than
 // timeout, it returns the app's own environment with a fallback PATH and a
-// Note saying so.
+// Note saying so. On Windows there is no login shell: the app's own
+// environment is the user's, so it is used directly.
 func Capture(shell string, timeout time.Duration) EnvCapture {
+	if runtime.GOOS == "windows" {
+		return EnvCapture{Vars: environmentFor(runtime.GOOS, os.Environ(), homeDir())}
+	}
 	vars, note := runLoginShell(shell, timeout)
 	if vars == nil {
 		vars = map[string]string{}
@@ -85,13 +57,19 @@ func Capture(shell string, timeout time.Duration) EnvCapture {
 	if home == "" {
 		home = homeDir()
 	}
-	vars["PATH"] = withToolFolders(vars["PATH"], home)
+	vars["PATH"] = withToolFoldersFor(runtime.GOOS, vars["PATH"], home)
 	return EnvCapture{Vars: vars, Note: note}
+}
+
+// fileExists reports a path that exists and is not a folder.
+func fileExists(p string) bool {
+	info, err := os.Stat(p)
+	return err == nil && !info.IsDir()
 }
 
 func runLoginShell(shell string, timeout time.Duration) (map[string]string, string) {
 	if shell == "" {
-		shell = "/bin/zsh"
+		shell = defaultShellFor(runtime.GOOS, "", fileExists)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()

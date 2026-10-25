@@ -14,11 +14,30 @@ start), then the split release and the docs. The risky parts are the ConPTY term
 ## How the build runs
 
 <!-- ql:waves -->
+- Wave 1 · Slice 1 (Windows MCP servers get their SOPS secrets) · first
+- Wave 2 · Slice 2 (The CLI works on a Windows checkout, and CI tests it on three systems) · on its own
+- Wave 3 · Slice 3 (The desktop terminal runs on Windows) · on its own
+- Wave 4 · Slice 4 (The app finds its folders, tools, CLI and shell on each OS) · on its own
+- Wave 5 · Slice 5 (The app builds, packages and starts on Linux and Windows) · on its own
+- Wave 6 · Slice 6 (One release ships every OS from three runners) · on its own
+- Wave 7 · Slice 7 (The docs tell every OS how to install and what to expect) · on its own
+
+7 waves · longest path 24 of 24 tasks
+
+A fresh agent runs the scenarios after slice 3 (the Windows pseudo console (ConPTY, through `golang.org/x/sys/windows`) runs only on the Windows runner.) and slice 6 (the split and merge publishing order runs for real only on `main`.) before the build goes on.
 <!-- /ql:waves -->
 
 ## How each point is proved
 
 <!-- ql:proof-map -->
+- Done means 1 · Linux users install the kirokit CLI with a package, Homebrew or download → "One release carries every OS's files" · runs after slice 6
+- Done means 2 · Windows users install the kirokit CLI with Scoop or a zip and run it in PowerShell → "One release carries every OS's files" · runs after slice 6
+- Done means 3 · The CLI installs a team on Linux and Windows that Kiro CLI can run → "A Windows install starts its SOPS-protected MCP server" · runs after slice 2
+- Done means 4 · Linux users install the desktop app from a .deb or .rpm → "The app tests pass and the built app starts on Linux and Windows" · runs after slice 5
+- Done means 5 · Windows users install the desktop app with a setup .exe → "The app tests pass and the built app starts on Linux and Windows" · runs after slice 5
+- Done means 6 · The Mac release keeps working exactly as today → "macOS users notice nothing" · runs after slice 6
+- Done means 7 · Every release builds and checks all three platforms automatically → "One release carries every OS's files" · runs after slice 6
+- Done means 8 · The README tells Linux and Windows users how to install and what to expect → "The README guides Linux and Windows users" · runs after slice 7
 <!-- /ql:proof-map -->
 
 ## Oracle
@@ -52,7 +71,7 @@ unchanged, and refuses an argument it cannot pass. The Oracle test runs on every
 +└── sops/                        + test-only age key and encrypted fixture secrets
 ```
 
-- [ ] T1 `sopswrap` builds a `cmd.exe` launch string and refuses what it cannot pass
+- [x] T1 `sopswrap` builds a `cmd.exe` launch string and refuses what it cannot pass
   - **Objective:** Add `BuildWrapperFor(Cmd, …)`, which joins tokens with single spaces and returns `ErrUnsafeForCmd` naming the first token with whitespace, `"` or `& | < > ^ % ! ( )`; `BuildWrapper` stays the POSIX form.
   - **Design:** "`sopswrap` gains a `cmd.exe` flavour that refuses what it cannot pass"
   - **Files:** `internal/sopswrap/sopswrap.go`, `internal/sopswrap/sopswrap_test.go`, `internal/sopswrap/sopswrap_windows_test.go`
@@ -64,7 +83,7 @@ unchanged, and refuses an argument it cannot pass. The Oracle test runs on every
     - On Windows, the joined string run as `cmd.exe /C <string>` (sops's exact call) starts a helper that reports exactly the original argv.
     - verify: `go test ./internal/sopswrap/ && GOOS=windows go vet ./internal/sopswrap/`
 
-- [ ] T2 Render takes the launch shell as an option and names the failing agent
+- [x] T2 Render takes the launch shell as an option and names the failing agent
   - **Objective:** Add `render.Options{KiroHome, LaunchShell}` and `RenderTeamWith`; `sopsArgsJSON` builds through the context's shell, and a refusal reads `render: <team>/<agent>: argument "<arg>" cannot pass through sops exec-env on Windows (cmd.exe): …`.
   - **Design:** "Render takes the launch shell as an option; goldens always use POSIX"
   - **Files:** `internal/render/render.go`, `internal/render/context.go`, `internal/render/funcs.go`, `internal/render/render_test.go`
@@ -75,17 +94,17 @@ unchanged, and refuses an argument it cannot pass. The Oracle test runs on every
     - `RenderTeam(…, kiroHome)` keeps its signature and callers (`kirokit render`, goldens, the app's catalog).
     - verify: `go test ./internal/render/`
 
-- [ ] T3 platform-team's Atlassian header passes through `cmd.exe`
-  - **Objective:** Change the devops agent's header argument to mcp-remote's documented `Authorization:${ATLASSIAN_AUTH}` and regenerate that golden.
+- [x] T3 platform-team's Atlassian header passes through `cmd.exe`
+  - **Objective:** Change the devops agent's header argument to mcp-remote's documented `Authorization:${ATLASSIAN_AUTH}` and regenerate its goldens.
   - **Design:** "plan:decision:d1"
-  - **Files:** `teams/platform-team/agents/devops/agent.json.tmpl`, `testdata/golden/platform-team/rendered/agents/devops.json`
-  - **Test first:** **Trivial:** `go test ./internal/golden/` fails after the template edit until `./kirokit update platform-team` rewrites the golden.
+  - **Files:** `teams/platform-team/agents/devops/agent.json.tmpl`, `testdata/golden/platform-team/rendered/agents/devops.json`, `testdata/golden/platform-team/installed-with-kb/agents/devops.json`, `internal/golden/windows_launch_test.go`
+  - **Test first:** **Trivial:** `./kirokit test platform-team` fails after the template edit until `./kirokit update platform-team` (and `-update-kb-golden` for the knowledge-base golden) rewrites the goldens.
   - **Definition of done:**
-    - `git diff testdata/golden` shows exactly one changed line, `--header 'Authorization: ${ATLASSIAN_AUTH}'` becoming `--header 'Authorization:${ATLASSIAN_AUTH}'`.
-    - Rendering platform-team with `LaunchShell: Cmd` succeeds (no other platform-team or data-team argument is refused).
-    - verify: `go build -o kirokit ./cmd/kirokit && ./kirokit test && go test ./internal/golden/`
+    - `git diff testdata/golden` shows the same one-line change in each platform-team devops golden, `--header 'Authorization: ${ATLASSIAN_AUTH}'` becoming `--header 'Authorization:${ATLASSIAN_AUTH}'`, and nothing else.
+    - Every team in `teams/` renders with `LaunchShell: Cmd` (no platform-team or data-team argument is refused).
+    - verify: `go build -o kirokit ./cmd/kirokit && ./kirokit test platform-team && go test ./internal/golden/`
 
-- [ ] T4 `kirokit install` bakes forward-slash paths and the `cmd.exe` launch on Windows
+- [x] T4 `kirokit install` bakes forward-slash paths and the `cmd.exe` launch on Windows
   - **Objective:** `Install` and `Check` call `RenderTeamWith` with `KiroHome: filepath.ToSlash(kiroHome)` and `sopswrap.Cmd` when `runtime.GOOS == "windows"`, POSIX elsewhere.
   - **Design:** "Render takes the launch shell as an option; goldens always use POSIX"
   - **Files:** `internal/install/install.go`, `internal/install/install_test.go`
@@ -96,7 +115,7 @@ unchanged, and refuses an argument it cannot pass. The Oracle test runs on every
     - On Windows an unsafe argument fails `install` before anything is written to `KIRO_HOME` (the manifest folder stays absent).
     - verify: `go test ./internal/install/ && GOOS=windows go vet ./internal/install/`
 
-- [ ] T5 The Oracle test launches an installed MCP server through the real sops
+- [x] T5 The Oracle test launches an installed MCP server through the real sops
   - **Objective:** Add a test that installs a fixture team into a fresh `KIRO_HOME`, then runs the installed agent's `command` and `args` as Kiro CLI does, with a committed test-only age key, and checks the argv and the decrypted secret the server receives.
   - **Design:** "The Oracle fixture"
   - **Files:** `cmd/kirokit/commands/install_sops_test.go`, `testdata/sops/age-test-key.txt`, `testdata/sops/secrets.enc.yaml`, `.gitleaks.toml`
@@ -108,7 +127,7 @@ unchanged, and refuses an argument it cannot pass. The Oracle test runs on every
     - `gitleaks git --staged` passes with the test key staged, and only `testdata/sops/age-test-key.txt` is allowlisted.
     - verify: `KIROKIT_REQUIRE_SOPS=1 go test ./cmd/kirokit/commands/ -run TestInstall_SopsLaunch -v`
 
-**Validation:** automated: `go test ./...` · `GOOS=windows go vet ./...` · `golangci-lint run` · `go build -o kirokit ./cmd/kirokit && ./kirokit test` · manual: none
+**Validation:** automated: `go test ./...` · `GOOS=windows go vet ./...` · `golangci-lint run` · `go build -o kirokit ./cmd/kirokit && ./kirokit test platform-team` · manual: none
 
 ## Slice 2: The CLI works on a Windows checkout, and CI tests it on three systems
 
@@ -117,17 +136,17 @@ own tests run there, and CI runs build, vet and tests on Ubuntu, Windows and mac
 
 **Depends on:** Slice 1
 
-- [ ] T6 Windows checkouts stay byte-exact, and Unix-only CLI tests skip or adapt
+- [x] T6 Windows checkouts stay byte-exact, and Unix-only CLI tests skip or adapt
   - **Objective:** Add `.gitattributes` (LF everywhere, `-text` for goldens, vendored skills and `*.enc.yaml`, binary for media); tests use `os.DevNull` and skip mode-bit and unprivileged-symlink checks on Windows.
   - **Design:** "plan:decision:d6"
-  - **Files:** `.gitattributes`, `cmd/kirokit/commands/sync_test.go`, `cmd/kirokit/commands/skills_test.go`, `internal/externalskills/fetch_test.go`, `internal/externalskills/lock_test.go`, `internal/install/install_test.go`, `internal/render/externalskills_test.go`, `internal/backup/backup_test.go`
+  - **Files:** `.gitattributes`, `cmd/kirokit/commands/sync_test.go`, `cmd/kirokit/commands/skills_test.go`, `internal/externalskills/fetch_test.go`, `internal/externalskills/lock_test.go`, `internal/install/install_test.go`, `internal/render/externalskills_test.go`, `internal/backup/backup_test.go`, `internal/testutil/testutil.go`
   - **Trivial:** `go test ./...` on macOS and in the Linux container, and `GOOS=windows go vet ./...`; the Windows runner (T10) is the runtime check.
   - **Definition of done:**
     - `git add --renormalize . && git status --short` changes no tracked file.
     - `git check-attr -a testdata/golden/platform-team/rendered/agents/devops.json teams/platform-team/agents/devops/env/secrets.enc.yaml` reports `text: unset` for both.
     - verify: `go test ./... && GOOS=windows go vet ./...`
 
-- [ ] T7 The skills lock records execute bits, so Windows verifies vendored skills
+- [x] T7 The skills lock records execute bits, so Windows verifies vendored skills
   - **Objective:** `LockEntry` gains `executables` (slash paths with the execute bit), written by `skills fetch` from git's index; on Windows, `HashDir` for verification takes execute bits from it instead of the file mode.
   - **Design:** "Vendored execute bits on Windows"
   - **Files:** `internal/externalskills/lock.go`, `internal/externalskills/verify.go`, `internal/externalskills/fetch.go`, `internal/externalskills/lock_test.go`, `internal/externalskills/fetch_test.go`
@@ -138,10 +157,10 @@ own tests run there, and CI runs build, vet and tests on Ubuntu, Windows and mac
     - On Windows, a lock whose hash needs execute bits but has no `executables` fails with a message saying to run `kirokit skills fetch <team>` again; a content edit still fails as drift.
     - verify: `go test ./internal/externalskills/ ./internal/render/`
 
-- [ ] T8 The knowledge-base link falls back to a directory junction on Windows
+- [x] T8 The knowledge-base link falls back to a directory junction on Windows
   - **Objective:** A new `internal/dirlink` makes a symlink, or on Windows a junction (`mklink /J`) when symlinks need a privilege, and recognises either as kirokit's link; install, uninstall and backup use it.
   - **Design:** "Directory links on Windows"
-  - **Files:** `internal/dirlink/dirlink.go`, `internal/dirlink/dirlink_windows.go`, `internal/dirlink/dirlink_other.go`, `internal/dirlink/dirlink_test.go`, `internal/install/install.go`, `internal/backup/backup.go`
+  - **Files:** `internal/dirlink/dirlink.go`, `internal/dirlink/dirlink_windows.go`, `internal/dirlink/dirlink_other.go`, `internal/dirlink/dirlink_test.go`, `internal/install/install.go`, `internal/backup/backup.go`, `internal/dirlink/dirlink_windows_test.go`, `internal/backup/backup_windows_test.go`
   - **Test first:** `dirlink.Make` then `dirlink.Is` on a temp folder, and on Windows a junction made with `mklink /J`; it fails to compile today because the package does not exist.
   - **Definition of done:**
     - On macOS and Linux, `Make` creates a symlink exactly as `os.Symlink` did; install and uninstall behave as today.
@@ -149,7 +168,7 @@ own tests run there, and CI runs build, vet and tests on Ubuntu, Windows and mac
     - A backup of a folder holding the link copies it as a link, not as the target's files.
     - verify: `go test ./internal/dirlink/ ./internal/install/ ./internal/backup/ && GOOS=windows go vet ./internal/...`
 
-- [ ] T9 `kirokit setup --source` accepts Windows drive paths
+- [x] T9 `kirokit setup --source` accepts Windows drive paths
   - **Objective:** The source pattern also accepts `C:\…` and `C:/…`, which still cannot be read as a git option.
   - **Design:** "plan:decision:d4"
   - **Files:** `cmd/kirokit/commands/setup.go`, `cmd/kirokit/commands/setup_test.go`
@@ -159,7 +178,7 @@ own tests run there, and CI runs build, vet and tests on Ubuntu, Windows and mac
     - Every address accepted today is still accepted.
     - verify: `go test ./cmd/kirokit/commands/ -run Setup`
 
-- [ ] T10 CI runs the CLI checks on Ubuntu, Windows and macOS, and Linux checks run locally in Docker
+- [x] T10 CI runs the CLI checks on Ubuntu, Windows and macOS, and Linux checks run locally in Docker
   - **Objective:** `ci.yaml` gets an OS matrix that installs sops and sets `KIROKIT_REQUIRE_SOPS=1`, with lint and the agent-asset check on Ubuntu only; `scripts/linux-docker.sh` runs a command in an Ubuntu-like container for local Linux checks.
   - **Design:** "plan:decision:d6"
   - **Files:** `.github/workflows/ci.yaml`, `scripts/linux-docker.sh`, `scripts/linux-docker.Dockerfile`
@@ -178,9 +197,9 @@ there, and env capture and child processes use Windows process handling. macOS a
 creack/pty unchanged.
 
 **Depends on:** Slice 2
-**Risky:** a new dependency (`github.com/UserExistsError/conpty` v0.1.4) that only the Windows runner exercises at runtime.
+**Risky:** the Windows pseudo console (ConPTY, through `golang.org/x/sys/windows`) runs only on the Windows runner.
 
-- [ ] T11 `terminal.Session` gets a ConPTY backend behind the same API
+- [x] T11 `terminal.Session` gets a ConPTY backend behind the same API
   - **Objective:** Move today's `terminal.go` unchanged to `terminal_unix.go` (`//go:build !windows`) and add `terminal_windows.go` with the same exported shape.
   - **Design:** "Terminal backends share one API"
   - **Files:** `desktop/terminal/terminal.go`, `desktop/terminal/terminal_unix.go`, `desktop/terminal/terminal_windows.go`, `desktop/terminal/terminal_test.go`, `desktop/terminal/terminal_windows_test.go`, `desktop/go.mod`, `desktop/go.sum`
@@ -193,7 +212,7 @@ creack/pty unchanged.
     - `Close` ends the process tree with `taskkill /T /F /PID <pid>` and releases the console; a second `Close` returns the first result.
     - verify: `cd desktop && go test ./terminal/ && GOOS=windows GOARCH=amd64 go vet ./terminal/ && GOOS=windows GOARCH=arm64 go vet ./terminal/`
 
-- [ ] T12 Env capture and helper processes use per-OS process handling
+- [x] T12 Env capture and helper processes use per-OS process handling
   - **Objective:** `procgroup_unix.go` and `procgroup_windows.go` hold `killTreeOnCancel(cmd)` and `hideConsole(cmd)`; `envcapture.go` and `catalog.go`'s `repoTag` use them, so the whole desktop module builds for Windows.
   - **Design:** "Terminal backends share one API"
   - **Files:** `desktop/procgroup_unix.go`, `desktop/procgroup_windows.go`, `desktop/envcapture.go`, `desktop/catalog.go`
@@ -213,7 +232,7 @@ hints. Every word and path on macOS stays as today.
 
 **Depends on:** Slice 3
 
-- [ ] T13 Data folder, age-key path and setup hints follow the OS
+- [x] T13 Data folder, age-key path and setup hints follow the OS
   - **Objective:** `NewApp` uses `os.UserConfigDir()/kirokit-desktop`; the age-key default follows sops's rule; the SOPS hint uses the Interface's *Words per OS* table.
   - **Design:** "The app's paths, tools and shell per OS", "Per-OS values are pure functions of GOOS"
   - **Files:** `desktop/platform.go`, `desktop/platform_test.go`, `desktop/app.go`, `desktop/prereq.go`, `desktop/prereq_test.go`
@@ -224,7 +243,7 @@ hints. Every word and path on macOS stays as today.
     - windows: `%AppData%\kirokit-desktop`, key `%AppData%\sops\age\keys.txt` (no XDG step), hint `Install it with: scoop install sops`; `SOPS_AGE_KEY_FILE` wins everywhere.
     - verify: `cd desktop && go test -run 'Platform|Prereq|DataDir' ./...`
 
-- [ ] T14 Env capture, PATH and tool lookup follow the OS
+- [x] T14 Env capture, PATH and tool lookup follow the OS
   - **Objective:** On Windows, `Capture` uses the app's own environment with no shell, `Lookup` tries `PATHEXT` suffixes without a mode check, and PATH joins with the OS separator; Linux's login shell defaults to `$SHELL`, `/bin/bash`, then `/bin/sh`; tool folders follow the OS.
   - **Design:** "The app's paths, tools and shell per OS"
   - **Files:** `desktop/envcapture.go`, `desktop/envcapture_test.go`, `desktop/platform.go`, `desktop/platform_test.go`, `desktop/shell.go`
@@ -235,7 +254,7 @@ hints. Every word and path on macOS stays as today.
     - On Unix, a file without an execute bit is still not found.
     - verify: `cd desktop && go test -run 'Capture|Lookup|ToolFolders|DefaultShell|TerminalEnv' ./...`
 
-- [ ] T15 The bundled CLI and the shell tab follow the OS, and the state names the shell
+- [x] T15 The bundled CLI and the shell tab follow the OS, and the state names the shell
   - **Objective:** `resolveCLI` looks beside the exe per OS, with OS-specific error words; the shell tab runs `pwsh.exe -NoLogo` (else `powershell.exe -NoLogo`) on Windows; `EnvStatus.Shell` reports `zsh`, `bash`, `PowerShell`.
   - **Design:** "The app's paths, tools and shell per OS"
   - **Files:** `desktop/shell.go`, `desktop/shell_test.go`, `desktop/app.go`, `desktop/platform.go`, `desktop/platform_test.go`
@@ -246,7 +265,7 @@ hints. Every word and path on macOS stays as today.
     - On Windows no zsh wrapper is written and `shellNote` is empty; on macOS and Linux the zsh wrapper and the non-zsh note stay as today.
     - verify: `cd desktop && go test -run 'BundledCLI|ResolveCLI|Shell|State' ./...`
 
-- [ ] T16 The dock names the shell tab after the running shell
+- [x] T16 The dock names the shell tab after the running shell
   - **Objective:** The frontend sets the shell tab's label and the kirokit tab's first line from `state.env.shell`, keeping `zsh` until the state arrives.
   - **Design:** "The app's paths, tools and shell per OS"
   - **Files:** `desktop/frontend/src/tabs.js`, `desktop/frontend/src/tabs.test.js`, `desktop/frontend/src/terminal.js`, `desktop/frontend/src/main.js`
@@ -256,7 +275,7 @@ hints. Every word and path on macOS stays as today.
     - Once `State()` reports `PowerShell`, the tab label changes to `PowerShell`; the first line printed afterwards names it too.
     - verify: `cd desktop/frontend && node --test "src/**/*.test.js"`
 
-- [ ] T17 Settings accept Windows folders and addresses
+- [x] T17 Settings accept Windows folders and addresses
   - **Objective:** The root check uses `filepath.VolumeName`, and `repoURLPattern` accepts `C:\…` and `C:/…`.
   - **Design:** "plan:decision:d4"
   - **Files:** `desktop/settings.go`, `desktop/settings_test.go`
@@ -266,7 +285,7 @@ hints. Every word and path on macOS stays as today.
     - `C:repo`, `-C:\x` and `C:\a b` are refused as addresses.
     - verify: `cd desktop && go test -run Settings ./...`
 
-- [ ] T18 Desktop tests run on Linux and Windows
+- [x] T18 Desktop tests run on Linux and Windows
   - **Objective:** Fake tools are `.cmd` files on Windows, Unix paths in tests come from `t.TempDir()`, and tests needing `/bin/sh`, zsh or a Unix pty skip on Windows with a Windows counterpart where the behaviour exists.
   - **Design:** "plan:decision:d6"
   - **Files:** `desktop/shell_test.go`, `desktop/runner_test.go`, `desktop/envcapture_test.go`, `desktop/prereq_test.go`, `desktop/clone_test.go`, `desktop/settings_test.go`, `desktop/catalog_test.go`, `desktop/testtools_test.go`
@@ -445,8 +464,8 @@ defaults and allowlists that one path.
 
 | Step | Action | Expected |
 |---|---|---|
-| 1 | `go build -o kirokit ./cmd/kirokit && ./kirokit test` | every team passes |
-| 2 | `git diff main --stat -- testdata/golden` | one file changed, `testdata/golden/platform-team/rendered/agents/devops.json`, 1 line in and 1 out |
+| 1 | `go build -o kirokit ./cmd/kirokit && ./kirokit test platform-team` | `platform-team: ok` (data-team's `context.json` golden is stale on `main` already, from Renovate's `dabb3eb`) |
+| 2 | `git diff main --stat -- testdata/golden` | two files changed, the platform-team devops goldens under `rendered/` and `installed-with-kb/`, each 1 line in and 1 out |
 | 3 | `git diff main -- desktop/build/darwin scripts/desktop-build.sh \| grep -c '^[-+][^-+]' ` | only additions in the non-darwin branches of the build script; `desktop/build/darwin` unchanged |
 | 4 | `task desktop:build && ls desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit` | the bundled CLI path exists, as today |
 | 5 | `KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit; echo $?` | `0` |
@@ -498,4 +517,46 @@ defaults and allowlists that one path.
 ## Commands the build runs
 
 <!-- ql:commands -->
+- `go test ./...` · slice 1, slice 2, project checks
+- `GOOS=windows go vet ./...` · slice 1, slice 2
+- `golangci-lint run` · slice 1, project checks
+- `go build -o kirokit ./cmd/kirokit && ./kirokit test platform-team` · slice 1, scenario 2
+- `actionlint` · slice 2, slice 5, slice 6, T23
+- `scripts/linux-docker.sh env KIROKIT_REQUIRE_SOPS=1 go test ./...` · slice 2
+- `task desktop:test` · slice 3, slice 4, project checks
+- `cd desktop && GOOS=windows go vet ./...` · slice 3, slice 4
+- `scripts/linux-docker.sh task desktop:test` · slice 4, scenario 3
+- `task desktop:build` · slice 5
+- `scripts/linux-docker.sh task desktop:build` · slice 5
+- `goreleaser check` · slice 6, T22
+- `node scripts/sync-agent-assets.mjs --check` · slice 7, T24, project checks
+- `go test ./internal/sopswrap/ && GOOS=windows go vet ./internal/sopswrap/` · T1
+- `go test ./internal/render/` · T2
+- `go build -o kirokit ./cmd/kirokit && ./kirokit test platform-team && go test ./internal/golden/` · T3
+- `go test ./internal/install/ && GOOS=windows go vet ./internal/install/` · T4
+- `KIROKIT_REQUIRE_SOPS=1 go test ./cmd/kirokit/commands/ -run TestInstall_SopsLaunch -v` · T5
+- `go test ./... && GOOS=windows go vet ./...` · T6
+- `go test ./internal/externalskills/ ./internal/render/` · T7
+- `go test ./internal/dirlink/ ./internal/install/ ./internal/backup/ && GOOS=windows go vet ./internal/...` · T8
+- `go test ./cmd/kirokit/commands/ -run Setup` · T9
+- `actionlint && scripts/linux-docker.sh env KIROKIT_REQUIRE_SOPS=1 go test ./...` · T10
+- `cd desktop && go test ./terminal/ && GOOS=windows GOARCH=amd64 go vet ./terminal/ && GOOS=windows GOARCH=arm64 go vet ./terminal/` · T11
+- `cd desktop && go test ./... && GOOS=windows GOARCH=amd64 go build ./... && GOOS=windows GOARCH=arm64 go build ./... && GOOS=linux go vet ./...` · T12
+- `cd desktop && go test -run 'Platform|Prereq|DataDir' ./...` · T13
+- `cd desktop && go test -run 'Capture|Lookup|ToolFolders|DefaultShell|TerminalEnv' ./...` · T14
+- `cd desktop && go test -run 'BundledCLI|ResolveCLI|Shell|State' ./...` · T15
+- `cd desktop/frontend && node --test "src/**/*.test.js"` · T16
+- `cd desktop && go test -run Settings ./...` · T17
+- `task desktop:test && scripts/linux-docker.sh task desktop:test && cd desktop && GOOS=windows go vet ./...` · T18
+- `cd desktop && go test -run Smoke ./... && task desktop:build && KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit` · T19
+- `scripts/linux-docker.sh task desktop:build && scripts/linux-docker.sh env GOOS=windows task desktop:build` · T20
+- `actionlint .github/workflows/desktop.yaml` · T21
+- `scripts/linux-docker.sh env KIROKIT_REQUIRE_SOPS=1 go test ./... ` · scenario 1
+- `git diff main --stat -- testdata/golden` · scenario 2
+- `task desktop:build && ls desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit` · scenario 2
+- `KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit; echo $?` · scenario 2
+- `gh run list --workflow Desktop --branch feat/linux-windows --limit 1` · scenario 3
+- `grep -n 'keys.txt' README.md` · scenario 5
+- `go vet ./...` · project checks
+- `go build ./...` · project checks
 <!-- /ql:commands -->

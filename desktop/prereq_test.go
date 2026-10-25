@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -11,7 +12,7 @@ func fakeBin(t *testing.T, names ...string) string {
 	t.Helper()
 	dir := t.TempDir()
 	for _, n := range names {
-		if err := os.WriteFile(filepath.Join(dir, n), []byte("#!/bin/sh\n"), 0o755); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, exeName(n)), []byte("#!/bin/sh\n"), 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -60,11 +61,18 @@ func TestPrerequisites_ResolveOnCapturedPath(t *testing.T) {
 }
 
 func TestPrerequisites_KeyLocationOrder(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows reads the key from %AppData%, never XDG_CONFIG_HOME; see TestPlatform_AgeKeyCandidate")
+	}
 	home := t.TempDir()
 	xdg := t.TempDir()
-	mac := filepath.Join(home, "Library", "Application Support", "sops", "age", "keys.txt")
+	// sops's default without XDG_CONFIG_HOME: the OS's config folder.
+	osDefault := filepath.Join(home, ".config", "sops", "age", "keys.txt")
+	if runtime.GOOS == "darwin" {
+		osDefault = filepath.Join(home, "Library", "Application Support", "sops", "age", "keys.txt")
+	}
 	xdgKey := filepath.Join(xdg, "sops", "age", "keys.txt")
-	for _, p := range []string{mac, xdgKey} {
+	for _, p := range []string{osDefault, xdgKey} {
 		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -79,8 +87,8 @@ func TestPrerequisites_KeyLocationOrder(t *testing.T) {
 	}
 
 	delete(vars, "XDG_CONFIG_HOME")
-	if c := byName(t, appWithEnv(t, vars).Prerequisites("t"), "Decryption key"); c.Detail != mac {
-		t.Errorf("without XDG_CONFIG_HOME, key = %q, want %q", c.Detail, mac)
+	if c := byName(t, appWithEnv(t, vars).Prerequisites("t"), "Decryption key"); c.Detail != osDefault {
+		t.Errorf("without XDG_CONFIG_HOME, key = %q, want %q", c.Detail, osDefault)
 	}
 
 	vars["SOPS_AGE_KEY_FILE"] = filepath.Join(home, "missing")
@@ -96,7 +104,7 @@ func TestPrerequisites_CapturesAfresh(t *testing.T) {
 	if byName(t, a.Prerequisites("t"), "SOPS").Found {
 		t.Fatal("sops found before it exists")
 	}
-	if err := os.WriteFile(filepath.Join(bin, "sops"), []byte("#!/bin/sh\n"), 0o755); err != nil {
+	if err := os.WriteFile(filepath.Join(bin, exeName("sops")), []byte("#!/bin/sh\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if !byName(t, a.Prerequisites("t"), "SOPS").Found {

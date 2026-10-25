@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"path/filepath"
+	"runtime"
 )
 
 // Check is one prerequisite and whether it was found. Detail is the path that
@@ -22,7 +22,7 @@ func (a *App) Prerequisites(team string) []Check {
 	env := a.refreshEnv()
 
 	checks := make([]Check, 0, 3)
-	checks = append(checks, toolCheck(env, "SOPS", "sops", "Install it with: brew install sops"))
+	checks = append(checks, toolCheck(env, "SOPS", "sops", sopsHintFor(runtime.GOOS)))
 	if key, ok := findAgeKey(env); ok {
 		checks = append(checks, Check{Name: "Decryption key", Found: true, Detail: key})
 	} else {
@@ -39,20 +39,9 @@ func toolCheck(env EnvCapture, name, bin, hint string) Check {
 	return Check{Name: name, Detail: hint}
 }
 
-// ageKeyCandidate is the file the key is read from: SOPS_AGE_KEY_FILE, else
-// $XDG_CONFIG_HOME/sops/age/keys.txt, else the macOS default.
+// ageKeyCandidate is the file sops reads the key from on this OS.
 func ageKeyCandidate(env EnvCapture) string {
-	if p := env.Getenv("SOPS_AGE_KEY_FILE"); p != "" {
-		return p
-	}
-	if xdg := env.Getenv("XDG_CONFIG_HOME"); xdg != "" {
-		return filepath.Join(xdg, "sops", "age", "keys.txt")
-	}
-	home := env.Getenv("HOME")
-	if home == "" {
-		home = homeDir()
-	}
-	return filepath.Join(home, "Library", "Application Support", "sops", "age", "keys.txt")
+	return ageKeyCandidateFor(runtime.GOOS, env, homeDir(), userConfigDir())
 }
 
 func findAgeKey(env EnvCapture) (string, bool) {

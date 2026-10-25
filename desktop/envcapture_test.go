@@ -3,15 +3,20 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
 )
 
 // fakeShell writes an executable script standing in for the login shell. It
-// ignores the -ilc arguments and runs body.
+// ignores the -ilc arguments and runs body. Windows reads no login shell, so
+// tests that need one skip there.
 func fakeShell(t *testing.T, body string) string {
 	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows reads no login shell; see TestPlatform_WindowsEnvironmentWithoutAShell")
+	}
 	p := filepath.Join(t.TempDir(), "fakesh")
 	if err := os.WriteFile(p, []byte("#!/bin/sh\n"+body+"\n"), 0o755); err != nil {
 		t.Fatal(err)
@@ -52,7 +57,7 @@ func TestCapture_SlowShellFallsBack(t *testing.T) {
 	if got.Note == "" {
 		t.Error("Note is empty, want a message Settings can show")
 	}
-	for _, dir := range []string{"/opt/homebrew/bin", "/usr/local/bin"} {
+	for _, dir := range toolFoldersFor(runtime.GOOS, os.Getenv("HOME")) {
 		if !strings.Contains(got.Getenv("PATH"), dir) {
 			t.Errorf("fallback PATH %q lacks %s", got.Getenv("PATH"), dir)
 		}
@@ -70,7 +75,7 @@ func TestCapture_AppendsToolFolders(t *testing.T) {
 	if parts[0] != "/usr/bin" || parts[1] != "/bin" {
 		t.Errorf("PATH = %q, want the shell's folders first", got.Getenv("PATH"))
 	}
-	for _, dir := range []string{"/opt/homebrew/bin", "/opt/homebrew/sbin", "/usr/local/bin"} {
+	for _, dir := range toolFoldersFor(runtime.GOOS, homeDir()) {
 		n := 0
 		for _, p := range parts {
 			if p == dir {

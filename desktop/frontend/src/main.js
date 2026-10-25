@@ -9,7 +9,7 @@ import { initInstall, syncArgs, uninstallArgs } from './pages/install.js';
 import { initSkills } from './pages/skills.js';
 import { initWelcome, showWelcome } from './pages/welcome.js';
 import { createDialogs, installPlan } from './dialogs.js';
-import { createDock } from './tabs.js';
+import { createDock, shellLabel } from './tabs.js';
 import { initDock } from './terminal.js';
 
 document.getElementById('logo').src = logoUrl;
@@ -149,6 +149,7 @@ function draw() {
 async function loadCatalog() {
   try {
     const st = await api.state();
+    terminalDock.setShell(shellLabel(st));
     view.cloned = st.cloned;
     view.loaded = true;
     // The address field starts from the saved one; typing replaces it.
@@ -159,6 +160,7 @@ async function loadCatalog() {
     view.error = '';
   } catch (e) {
     view.error = message(e);
+    terminalDock.setShell(shellLabel());
   }
   draw();
 }
@@ -174,7 +176,7 @@ async function loadInstalls() {
 
 const refresh = () => loadCatalog().then(loadInstalls);
 
-initDock(createDock());
+const terminalDock = initDock(createDock());
 settings.load();
 refresh();
 api.on('installs:changed', (records) => {
