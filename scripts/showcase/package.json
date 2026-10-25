@@ -1,0 +1,9 @@
+{
+  "name": "kirokit-showcase",
+  "private": true,
+  "type": "module",
+  "description": "Records the README showcase (assets/kirokit-showcase.gif and .mp4); run it with `task showcase`.",
+  "devDependencies": {
+    "playwright-core": "1.63.0"
+  }
+}
