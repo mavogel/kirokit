@@ -3,9 +3,9 @@
 ## Summary
 
 <!-- ql:summary -->
-13 of 24 tasks · 3 of 7 slices
+22 of 24 tasks · 5 of 7 slices
 
-Building now: started 25 Oct, 19:12, 44 min so far.
+Building now: started 25 Oct, 19:12, 1 h 14 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -16,9 +16,9 @@ Building now: started 25 Oct, 19:12, 44 min so far.
 | 1 | Windows MCP servers get their SOPS secrets | After this slice, `kirokit install` on Windows writes a `sops exec-env` launch that `cmd.exe` runs unchanged, and refuses an argument it cannot pass. | done |
 | 2 | The CLI works on a Windows checkout, and CI tests it on three systems | After this slice, a Windows checkout keeps goldens, lock hashes and SOPS files byte-exact, the CLI's own tests run there, and CI runs build, vet and tests on Ubuntu, Windows and macOS. | done |
 | 3 | The desktop terminal runs on Windows | After this slice, the desktop module compiles for Windows: both tabs run on a ConPTY pseudo console there, and env capture and child processes use Windows process handling. | done |
-| 4 | The app finds its folders, tools, CLI and shell on each OS | After this slice, the app on Linux and Windows keeps its data where each OS expects, finds sops, kiro-cli and its bundled CLI, opens the right shell named after itself, and shows OS-correct setup hints. | task 2 of 6 |
-| 5 | The app builds, packages and starts on Linux and Windows | After this slice, `task desktop:build` builds the app on each OS (Linux with WebKitGTK 4.1, Windows with an NSIS setup carrying `bin\kirokit.exe`), the app has a smoke start, and the Desktop workflow proves the build starts on all three runners. | after 4 |
-| 6 | One release ships every OS from three runners | After this slice, GoReleaser builds Windows CLI zips, Linux `.deb` and `.rpm` for the CLI and the app, a Scoop manifest and the Windows setup files, and the release workflow builds on macOS, Linux and Windows runners and pushes the tag only after all of them succeed. | after 5 |
+| 4 | The app finds its folders, tools, CLI and shell on each OS | After this slice, the app on Linux and Windows keeps its data where each OS expects, finds sops, kiro-cli and its bundled CLI, opens the right shell named after itself, and shows OS-correct setup hints. | done |
+| 5 | The app builds, packages and starts on Linux and Windows | After this slice, `task desktop:build` builds the app on each OS (Linux with WebKitGTK 4.1, Windows with an NSIS setup carrying `bin\kirokit.exe`), the app has a smoke start, and the Desktop workflow proves the build starts on all three runners. | done |
+| 6 | One release ships every OS from three runners | After this slice, GoReleaser builds Windows CLI zips, Linux `.deb` and `.rpm` for the CLI and the app, a Scoop manifest and the Windows setup files, and the release workflow builds on macOS, Linux and Windows runners and pushes the tag only after all of them succeed. | task 2 of 2 |
 | 7 | The docs tell every OS how to install and what to expect | After this slice, README and CONTRIBUTING describe installing and running kirokit and its app on macOS, Linux and Windows, including prerequisites and the unsigned-app warnings. | after 6 |
 <!-- /ql:slices -->
 
@@ -39,6 +39,9 @@ Written when the last task is ticked.
 - The Plan · Slice 1 validation and Scenario 2 step 1 run './kirokit test platform-team', and Scenario 2 step 2 expects the two platform-team devops goldens, for the same reason as T3's amendment.
 - The Plan · T6 owns the shared internal/testutil helper; T8 owns its Windows-only junction tests for dirlink and backup.
 - Slice 3 · The Windows terminal backend calls the pseudo-console API through golang.org/x/sys/windows (v0.46.0, already in the desktop module via Wails) instead of github.com/UserExistsError/conpty v0.1.4; the Session API and taskkill tree kill are unchanged.
+- Slice 2 · T9 also adds 'kirokit --version' (cobra's version flag, printing 'kirokit <version>' like the first line of 'kirokit version'), because Done means 1 and 2 check installs with 'kirokit --version', which was an unknown flag.
+- Slice 5 · T20 keeps Wails' regenerated wails_tools.nsh and the downloaded WebView2 bootstrapper out of git (desktop/.gitignore) and tracks only project.nsi, the icon, info.json and the manifest; Taskfile runs the build script through bash so Windows (Git Bash) runs it.
+- Slice 5 · T20 also excludes *.ico and *.icns from lefthook's whitespace fixers, which corrupted the Windows icon on the first commit attempt.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -63,6 +66,10 @@ Written when the last task is ticked.
 - T16 · b9daa54 · `cd desktop/frontend && node --test "src/**/*.test.js"` · exit 0 · 0.4s
 - T17 · b9daa54 · `cd desktop && go test -run Settings ./...` · exit 0 · 0.6s
 - T18 · b9daa54 · `task desktop:test && scripts/linux-docker.sh task desktop:test && cd desktop && GOOS=windows go vet ./...` · exit 0 · 14.4s
+- T19 · bc3d87e · `cd desktop && go test -run Smoke ./... && task desktop:build && KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit` · failed: command not found (exit 127) · 4.6s
+- T20 · bc3d87e · `scripts/linux-docker.sh task desktop:build && scripts/linux-docker.sh env GOOS=windows task desktop:build` · exit 0 · 14.9s
+- T22 · bc3d87e · `goreleaser check` · exit 0 · 0.6s
+- T21 · bc3d87e · `actionlint .github/workflows/desktop.yaml` · exit 0 · 0.1s
 
 ## Known limits
 
@@ -81,6 +88,9 @@ None recorded.
 - Plan (amended): Slice 1 validation and Scenario 2 step 1 run './kirokit test platform-team', and Scenario 2 step 2 expects the two platform-team devops goldens, for the same reason as T3's amendment
 - T6, T8 (amended): T6 owns the shared internal/testutil helper; T8 owns its Windows-only junction tests for dirlink and backup
 - T11 (amended): The Windows terminal backend calls the pseudo-console API through golang.org/x/sys/windows (v0.46.0, already in the desktop module via Wails) instead of github.com/UserExistsError/conpty v0.1.4; the Session API and taskkill tree kill are unchanged
+- T9 (amended): T9 also adds 'kirokit --version' (cobra's version flag, printing 'kirokit <version>' like the first line of 'kirokit version'), because Done means 1 and 2 check installs with 'kirokit --version', which was an unknown flag
+- T20 (amended): T20 keeps Wails' regenerated wails_tools.nsh and the downloaded WebView2 bootstrapper out of git (desktop/.gitignore) and tracks only project.nsi, the icon, info.json and the manifest; Taskfile runs the build script through bash so Windows (Git Bash) runs it
+- T20 (amended): T20 also excludes *.ico and *.icns from lefthook's whitespace fixers, which corrupted the Windows icon on the first commit attempt
 
 ## Plan amended
 
@@ -115,5 +125,23 @@ process exits, so `Read` drains the last output and then ends. The child is star
 `STARTF_USESTDHANDLES` and no handles, so it never inherits the app's own redirected handles. No
 third-party module is added (`golang.org/x/sys` moves from indirect to direct in `desktop/go.mod`).
 The Plan's "Decisions made for you" line naming the library is replaced by this one.
+
+Amended by the agent on 2026-10-25; changed 04-outline.md.
+
+### T9 · amended
+
+T9 also adds 'kirokit --version' (cobra's version flag, printing 'kirokit <version>' like the first line of 'kirokit version'), because Done means 1 and 2 check installs with 'kirokit --version', which was an unknown flag
+
+Amended by the agent on 2026-10-25; changed 04-outline.md.
+
+### T20 · amended
+
+T20 keeps Wails' regenerated wails_tools.nsh and the downloaded WebView2 bootstrapper out of git (desktop/.gitignore) and tracks only project.nsi, the icon, info.json and the manifest; Taskfile runs the build script through bash so Windows (Git Bash) runs it
+
+Amended by the agent on 2026-10-25; changed 04-outline.md.
+
+### T20 · amended
+
+T20 also excludes *.ico and *.icns from lefthook's whitespace fixers, which corrupted the Windows icon on the first commit attempt
 
 Amended by the agent on 2026-10-25; changed 04-outline.md.
