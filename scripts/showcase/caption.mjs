@@ -153,13 +153,19 @@ const pages = [
   },
 ];
 
+// One fresh page per image, sized at creation: resizing a reused page let
+// screenshots catch stale paint (repeated rows, a blank caption).
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 try {
-  const page = await browser.newPage({ deviceScaleFactor: 1 });
   for (const p of pages) {
-    await page.setViewportSize({ width: p.width, height: p.height });
-    await page.setContent(p.html);
+    const page = await browser.newPage({ viewport: { width: p.width, height: p.height }, deviceScaleFactor: 1 });
+    await page.setContent(p.html, { waitUntil: 'load' });
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    });
     await page.screenshot({ path: join(outdir, p.file), omitBackground: Boolean(p.transparent) });
+    await page.close();
   }
 } finally {
   await browser.close();

@@ -105,6 +105,8 @@ task showcase   # scripts/showcase/record.sh; --keep leaves /tmp/kirokit-demo fo
 
 It also needs Google Chrome in `/Applications`, a signed-in `kiro-cli`, the SOPS age key at its default location (or `SOPS_AGE_KEY_FILE`), network access to github.com, and free ports 34115 and 5173 (no `task desktop:dev` running). The run types into a real Kiro session but never sends a chat message. It refuses to write `assets/` if the recorded text shows your home path, user name or git email, if the GIF exceeds 8 MB or the MP4 4 MB, or if the cut falls outside 30 to 60 seconds.
 
+`node --test scripts/showcase/` tests the recorder's own checks, caption timing and error paths without recording anything (about 40 s; the tests that need tmux, ffmpeg or Chrome skip without them).
+
 
 ## Working with templates and golden files
 

@@ -84,6 +84,12 @@ Delivered 25 Oct, 11:37
 - all · 62a5c28 · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since it passed at 11:41
 - all · 62a5c28 · `lefthook run pre-commit` · reused: nothing changed since it passed at 11:41
 - all · 62a5c28 · `task showcase` · exit 0 · 45.1s
+- all · 3fe8fee · `go test ./...` · reused: nothing changed since it passed at 11:41
+- all · 3fe8fee · `golangci-lint run` · reused: nothing changed since it passed at 11:41
+- all · 3fe8fee · `go vet ./...` · reused: nothing changed since it passed at 11:41
+- all · 3fe8fee · `task build` · reused: nothing changed since it passed at 11:41
+- all · 3fe8fee · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since it passed at 11:41
+- all · 3fe8fee · `lefthook run pre-commit` · reused: nothing changed since it passed at 11:41
 
 ## Known limits
 

@@ -24,6 +24,7 @@ out="$demo/out"
 sock=kirokit-showcase
 step=start
 pids=()
+owned=0 # set once this run has created $demo; until then cleanup touches nothing shared
 
 fail() { echo "showcase: $step: $*" >&2; exit 1; }
 say() { echo "showcase: $step: $*"; }
@@ -31,6 +32,7 @@ say() { echo "showcase: $step: $*"; }
 cleanup() {
   local code=$? pid
   trap - EXIT INT TERM
+  ((owned)) || exit "$code"
   tmux -L "$sock" kill-server 2>/dev/null || true
   for pid in "${pids[@]+"${pids[@]}"}"; do
     # Each background job runs in its own process group (set -m), so its
@@ -65,9 +67,14 @@ for port in 34115 5173; do
   fi
 done
 
+if [[ -f "$demo/pid" ]] && kill -0 "$(<"$demo/pid")" 2>/dev/null; then
+  fail "another showcase run (pid $(<"$demo/pid")) is using $demo"
+fi
 rm -rf "${demo:?}"
 # Fails if anything recreated the folder in between; only this user can enter it.
 mkdir -m 700 "$demo" || fail "could not create $demo"
+owned=1
+echo $$ > "$demo/pid"
 mkdir "$demo"/{bin,home,kiro,work} "$out"
 
 # --- 2. build ---------------------------------------------------------------

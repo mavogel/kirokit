@@ -49,7 +49,9 @@ length() {
   (($#)) || fail length "no files to check"
   for file; do
     [[ -f "$file" ]] || fail length "missing $file"
-    seconds="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$file")"
+    seconds="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$file" 2>/dev/null)" \
+      || fail length "cannot read the length of $file"
+    [[ "$seconds" =~ ^[0-9]+(\.[0-9]+)?$ ]] || fail length "cannot read the length of $file"
     awk "BEGIN { exit !($seconds >= 30 && $seconds <= 60) }" \
       || fail length "$file is $seconds s (needs 30 to 60 s)"
   done
