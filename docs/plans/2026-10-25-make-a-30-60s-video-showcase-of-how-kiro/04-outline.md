@@ -300,7 +300,7 @@ The Plan's contracts hold the design.
 - `scripts/showcase/record.sh --keep` · slice 1
 - `node --check scripts/showcase/app-drive.mjs` · slice 2, T4
 - `node --check scripts/showcase/caption.mjs` · slice 2
-- `task showcase` · slice 2, project checks
+- `task showcase` · slice 2
 - `lefthook run pre-commit` · slice 3, project checks
 - `go test ./...` · slice 3, project checks
 - `node scripts/sync-agent-assets.mjs --check` · slice 3, project checks

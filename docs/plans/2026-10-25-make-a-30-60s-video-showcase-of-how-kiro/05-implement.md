@@ -28,13 +28,11 @@ Delivered 25 Oct, 11:37
 - One command makes the checked GIF and MP4 · slice 2 · 5 tasks
 - The README opens with the showcase and commits keep media intact · slice 3 · 3 tasks
 
-**Verified** · 0
-- None
+**Verified** · 2
+- Project checks passed · 7 of 7 · recorded
+- Security review · done · nothing severe in the change
 
-
-**Left** · 4
-- Security review · Security review · not done
-- Project checks · Project checks · not done
+**Left** · 2
 - Independent review · Review · not done
 - Fix rounds · Fix · not done
 <!-- /ql:delivered -->
@@ -52,6 +50,7 @@ Delivered 25 Oct, 11:37
 - Slice 2 · The title card fades into the CLI clip and the app clip into the end card with 0.4 s fades, besides the approved 0.5 s crossfade between the clips; the CLI clip is padded to the frame with the terminal's own background `#171b21` instead of being scaled; nothing you approved changes.
 - Slice 2 · `record.sh` calls `checks.sh` as a command rather than sourcing it, so each check stays runnable on its own with the same messages; nothing you approved changes.
 - Slice 3 · T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase.
+- The Plan · Task showcase leaves the project check list: every run records new media into assets/, so QualityLayer records it as 'files changed while the check ran' and never as fresh proof. It stays proved by the T8 slice check and Scenarios 1-3.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -71,6 +70,20 @@ Delivered 25 Oct, 11:37
 - T9 · f3b04e1 · `uvx --from pre-commit-hooks==6.0.0 check-yaml lefthook.yml` · exit 0 · 0.1s
 - T10 · f3b04e1 · `ffprobe -v error -show_entries format=duration -of csv=p=0 assets/kirokit-showcase.mp4` · exit 0 · 0.1s
 - T11 · f3b04e1 · `grep -c 'assets/kirokit-showcase' README.md` · exit 0 · 0s
+- all · 62a5c28 · `go test ./...` · exit 0 · 14.9s
+- all · 62a5c28 · `golangci-lint run` · exit 0 · 0.5s
+- all · 62a5c28 · `go vet ./...` · exit 0 · 0.1s
+- all · 62a5c28 · `task build` · exit 0 · 0.4s
+- all · 62a5c28 · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
+- all · 62a5c28 · `lefthook run pre-commit` · exit 0 · 0.1s
+- all · 62a5c28 · `task showcase` · exit 0 · 45s
+- all · 62a5c28 · `go test ./...` · reused: nothing changed since it passed at 11:41
+- all · 62a5c28 · `golangci-lint run` · reused: nothing changed since it passed at 11:41
+- all · 62a5c28 · `go vet ./...` · reused: nothing changed since it passed at 11:41
+- all · 62a5c28 · `task build` · reused: nothing changed since it passed at 11:41
+- all · 62a5c28 · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since it passed at 11:41
+- all · 62a5c28 · `lefthook run pre-commit` · reused: nothing changed since it passed at 11:41
+- all · 62a5c28 · `task showcase` · exit 0 · 45.1s
 
 ## Known limits
 
@@ -90,6 +103,7 @@ None recorded.
 - T7 (tactical): the title card fades into the CLI clip and the app clip into the end card with 0.4 s fades, besides the approved 0.5 s crossfade between the clips; the CLI clip is padded to the frame with the terminal's own background `#171b21` instead of being scaled; nothing you approved changes
 - T8 (tactical): `record.sh` calls `checks.sh` as a command rather than sourcing it, so each check stays runnable on its own with the same messages; nothing you approved changes
 - T11 (amended): T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase
+- Plan (amended): task showcase leaves the project check list: every run records new media into assets/, so QualityLayer records it as 'files changed while the check ran' and never as fresh proof. It stays proved by the T8 slice check and Scenarios 1-3.
 
 ## Plan amended
 
@@ -98,3 +112,11 @@ None recorded.
 T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase
 
 Amended by the agent on 2026-10-25; changed 04-outline.md.
+
+### Plan · amended
+
+task showcase leaves the project check list: every run records new media into assets/, so QualityLayer records it as 'files changed while the check ran' and never as fresh proof. It stays proved by the T8 slice check and Scenarios 1-3.
+
+Why: a recording is never byte-identical to the last one (timestamps, network timing, a new Kiro tip line), so `qualitylayer check all` twice returned "Files changed while the check ran: the result is recorded without a key" with all seven commands at exit 0. Restoring or committing the new media cannot fix that, because the next check run rewrites them again. What the approved check promised, that one command records both files from the real tools and passes the privacy, size and length gates, is still proved: the T8 check ran `task showcase` with exit 0 (45.4 s), the two `check all` runs above ran it with exit 0, and Scenarios 1 to 3 exercise it end to end. The remaining six project checks do not touch the tree and stay as recorded proof.
+
+Amended by the agent on 2026-10-25; changed 03-plan.md.

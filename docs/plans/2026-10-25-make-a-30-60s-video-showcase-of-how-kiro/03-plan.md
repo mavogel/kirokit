@@ -3,8 +3,8 @@ type: plan
 status: approved
 profile: full
 approved: true
-review_digest: 036f4b30933e14f23f5324d579fac6f6e71cb1304b37a801fee56d0d2c6e3e76
-review_basis: 4ca6da4ce650f19a85a63c6b7130d18c5ad8f0d6ab39743abcb81337226a4567
+review_digest: a2fd4b1717f5ddcfb68fcbb67c241239d8b56435cea1985366e29f3ba8dec87d
+review_basis: d72469160d46060c985a8000b904f55427f6ee770bd7a3ef77170ce94eba2048
 ---
 
 # Plan: a re-recordable 30-60 s showcase of the kirokit CLI and app
@@ -266,7 +266,9 @@ The README gains the GIF right under the intro, plus a one-line link to the MP4.
   No Go or desktop code changes, so the existing suites only need to stay green.
 - **How to start the program:** `task build` for the CLI; the app comes up through `go tool wails dev` in `desktop/` (as in `task desktop:dev`), which `record.sh` starts itself.
 
-**Project checks:** `go test ./...` · `golangci-lint run` · `go vet ./...` · `task build` · `node scripts/sync-agent-assets.mjs --check` · `lefthook run pre-commit` · `task showcase`
+**Project checks:** `go test ./...` · `golangci-lint run` · `go vet ./...` · `task build` · `node scripts/sync-agent-assets.mjs --check` · `lefthook run pre-commit`
+
+`task showcase` is proved by the slice 2 check (T8) and the end-to-end scenarios, not as a project check: every run records new media into `assets/`, so a check that runs it changes the files it checks.
 
 ## Proven before the gate
 

@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-Security review is running.
+The independent review is next.
 <!-- /ql:summary -->
 
 ## Open items
@@ -17,12 +17,12 @@ Security review is running.
 
 <!-- ql:lanes -->
 - **Security review** · a fresh agent · read-only
-  - State: running
-  - Result: not yet
+  - State: done
+  - Result: done · nothing severe in the change
   - Why it runs here: The change crosses a trust boundary: the person's SOPS age key — creates a symlink to (or when set) inside, It never reads, copies or prints the key, The link is removed in the.
 - **Project checks** · QualityLayer itself · no agent
-  - State: waiting
-  - Result: not yet
+  - State: done
+  - Result: done · 7 checks · 6 reused
 - **Independent review** · Claude Code · Opus 5.5 · never saw the build
   - State: waiting
   - Result: not yet
@@ -56,7 +56,13 @@ Not run: Second opinion is off in Settings, though it would run here because the
 ## Checks
 
 <!-- ql:checks -->
-Not run yet.
+- all · 054d6fbf92a6ae58031ed416b27885400b6e7d338c5df9d82fc32bf2cb66f00c · `go test ./...` · exit 0 · 0s · reused
+- all · 054d6fbf92a6ae58031ed416b27885400b6e7d338c5df9d82fc32bf2cb66f00c · `golangci-lint run` · exit 0 · 0s · reused
+- all · 054d6fbf92a6ae58031ed416b27885400b6e7d338c5df9d82fc32bf2cb66f00c · `go vet ./...` · exit 0 · 0s · reused
+- all · 054d6fbf92a6ae58031ed416b27885400b6e7d338c5df9d82fc32bf2cb66f00c · `task build` · exit 0 · 0s · reused
+- all · 054d6fbf92a6ae58031ed416b27885400b6e7d338c5df9d82fc32bf2cb66f00c · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0s · reused
+- all · 054d6fbf92a6ae58031ed416b27885400b6e7d338c5df9d82fc32bf2cb66f00c · `lefthook run pre-commit` · exit 0 · 0s · reused
+- all · 054d6fbf92a6ae58031ed416b27885400b6e7d338c5df9d82fc32bf2cb66f00c · `task showcase` · exit 0 · 45.1s
 <!-- /ql:checks -->
 
 ## Quality pass
