@@ -3,19 +3,17 @@
 ## Summary
 
 <!-- ql:summary -->
-6 of 8 points assessed · 5 passed
+6 of 8 points assessed · 6 passed
 
-Independent review failed; the recorded findings need attention.
+Round 2: checking after 0 fix rounds.
 <!-- /ql:summary -->
 
 ## Open items
 
 <!-- ql:open-items -->
-- **Failed:** Point 3 · The app part shows the same job done with buttons · The app clip's rounded frame is broken in the committed showcase. The real app (Wails dev) clone, Install, setup dialog and the dock's `installed platform-team into` are all there, but every clip frame, CLI and app alike, has a second rounded top edge at y≈693 of 896 and no bottom border or corners. This is not a plain rounded frame (D1); a run whose `frame.png` rendered intact shows it right:
-- **Unverified:** A failed run can delete another run's work folder. If a second run fails preflight while one is already running, its EXIT trap still removes the fixed `/tmp/kirokit-demo` and kills the `kirokit-showcase` tmux server, which belong to the other run
-- **Unverified:** The GIF shows a Kiro session resume id. The CLI clip ends on `Resume with: kiro-cli --resume-id sess_…` for an empty chat session. It is not a credential, but the privacy check does not consider it
-- **Unverified:** One check prints a different failure message than documented. `checks.sh length` on a non-media file exits 1 with only ffprobe's error, not `showcase: length: …`; it still fails closed
-- **Unverified:** The new recorder tests are not part of `task ci` or CI. They run with `node --test scripts/showcase/`, as CONTRIBUTING now says
+- **Unverified:** Two recorder tests broke when an unrelated dev server held port 5173. Their port probe only bound 127.0.0.1, so a vite on `[::1]:5173` slipped past it and `record.sh`'s own lsof preflight then failed them; the probe now asks lsof the same way `record.sh` does, and the two tests skip instead (test-only, unstaged)
+- **Unverified:** The GIF still shows a Kiro session resume id. The CLI clip ends on `Resume with: kiro-cli --resume-id sess_…` for an empty chat session. It is not a credential, but the privacy check does not consider it
+- **Unverified:** The recorder tests are still outside `task ci` and CI. They run with `node --test scripts/showcase/`, as CONTRIBUTING says
 - **Only you can confirm:** The pacing feels right
 - **Only you can confirm:** It looks right on the rendered GitHub page
 <!-- /ql:open-items -->
@@ -31,15 +29,15 @@ Independent review failed; the recorded findings need attention.
   - State: done
   - Result: done · 7 checks
 - **Independent review** · fresh helper
-  - State: fail
-  - Result: failed · 1 of 6 points
+  - State: done
+  - Result: done · 6 of 6 points · 2 yours to confirm
 - **Second opinion** · another vendor's agent
   - State: skipped
   - Result: not run
   - Why it runs here: Not run: Second opinion is off in Settings, though it would run here because the change crosses a trust boundary: the person's SOPS age key — creates a symlink to (or when set) inside, It never reads, copies or prints the key, The link is removed in the, the Plan says it is risky: the recording drives outside tools (a logged-in, a GitHub clone over the network, Chrome via a new dev-only dependency) and links the and slice 2 is marked risky; say "get a second opinion" to have one.
 - **Fix rounds** · the build session
-  - State: waiting
-  - Result: not yet
+  - State: done
+  - Result: done · none needed
 <!-- /ql:lanes -->
 
 ## Done means, checked
@@ -47,20 +45,21 @@ Independent review failed; the recorded findings need attention.
 <!-- ql:proof -->
 | Done means | Proof | |
 |---|---|---|
-| 1. A 30–60 second showcase autoplays at the top of the GitHub README | Does the GIF loop by itself right under the intro on github.com, with both screenshots below? `README.md:10` sits between the intro and `## Quickstart`, and the GIF's loop count is 0 (forever); push the branch and open the repository page to confirm. | yours to confirm |
-| 2. The CLI part shows a team's config installed and its agent starting | ![GIF frames show `kirokit install platform-team` printing `installed platform-team into /tmp/kirokit-demo/kiro`, `kiro-cli chat --agent devops --v3` starting, and `/jir` listing `/jira-search` and `/jira-triage (file prompt)`,](evidence/it1-scenario-1-step-4-install.png) | passed |
-| 3. The app part shows the same job done with buttons | ![The app clip's rounded frame is broken in the committed showcase. The real app (Wails dev) clone, Install, setup dialog and the dock's `installed platform-team into` are all there, but every clip frame, CLI and app alike, has a second rounded top edge at y≈693 of 896 and no bottom border or corners. This is not a plain rounded frame (D1); a run whose `frame.png` rendered intact shows it right:](evidence/it1-done-3-committed-seam.png) | failed |
-| 4. A viewer can follow every step without sound | Does each caption stay long enough to read without sound? There are four numbered captions plus title and end cards, and `caption.mjs` refuses any caption shorter than 2.5 s (fresh runs: caption 2 at 5.1 s of a 21.7 s CLI clip, caption 4 at 6.6 s of an 11.4 s app clip); watch the GIF and judge the pacing. D1 can also drop caption 1 (1 in 20 renders). | yours to confirm |
-| 5. No private details are on screen | The privacy check passes on two fresh runs' cast, dock text and captions; independent greps find no home path, user name or git email in the cast; `strings` on both committed files finds none; the frames show only `/tmp/kirokit-demo` paths and the public GitHub slug,. | passed |
-| 6. The video can be made again with one command when the UI changes | `scripts/showcase/` holds the recorder; two fresh `record.sh --keep` runs of the judged tree recorded the real CLI and app and rebuilt both files in about 52 s; CONTRIBUTING's "Showcase video" names `task showcase`,. | passed |
-| 7. The README GIF is small enough for GitHub to show it reliably | The GIF is 2395833 bytes (gate 8 MiB, well under ~10 MB), 1000×700, 12 fps, loops forever. | passed |
-| 8. A sharp MP4 of the same showcase sits beside the GIF | `assets/kirokit-showcase.mp4` is 813601 bytes, H.264 `yuv420p` 1280×896 at 30 fps, 36.1 s; the GIF is made from that MP4 in the same run. | passed |
+| 1. A 30–60 second showcase autoplays at the top of the GitHub README | Does the GIF loop by itself right under the intro on github.com, with both screenshots below? `README.md:10-11` is unchanged since iteration 1 and sits above `## Quickstart`; the re-recorded GIF is 36.4 s with a NETSCAPE loop block,; push the branch and open the repository page to confirm. | yours to confirm |
+| 2. The CLI part shows a team's config installed and its agent starting | ![The re-recorded GIF shows `kirokit install platform-team` printing `installed platform-team into /tmp/kirokit-demo/kiro`, `kiro-cli chat --agent devops --v3` starting, and `/jir` listing `/jira-search` and `/jira-triage (file prompt)`,](evidence/it2-scenario-1-step-4-install.png) | passed |
+| 3. The app part shows the same job done with buttons | The committed media show the real app (Wails dev) clone, Install and the dock's `installed platform-team into` inside one complete rounded frame; sampled every 0.5 s from 2.5 to 32.5 s, the bottom, left and right border pixels are always the frame colour (≈`#3a3450` after H.264), never clip content as with D1; a fresh run's `frame.png` has all four borders and a rounded bottom-left corner,,. | passed |
+| 4. A viewer can follow every step without sound | ![Does each caption stay long enough to read without sound? The re-recorded cut has four numbered captions plus title and end cards; caption 2 starts at 5.27 s of a 20.18 s CLI clip and caption 4 at 6.59 s of an 11.41 s app clip, and every caption render is now complete (20 of 20),; watch the GIF and judge the pacing](evidence/it2-scenario-1-contact.png) | yours to confirm |
+| 5. No private details are on screen | `strings` on both committed files finds no home path, user name or git email; the fresh run's privacy check on its cast, dock text and captions exits 0; the frames show only `/tmp/kirokit-demo` paths and the public GitHub slug,. | passed |
+| 6. The video can be made again with one command when the UI changes | A fresh `record.sh --keep` of the judged tree (exported with `git archive`) recorded the real CLI and app and rebuilt both files, exit 0; CONTRIBUTING's "Showcase video" names `task showcase`,. | passed |
+| 7. The README GIF is small enough for GitHub to show it reliably | The committed GIF is 2453580 bytes (gate 8 MiB, well under ~10 MB), 1000×700, 12 fps, loops forever. | passed |
+| 8. A sharp MP4 of the same showcase sits beside the GIF | `assets/kirokit-showcase.mp4` is 825273 bytes, H.264 `yuv420p` 1280×896 at 30 fps, 36.4 s; the GIF is made from that MP4 in the same run. | passed |
 <!-- /ql:proof -->
 
 ## Fix rounds
 
 <!-- ql:fix-rounds -->
 - Round 1 · 3 points still open
+- Round 2 · everything checked passed
 <!-- /ql:fix-rounds -->
 
 ## Second opinion

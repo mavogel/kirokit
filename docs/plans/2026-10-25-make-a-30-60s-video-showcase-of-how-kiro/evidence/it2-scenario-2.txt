@@ -1,0 +1,13 @@
+# done 5: strings of the committed media (ec70a9d) against the home path, user name and git email (values redacted)
+assets/kirokit-showcase.gif: home=0 user=0 email=0
+assets/kirokit-showcase.mp4: home=0 user=0 email=0
+# scenario 2 steps 1-3 rerun (checks.sh changed)
+showcase: privacy: home path in <tmp>/home.txt
+step1 exit 1
+step2 exit 0
+showcase: privacy: git email in <tmp>/email.txt
+step3 exit 1
+# probe: checks.sh length on the still PNG / empty file
+showcase: length: cannot read the length of <tmp>/empty.mp4
+exit 1
+committed media length exit 0

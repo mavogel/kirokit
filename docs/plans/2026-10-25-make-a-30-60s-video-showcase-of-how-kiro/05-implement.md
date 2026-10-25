@@ -28,17 +28,15 @@ Delivered 25 Oct, 11:37
 - One command makes the checked GIF and MP4 · slice 2 · 5 tasks
 - The README opens with the showcase and commits keep media intact · slice 3 · 3 tasks
 
-**Verified** · 3
+**Verified** · 4
 - Project checks passed · 7 of 7 · recorded
 - Security review · done · nothing severe in the change
-- Independent review of the Done means points · 5 of 8 proved
+- Independent review · done · 6 of 6 points · 2 yours to confirm
+- Independent review of the Done means points · 6 of 8 proved
 
-**Left** · 5
+**Left** · 2
 - Done means 1: A 30–60 second showcase autoplays at the top of the GitHub README · yours to confirm in Review
-- Done means 3: The app part shows the same job done with buttons · failed
 - Done means 4: A viewer can follow every step without sound · yours to confirm in Review
-- Independent review · failed
-- Fix rounds · Fix · not done
 <!-- /ql:delivered -->
 
 ## Decided while building

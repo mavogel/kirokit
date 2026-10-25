@@ -1,0 +1,31 @@
+✔ length: a still image without a length fails with the check's message (65.932084ms)
+✔ record.sh: a dead run's folder is taken over and removed when the run fails (272.720333ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 472.030208
+== mutation: old checks.sh, pid guard refuses on any pid file
+✖ length: a still image without a length fails with the check's message (275.918167ms)
+✖ record.sh: a dead run's folder is taken over and removed when the run fails (323.075083ms)
+✖ failing tests:
+✖ length: a still image without a length fails with the check's message (275.918167ms)
+    actual: 'awk: division by zero\n source line number 1\nshowcase: length: /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/showcase-test-Qk7tmw/still.png is N/A s (needs 30 to 60 s)\n',
+✖ record.sh: a dead run's folder is taken over and removed when the run fails (323.075083ms)
+    actual: 'showcase: preflight: another showcase run (pid 59117) is using /tmp/kirokit-demo\n',
+== after portFree uses lsof (an unrelated vite holds [::1]:5173)
+✔ app-drive: no output folder prints the usage (252.847667ms)
+✔ app-drive: without a dev server it stops at the welcome step (860.958625ms)
+✔ record.sh: an unknown flag prints the usage (8.152583ms)
+✔ record.sh: a missing tool fails preflight and leaves no work folder (11.687333ms)
+✔ record.sh: a missing age key fails preflight naming its path (16.660917ms)
+﹣ record.sh: a second run leaves a live run's folder alone (96.554542ms) # a dev server port is in use
+﹣ record.sh: a dead run's folder is taken over and removed when the run fails (97.890458ms) # a dev server port is in use
+✔ record.sh: a busy dev-server port fails preflight (112.93475ms)
+ℹ tests 8
+ℹ pass 6
+ℹ fail 0
+ℹ skipped 2

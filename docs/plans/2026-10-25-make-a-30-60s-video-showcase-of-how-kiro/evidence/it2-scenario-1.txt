@@ -1,0 +1,8 @@
+# scenario 1 at ec70a9d
+step 1: fresh record.sh --keep of the exported tree exit 0, log names cli, app, captions, compose, publish — see it2-fresh-run.txt (task showcase runs this script; no receipt exists at this revision)
+step 2: committed MP4 duration 36.433333 s; GIF 36.410000 s; fresh run 36.3 s
+step 3: assets/kirokit-showcase.gif 2453580 assets/kirokit-showcase.mp4 825273  (limits 8388608 / 4194304)
+step 4: it2-scenario-1-step-4-install.png (GIF 7 s: kirokit install platform-team -> installed platform-team into /tmp/kirokit-demo/kiro, caption 1), it2-scenario-1-step-4-jir.png (GIF 19 s: /jir lists /jira-search and /jira-triage (file prompt), caption 2)
+step 5: it2-scenario-1-step-5-clone.png (GIF 25 s: Clone form, git clone in dock, caption 3), it2-scenario-1-step-5-installed.png (GIF 31 s: dock prints installed platform-team into /tmp/kirokit-demo/home/.kiro, badge installed, caption 4); rounded frame complete: it2-done-3-border-scan.txt
+step 6: ls /tmp/kirokit-demo -> lsd: /tmp/kirokit-demo: No such file or directory (os error 2).
+GIF loop: NETSCAPE2.0 blocks = 1

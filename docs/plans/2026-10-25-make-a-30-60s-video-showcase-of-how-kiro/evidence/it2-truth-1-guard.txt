@@ -1,0 +1,5 @@
+# guard probe: /tmp/kirokit-demo/pid holds a live pid (81306, a sleep this probe started), real tools, lsof shim for the foreign [::1]:5173
+showcase: preflight: another showcase run (pid 81306) is using /tmp/kirokit-demo
+exit 1
+folder after: clip.txt  clip=in progress
+probe folder removed: ls: /tmp/kirokit-demo: No such file or directory

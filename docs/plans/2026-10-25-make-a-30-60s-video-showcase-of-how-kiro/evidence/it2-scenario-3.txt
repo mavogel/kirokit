@@ -1,0 +1,14 @@
+# scenario 3 in the exported ec70a9d tree (lsof shim for the foreign [::1]:5173 only); folder at start: bin home kiro out pid work  pid file 74063 alive=no
+step 1: key inode/mtime 237292720 1791887658; assets e81aac4 ada15ac 
+started record.sh pid 76570 (own process group)
+log before SIGINT:
+  
+  added 1 package in 300ms
+  showcase: cli: recording the terminal
+  showcase: cli: cli.gif ready
+  showcase: app: starting the app in Wails dev mode
+  showcase: app: recording the app
+step 2: record.sh exit 130
+step 3: ls /tmp/kirokit-demo: ls: /tmp/kirokit-demo: No such file or directory
+  wails/vite of this tree alive: 0; listeners 34115=0 5174=0
+  key inode/mtime 237292720 1791887658; assets e81aac4 ada15ac 

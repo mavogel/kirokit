@@ -1,0 +1,18 @@
+== regression sensitivity: pre-fix caption.mjs (reused, resized page), 3 attempts
+✖ caption: every render paints the whole frame and every caption (1155.314ms)
+✖ caption: every render paints the whole frame and every caption (1155.314ms)
+✖ caption: every render paints the whole frame and every caption (1192.948542ms)
+✖ caption: every render paints the whole frame and every caption (1192.948542ms)
+✖ caption: every render paints the whole frame and every caption (1175.010959ms)
+✖ caption: every render paints the whole frame and every caption (1175.010959ms)
+== fixed caption.mjs
+✔ caption: every render paints the whole frame and every caption (13469.80975ms)
+  AssertionError [ERR_ASSERTION]: run 2: frame bottom border
+  + actual - expected
+    actual: '00000000',
+    expected: '3a3450ff',
+== fixed caption.mjs: 4 x 5 renders = 20 renders, each checks 4 frame borders, clear centre, corner, 4 caption centres
+✔ caption: every render paints the whole frame and every caption (13511.218ms)
+✔ caption: every render paints the whole frame and every caption (13614.775875ms)
+✔ caption: every render paints the whole frame and every caption (13849.306875ms)
+✔ caption: every render paints the whole frame and every caption (13843.878958ms)
