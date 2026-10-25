@@ -4,15 +4,52 @@ Task: `docs/plans/2026-10-25-feat-make-the-desktop-and-cli-also-avail/`
 
 ## Why the change
 
-<!-- fill: exactly one sentence: the problem it solves and what becomes possible once it ships -->
+kirokit and its desktop app only shipped for macOS (the CLI also as a bare Linux tar.gz); this ships both for Linux and Windows on amd64 and arm64, so Linux and Windows team members can install their team's Kiro setup, including MCP servers that read SOPS secrets.
 
 ## What a reviewer must know
 
-<!-- fill: 1 to 3 bullets (a migration, compatibility, a deliberate omission, a surprising decision), or "None." -->
+- **Nothing here has run on Windows or a GitHub runner yet.** The branch is not pushed; the `cmd.exe` launch, the ConPTY terminal, the Windows app start and the split release (which needs `GORELEASER_KEY`) are proved only by the first CI and Desktop runs and a release dry run (`gh workflow run release.yaml --ref <branch> -f dry_run=true`). macOS was run here; Linux in a container.
+- **Windows refuses some MCP arguments by design.** sops runs the command through `cmd.exe` there, so Windows installs reject arguments with whitespace, `"` or `& | < > ^ % ! ( )`. platform-team's header became `Authorization:${ATLASSIAN_AUTH}` (one golden line, in two goldens); macOS/Linux output is otherwise byte-identical. The release now builds on three runners and pushes the tag only after all of them succeed; CI keeps a job named `build-vet-lint-test` because the `main` ruleset requires it.
+- **Follow-ups from the reviewer:** the release's `dry_run` input is declared but never read (as before: every manual run is a dry run); a symlinked Kiro-home folder is backed up as a link, so the backup points at files the install then overwrites, as on `main`.
 
 ## What changed
 
-<!-- fill: the change outline in structural views, never a file-by-file list: only the views that explain this change, each after one line that says why it matters -->
+How a secret-reading MCP server is launched now depends on the OS that installs it; `render` and the goldens always use the POSIX form:
+
+```diff
+ kirokit install <team>
+-  render.RenderTeam(…, kiroHome)                         POSIX quoting, native paths
++  render.RenderTeamWith(…, Options{
++      KiroHome:    filepath.ToSlash(kiroHome),            C:/Users/…/.kiro on Windows
++      LaunchShell: Cmd on windows, else POSIX })
+     sopsArgsJSON -> sopswrap.BuildWrapperFor(shell, file, cmd, args)
+       POSIX: "sops exec-env <file> 'npx … Authorization:${X}'"   (sh -c, as before)
++      Cmd:   "sops exec-env <file> npx … Authorization:${X}"     (cmd.exe /C; unsafe token -> render: <team>/<agent>: argument "…" cannot pass …)
+```
+
+The desktop app keeps one OS-independent core; what differs per OS lives in build-tagged pairs or in pure functions of the OS name, so every branch is tested on any machine:
+
+```text
+desktop/
+├── terminal/terminal_unix.go      creack/pty (today's file, unchanged)
+├── terminal/terminal_windows.go   pseudo console via golang.org/x/sys/windows; Close = taskkill /T
+├── procgroup_{unix,windows}.go    kill the process tree on timeout; no console windows on Windows
+├── platform.go                    per OS: data folder, age-key path, hints, tool folders, PATH lookup,
+│                                  bundled-CLI location, shell tab (zsh/bash or PowerShell) and its name
+└── smoke.go                       KIROKIT_DESKTOP_SMOKE=1: quit once the page loads (CI start check)
+internal/dirlink/                  symlink, or a junction on Windows; install, uninstall and backup use it
+internal/externalskills/lock.go    + executables: […]   git's exec bits, so Windows can verify the hash
+```
+
+The release becomes a split build, one job per OS, merged at the end:
+
+```text
+version (svu) ─┬─ app-linux-arm64 (ubuntu-24.04-arm) ──┐
+               └─ split: macOS │ Linux │ Windows  ─────┴─ merge: push tag, goreleaser continue --merge
+Linux:   kirokit_<v>_linux_<arch>.{deb,rpm,tar.gz} · kirokit-desktop_<v>_linux_<arch>.{deb,rpm} · cask on_linux
+Windows: kirokit_<v>_windows_<arch>.zip · Scoop manifest (mavogel/scoop-bucket) · kirokit-desktop_<v>_windows_<arch>-setup.exe
+macOS:   unchanged (tar.gz, DMGs, both casks)
+```
 
 ## Screens compared
 
@@ -26,7 +63,7 @@ Task: `docs/plans/2026-10-25-feat-make-the-desktop-and-cli-also-avail/`
 ## Built, slice by slice
 
 <!-- ql:slices -->
-7 slices · 24 tasks · 17 commits · 88 files · +3503 −344
+7 slices · 24 tasks · 18 commits · 88 files · +3503 −344
 
 **Slice 1 · Windows MCP servers get their SOPS secrets** · T1, T2, T3, T4, T5 · 17 files · +697 −41
 
@@ -176,6 +213,38 @@ No acceptance recorded; 17 items remain unverified for Review. Lanes that ran: S
 
 ## Try it yourself
 
-<!-- fill: ### Try it (up to three steps, each a #### block with Do, Run, Expect and Saw lines), ### Not verified and ### Docs; the App shows it in the Approve view -->
+### Try it
 
-<!-- optional section here, only when there is content: "Security" -->
+#### 1. An installed MCP server gets its arguments and decrypted secret unchanged
+- Do: run the SOPS launch test, which installs a fixture team and starts its server through the real `sops exec-env`.
+- Run: `KIROKIT_REQUIRE_SOPS=1 go test ./cmd/kirokit/commands/ -run TestInstall_SopsLaunch -v`
+- Expect: `--- PASS: TestInstall_SopsLaunchReachesTheServerUnchanged`
+- Saw: passes on macOS and in the Linux container — `evidence/it2-oracle-macos.txt`, `evidence/it2-scenario-1-linux.txt`
+
+#### 2. macOS installs exactly as before, including through a symlinked agents folder
+- Do: install platform-team into a temporary Kiro home whose `agents` folder is a symlink.
+- Run: `go build -o kirokit ./cmd/kirokit && T=$(mktemp -d) && mkdir -p $T/real $T/kiro && ln -s $T/real $T/kiro/agents && KIRO_HOME=$T/kiro ./kirokit install platform-team`
+- Expect: `installed platform-team into …/kiro`, and the installed files match `main`'s
+- Saw: byte-identical to `main` for a fresh home, an existing folder and a symlinked folder — `evidence/it2-truth-macos-install.txt`
+
+#### 3. The app on macOS still names its shell tab zsh and starts
+- Do: build the app and smoke-start it, then open it and look at the dock.
+- Run: `task desktop:build && KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit; echo $?`
+- Expect: `0`; in the running app the dock's second tab reads **zsh**
+- Saw: exit 0 and the same bundle layout — `evidence/it2-scenario-2-steps-1-5.txt`; the dock's tab reads zsh — `evidence/it1-scenario-2-step-6-dock-shell.png`
+
+### Not verified
+
+- Anything on Windows (the `cmd.exe` launch, the ConPTY terminal, the PowerShell tab, the app start, the setup `.exe` installing) and the CI, Desktop and Release workflows on GitHub's runners: the branch is not pushed, and the build may not push — open item T10.
+- The `.deb`/`.rpm`/zip/Scoop/cask release files as GoReleaser's split and merge produce them in CI: needs `GORELEASER_KEY`, which exists only in GitHub. Locally, Linux split snapshots ran and the packages installed on a clean Ubuntu and started; the merge needs the key.
+- `brew install --cask mavogel/tap/kirokit` on Linux and `scoop install kirokit` after the first real release.
+- The macOS "brew install sops" hint (scenario 2 step 7): sops is installed on this Mac, so the hint never shows; its text is unchanged.
+
+### Docs
+
+- README: install per OS (CLI and app), prerequisites and the age-key path per OS, SmartScreen steps beside the macOS quarantine note, the Windows argument rule, junctions, `executables` in the lock, drive-path sources, the shell tab's name, scheduled sync macOS/Linux only.
+- CONTRIBUTING: three-OS CI, Linux/Windows build prerequisites, `scripts/linux-docker.sh`. AGENTS.md: the per-OS layout and rules.
+
+## Security
+
+- Low · `internal/sopswrap/sopswrap.go`: the `cmd.exe` launch refuses whitespace, quotes and `& | < > ^ % ! ( )`, so template values cannot inject commands; secrets stay in the encrypted file and are referenced only as `${VAR}`. No action.
