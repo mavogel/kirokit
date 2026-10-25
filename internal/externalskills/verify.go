@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"sort"
 	"strings"
@@ -143,14 +144,29 @@ func resolveCollection(teamDir string, e manifest.ExternalSkill, lock Lock, clai
 // checkVendored verifies that a lock entry's vendored directory exists, has a
 // SKILL.md, and hashes to the locked value.
 func checkVendored(teamDir string, le LockEntry, add func(string, string, ...any)) {
+	checkVendoredOn(runtime.GOOS, teamDir, le, add)
+}
+
+func checkVendoredOn(goos, teamDir string, le LockEntry, add func(string, string, ...any)) {
 	dir := filepath.Join(SkillsDir(teamDir), le.Name)
 	if _, err := os.Stat(dir); err != nil {
 		add(le.Name, "vendored files are missing")
 	} else if _, err := os.Stat(filepath.Join(dir, "SKILL.md")); err != nil {
 		add(le.Name, "vendored files have no SKILL.md")
-	} else if sum, err := HashDir(dir); err != nil {
+	} else if sum, err := vendoredHash(goos, dir, le); err != nil {
 		add(le.Name, "%v", err)
+	} else if sum != le.SHA256 && goos == "windows" && len(le.Executables) == 0 {
+		add(le.Name, "vendored content does not match the lock file, or the lock predates recorded execute bits (Windows keeps none, so the lock must list them)")
 	} else if sum != le.SHA256 {
 		add(le.Name, "vendored content does not match the lock file")
 	}
+}
+
+// vendoredHash hashes a vendored skill as the lock does. Windows keeps no
+// execute bit, so there the bits come from the lock entry.
+func vendoredHash(goos, dir string, le LockEntry) (string, error) {
+	if goos == "windows" {
+		return hashDirWithExecutables(dir, le.Executables)
+	}
+	return HashDir(dir)
 }

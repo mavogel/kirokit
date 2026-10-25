@@ -4,10 +4,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/mavogel/kirokit/internal/manifest"
+	"github.com/mavogel/kirokit/internal/testutil"
 )
 
 func git(t *testing.T, dir string, args ...string) string {
@@ -16,7 +18,7 @@ func git(t *testing.T, dir string, args ...string) string {
 	cmd.Dir = dir
 	cmd.Env = append(WithoutRepoGitEnv(),
 		"GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t",
-		"GIT_CONFIG_GLOBAL=/dev/null", "GIT_CONFIG_SYSTEM=/dev/null")
+		"GIT_CONFIG_GLOBAL="+os.DevNull, "GIT_CONFIG_SYSTEM="+os.DevNull)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("git %v in %s: %v\n%s", args, dir, err, out)
@@ -90,7 +92,7 @@ func TestFetch_TagPinVendorsThatTagsTreeAndRecordsItsCommit(t *testing.T) {
 		t.Error("lock hash does not match the vendored files")
 	}
 	onDisk, err := ReadLock(LockPath(teamDir))
-	if err != nil || len(onDisk.Skills) != 1 || onDisk.Skills[0] != lock.Skills[0] {
+	if err != nil || len(onDisk.Skills) != 1 || !reflect.DeepEqual(onDisk.Skills[0], lock.Skills[0]) {
 		t.Errorf("lock on disk = %+v (%v), want the returned lock", onDisk, err)
 	}
 	if err := Verify(teamDir, []manifest.ExternalSkill{pdfEntry(repo, "v1")}); err != nil {
@@ -101,15 +103,20 @@ func TestFetch_TagPinVendorsThatTagsTreeAndRecordsItsCommit(t *testing.T) {
 func TestFetch_PreservesExecutableBitOfNestedScript(t *testing.T) {
 	repo, _, _ := sourceRepo(t)
 	teamDir := teamDirFor(t)
-	if _, err := Fetch(teamDir, []manifest.ExternalSkill{pdfEntry(repo, "v1")}); err != nil {
+	lock, err := Fetch(teamDir, []manifest.ExternalSkill{pdfEntry(repo, "v1")})
+	if err != nil {
 		t.Fatal(err)
+	}
+	// git's own record of the mode, so a Windows checkout can verify the hash.
+	if want := []string{"scripts/run.sh"}; testutil.ExecBitsKept && !reflect.DeepEqual(lock.Skills[0].Executables, want) {
+		t.Errorf("lock executables = %q, want %q", lock.Skills[0].Executables, want)
 	}
 	script := filepath.Join(SkillsDir(teamDir), "pdf", "scripts", "run.sh")
 	info, err := os.Stat(script)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if info.Mode().Perm()&0o100 == 0 {
+	if testutil.ExecBitsKept && info.Mode().Perm()&0o100 == 0 {
 		t.Errorf("run.sh mode = %v, want owner-executable", info.Mode().Perm())
 	}
 	if got := readFile(t, filepath.Join(SkillsDir(teamDir), "pdf", "reference.md")); got != "ref\n" {
@@ -172,7 +179,7 @@ func TestFetch_BranchRefFollowsTheBranchAndRerunIsIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if readFile(t, LockPath(teamDir)) != lockBytes || second.Skills[0] != first.Skills[0] {
+	if readFile(t, LockPath(teamDir)) != lockBytes || !reflect.DeepEqual(second.Skills[0], first.Skills[0]) {
 		t.Error("re-running Fetch with no upstream change altered the lock")
 	}
 
@@ -205,9 +212,7 @@ func TestFetch_FailuresNameTheSkillAndLeaveEverythingUntouched(t *testing.T) {
 	repo, _, _ := sourceRepo(t)
 	writeFile(t, filepath.Join(repo, "skills/nomanifest/readme.md"), "no SKILL.md\n", 0o644)
 	writeFile(t, filepath.Join(repo, "skills/linked/SKILL.md"), "x\n", 0o644)
-	if err := os.Symlink("SKILL.md", filepath.Join(repo, "skills/linked/alias.md")); err != nil {
-		t.Fatal(err)
-	}
+	testutil.Symlink(t, "SKILL.md", filepath.Join(repo, "skills/linked/alias.md"))
 	commitAll(t, repo, "broken skills")
 
 	good := pdfEntry(repo, "v1")
@@ -393,7 +398,7 @@ func TestFetch_CollectionVendorsEverySkillAndIgnoresDirectoriesWithoutSkillMD(t 
 		t.Error("notes (no SKILL.md) was vendored")
 	}
 	info, err := os.Stat(filepath.Join(SkillsDir(teamDir), "a", "run.sh"))
-	if err != nil || info.Mode().Perm()&0o100 == 0 {
+	if err != nil || (testutil.ExecBitsKept && info.Mode().Perm()&0o100 == 0) {
 		t.Errorf("a/run.sh = %v (%v), want owner-executable", info, err)
 	}
 	if err := Verify(teamDir, entries); err != nil {
@@ -428,9 +433,7 @@ func TestFetch_CollectionExcludeSkipsSkillsAndRefetchRemovesNewlyExcludedOnes(t 
 func TestFetch_CollectionFailuresNameTheProblemAndLeaveEverythingUntouched(t *testing.T) {
 	repo, _ := collectionRepo(t)
 	writeFile(t, filepath.Join(repo, "skills/linked/SKILL.md"), "x\n", 0o644)
-	if err := os.Symlink("SKILL.md", filepath.Join(repo, "skills/linked/alias.md")); err != nil {
-		t.Fatal(err)
-	}
+	testutil.Symlink(t, "SKILL.md", filepath.Join(repo, "skills/linked/alias.md"))
 	commitAll(t, repo, "add a skill with a symlink")
 
 	tests := []struct {

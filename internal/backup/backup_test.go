@@ -4,8 +4,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"testing"
 	"time"
+
+	"github.com/mavogel/kirokit/internal/testutil"
 )
 
 func fixedClock(t *testing.T, at time.Time) {
@@ -100,9 +103,7 @@ func TestCopyAside_CopiesTheWholeFolderAndLeavesTheSourceUntouched(t *testing.T)
 	src := filepath.Join(home, "agents")
 	put(t, filepath.Join(src, "mine.json"), "mine", 0o600)
 	put(t, filepath.Join(src, "nested", "run.sh"), "echo", 0o700)
-	if err := os.Symlink("mine.json", filepath.Join(src, "link.json")); err != nil {
-		t.Fatal(err)
-	}
+	testutil.Symlink(t, "mine.json", filepath.Join(src, "link.json"))
 
 	got, err := CopyAside(src, "20261015-101530")
 	if err != nil {
@@ -115,7 +116,7 @@ func TestCopyAside_CopiesTheWholeFolderAndLeavesTheSourceUntouched(t *testing.T)
 	if read(t, filepath.Join(got, "mine.json")) != "mine" || read(t, filepath.Join(got, "nested", "run.sh")) != "echo" {
 		t.Error("the copy is missing files")
 	}
-	if info, err := os.Stat(filepath.Join(got, "nested", "run.sh")); err != nil || info.Mode().Perm() != 0o700 {
+	if info, err := os.Stat(filepath.Join(got, "nested", "run.sh")); err != nil || (testutil.ExecBitsKept && info.Mode().Perm() != 0o700) {
 		t.Errorf("copied script mode = %v (%v), want 700", info.Mode().Perm(), err)
 	}
 	if target, err := os.Readlink(filepath.Join(got, "link.json")); err != nil || target != "mine.json" {
@@ -151,9 +152,7 @@ func TestDiffers(t *testing.T) {
 	other := filepath.Join(dir, "other")
 	put(t, same, "x", 0o600)
 	put(t, other, "y", 0o600)
-	if err := os.Symlink(same, filepath.Join(dir, "link")); err != nil {
-		t.Fatal(err)
-	}
+	testutil.Symlink(t, same, filepath.Join(dir, "link"))
 
 	tests := []struct {
 		name string
@@ -198,7 +197,13 @@ func TestTreesEqual(t *testing.T) {
 		{"a byte differs", build(map[string]string{"agents/a.json": "A", "skills/s/SKILL.md": "s"}), false},
 		{"extra file", build(map[string]string{"agents/a.json": "a", "skills/s/SKILL.md": "s", "notes.txt": "n"}), false},
 		{"missing file", build(map[string]string{"agents/a.json": "a"}), false},
-		{"exec bit differs", build(base, "agents/a.json"), false},
+	}
+	if testutil.ExecBitsKept {
+		tests = append(tests, struct {
+			name  string
+			other string
+			want  bool
+		}{"exec bit differs", build(base, "agents/a.json"), false})
 	}
 	for _, tc := range tests {
 		got, err := TreesEqual(build(base), tc.other)
@@ -232,6 +237,9 @@ func TestCopyAside_CopiesASingleFile(t *testing.T) {
 func TestCopyAside_RemovesAHalfWrittenBackupWhenTheCopyFails(t *testing.T) {
 	if os.Geteuid() == 0 {
 		t.Skip("root can read an unreadable file")
+	}
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows file modes cannot make a file unreadable")
 	}
 	home := t.TempDir()
 	src := filepath.Join(home, "agents")

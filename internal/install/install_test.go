@@ -10,7 +10,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mavogel/kirokit/internal/dirlink"
 	"github.com/mavogel/kirokit/internal/sopswrap"
+	"github.com/mavogel/kirokit/internal/testutil"
 )
 
 func mustWrite(t *testing.T, path, content string) {
@@ -287,9 +289,7 @@ func TestAttachKnowledgeBase_ReplacesAStaleSymlinkAtTheMountPoint(t *testing.T) 
 	mustWrite(t, filepath.Join(oldSource, "a.md"), "old\n")
 	mustWrite(t, filepath.Join(newSource, "b.md"), "new\n")
 	mount := filepath.Join(dir, "mount")
-	if err := os.Symlink(oldSource, mount); err != nil {
-		t.Fatalf("seed stale symlink: %v", err)
-	}
+	testutil.Symlink(t, oldSource, mount)
 
 	if err := AttachKnowledgeBase(agentJSON, mount, newSource); err != nil {
 		t.Fatalf("AttachKnowledgeBase returned error: %v", err)
@@ -313,20 +313,17 @@ func TestInstall_WithKnowledgeBaseCreatesSymlinkAndResourceEntry(t *testing.T) {
 		t.Fatalf("Install with KnowledgeBase returned error: %v", err)
 	}
 
-	linkInfo, err := os.Lstat(kbMount)
-	if err != nil {
-		t.Fatalf("expected symlink at mount point %s: %v", kbMount, err)
+	// A symlink, or on Windows without the symlink privilege a junction.
+	if !dirlink.Is(kbMount) {
+		t.Fatalf("%s is not a link", kbMount)
 	}
-	if linkInfo.Mode()&os.ModeSymlink == 0 {
-		t.Fatalf("%s is not a symlink", kbMount)
-	}
-	target, err := os.Readlink(kbMount)
+	target, err := dirlink.Target(kbMount)
 	if err != nil {
 		t.Fatalf("readlink %s: %v", kbMount, err)
 	}
 	absSource, _ := filepath.Abs(kbSource)
-	if target != absSource {
-		t.Errorf("symlink target = %q, want %q", target, absSource)
+	if filepath.Clean(target) != absSource {
+		t.Errorf("link target = %q, want %q", target, absSource)
 	}
 
 	agentJSON, err := os.ReadFile(filepath.Join(kiroHome, "agents", "agent1.json"))
@@ -336,8 +333,32 @@ func TestInstall_WithKnowledgeBaseCreatesSymlinkAndResourceEntry(t *testing.T) {
 	if !strings.Contains(string(agentJSON), `"type":"knowledgeBase"`) && !strings.Contains(string(agentJSON), `"type": "knowledgeBase"`) {
 		t.Errorf("installed agent1.json = %s, want a knowledgeBase resource entry", agentJSON)
 	}
-	if !strings.Contains(string(agentJSON), kbMount) {
-		t.Errorf("installed agent1.json = %s, want it to reference the mount point %s", agentJSON, kbMount)
+	if !strings.Contains(string(agentJSON), `"file://`+filepath.ToSlash(kbMount)+`"`) {
+		t.Errorf("installed agent1.json = %s, want it to reference the mount point file://%s", agentJSON, filepath.ToSlash(kbMount))
+	}
+
+	// A reinstall replaces kirokit's own link rather than refusing it.
+	if err := Install(roots, team, kiroHome, kb); err != nil {
+		t.Fatalf("reinstall with KnowledgeBase: %v", err)
+	}
+	if !dirlink.Is(kbMount) {
+		t.Errorf("%s is not a link after a reinstall", kbMount)
+	}
+}
+
+func TestInstall_KnowledgeBaseRefusesARealFolderAtTheMountPoint(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	kbSource := t.TempDir()
+	kbMount := filepath.Join(kiroHome, "kirokit-kb", team, "agent1")
+	mustWrite(t, filepath.Join(kbMount, "mine.md"), "mine\n")
+
+	err := Install(roots, team, kiroHome, &KnowledgeBase{Agent: "agent1", Source: kbSource, Mount: kbMount})
+	if err == nil || !strings.Contains(err.Error(), "refusing to overwrite") {
+		t.Fatalf("Install = %v, want a refusal to overwrite the real folder", err)
+	}
+	if _, err := os.Stat(filepath.Join(kbMount, "mine.md")); err != nil {
+		t.Errorf("the real folder's file is gone: %v", err)
 	}
 }
 
@@ -377,6 +398,7 @@ func installTree(renderedDir, kiroHome string) ([]string, error) {
 }
 
 func TestCopyRenderedTree_PreservesOwnerExecuteBit(t *testing.T) {
+	testutil.SkipWithoutExecBits(t)
 	rendered := t.TempDir()
 	kiroHome := t.TempDir()
 	script := filepath.Join(rendered, "skills", "pdf", "scripts", "run.sh")
@@ -408,6 +430,7 @@ func TestCopyRenderedTree_PreservesOwnerExecuteBit(t *testing.T) {
 }
 
 func TestCopyRenderedTree_ReinstallMakesAPreviouslyPlainFileExecutable(t *testing.T) {
+	testutil.SkipWithoutExecBits(t)
 	rendered := t.TempDir()
 	kiroHome := t.TempDir()
 	script := filepath.Join(rendered, "skills", "pdf", "run.sh")

@@ -96,6 +96,23 @@ func TestSetup_BranchRefusesBadOrUnknownRef(t *testing.T) {
 	}
 }
 
+func TestSetup_SourcePatternAcceptsWindowsDrivePaths(t *testing.T) {
+	accepted := []string{
+		`C:\repos\team`, `C:/repos/team`, `d:\x`,
+		"https://github.com/o/r.git", "ssh://git@h/r.git", "file:///srv/r.git", "git@github.com:o/r.git", "/srv/r",
+	}
+	for _, s := range accepted {
+		if !sourcePattern.MatchString(s) {
+			t.Errorf("%q refused, want accepted", s)
+		}
+	}
+	for _, s := range []string{`C:`, `C:repo`, `-C:\x`, `C:\a b`, `CD:\x`, "some/dir", "--upload-pack=x"} {
+		if sourcePattern.MatchString(s) {
+			t.Errorf("%q accepted, want refused", s)
+		}
+	}
+}
+
 func TestSetup_RefusesBadInput(t *testing.T) {
 	existing := t.TempDir()
 	if err := os.WriteFile(filepath.Join(existing, "keep"), nil, 0o600); err != nil {

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/mavogel/kirokit/internal/externalskills"
+	"github.com/mavogel/kirokit/internal/testutil"
 )
 
 const (
@@ -78,7 +79,7 @@ func TestRenderTeam_VendoredExternalSkillIsCopiedVerbatim(t *testing.T) {
 	}
 
 	script, err := os.Stat(filepath.Join(outDir, "skills", "pdf", "scripts", "run.sh"))
-	if err != nil || script.Mode().Perm()&0o100 == 0 {
+	if err != nil || (testutil.ExecBitsKept && script.Mode().Perm()&0o100 == 0) {
 		t.Errorf("rendered script mode = %v (%v), want owner-executable", script.Mode().Perm(), err)
 	}
 	plain, err := os.Stat(filepath.Join(outDir, "skills", "pdf", "SKILL.md"))

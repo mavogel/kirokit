@@ -9,8 +9,19 @@ permissions:
   contents: read
 
 jobs:
-  build-vet-lint-test:
-    runs-on: ubuntu-latest
+  # The CLI's build, vet and tests on each OS kirokit ships for. The tests
+  # include the SOPS launch test, which starts an installed MCP server through
+  # the real sops (cmd.exe on Windows), so sops is installed and required.
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      KIROKIT_REQUIRE_SOPS: "1"
+      SOPS_VERSION: "3.13.3"
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -20,6 +31,32 @@ jobs:
         with:
           go-version: stable
 
+      # The release binary for this runner, checked against sops's published checksums.
+      - name: Install sops
+        shell: bash
+        run: |
+          case "$RUNNER_OS-$RUNNER_ARCH" in
+            Linux-X64) asset="sops-v$SOPS_VERSION.linux.amd64" ;;
+            Linux-ARM64) asset="sops-v$SOPS_VERSION.linux.arm64" ;;
+            macOS-X64) asset="sops-v$SOPS_VERSION.darwin.amd64" ;;
+            macOS-ARM64) asset="sops-v$SOPS_VERSION.darwin.arm64" ;;
+            Windows-X64) asset="sops-v$SOPS_VERSION.amd64.exe" ;;
+            Windows-ARM64) asset="sops-v$SOPS_VERSION.arm64.exe" ;;
+            *) echo "no sops build for $RUNNER_OS-$RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          base="https://github.com/getsops/sops/releases/download/v$SOPS_VERSION"
+          bin="$RUNNER_TEMP/sops-bin"
+          mkdir -p "$bin"
+          cd "$bin"
+          curl -fsSLO "$base/$asset"
+          curl -fsSLO "$base/sops-v$SOPS_VERSION.checksums.txt"
+          grep " $asset\$" "sops-v$SOPS_VERSION.checksums.txt" | sha256sum -c -
+          name=sops
+          if [ "$RUNNER_OS" = Windows ]; then name=sops.exe; fi
+          mv "$asset" "$name"
+          chmod +x "$name"
+          echo "$bin" >> "$GITHUB_PATH"
+
       - name: Build
         run: go build ./...
 
@@ -27,6 +64,7 @@ jobs:
         run: go vet ./...
 
       - name: Lint
+        if: runner.os == 'Linux'
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
         with:
           version: v2.15.0
@@ -35,4 +73,14 @@ jobs:
         run: go test ./... -v
 
       - name: Agent assets in sync
+        if: runner.os == 'Linux'
         run: node scripts/sync-agent-assets.mjs --check
+
+  # The check the main ruleset requires: it passes only when every OS passed.
+  build-vet-lint-test:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every OS passed
+        run: '[ "${{ needs.test.result }}" = success ]'
