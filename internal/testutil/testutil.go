@@ -7,7 +7,8 @@ import (
 	"testing"
 )
 
-// ExecBitsKept is false on Windows, whose file modes carry no execute bit.
+// ExecBitsKept is false on Windows, whose file modes carry no execute bit
+// (nor any other Unix permission bit, such as 0600's group and other bits).
 const ExecBitsKept = runtime.GOOS != "windows"
 
 // SkipWithoutExecBits skips a test that checks a file's execute bit: Windows

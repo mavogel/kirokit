@@ -172,7 +172,7 @@ func TestShell_OtherShellGetsTheVariablesAndANote(t *testing.T) {
 }
 
 // On Windows the shell tab is PowerShell, started with the app's settings in
-// its environment and the bundled CLI's folder first on PATH.
+// its environment, and `kirokit` there runs the bundled CLI.
 func TestShell_WindowsOpensPowerShellWithTheSettings(t *testing.T) {
 	if !onWindows {
 		t.Skip("PowerShell is the shell tab on Windows only")
@@ -187,9 +187,11 @@ func TestShell_WindowsOpensPowerShellWithTheSettings(t *testing.T) {
 	}
 
 	a.ShellResize(400, 30)
-	a.ShellWrite(`Write-Output ("[{0}] [{1}] [{2}] [{3}]" -f $env:KIROKIT_REPO, $env:KIRO_HOME, ($env:PATH -split ';')[0], $PSVersionTable.PSVersion.Major)` + "\r")
+	// PowerShell 7 puts its own folder first on PATH, so the check is which
+	// kirokit the shell runs: the bundled one.
+	a.ShellWrite(`Write-Output ("[{0}] [{1}] [{2}]" -f $env:KIROKIT_REPO, $env:KIRO_HOME, (Get-Command kirokit).Source)` + "\r")
 
-	want := "[" + filepath.Join(a.dataDir, "repo") + "] [" + filepath.Join(home, "kh") + "] [" + filepath.Dir(cli) + "] ["
+	want := "[" + filepath.Join(a.dataDir, "repo") + "] [" + filepath.Join(home, "kh") + "] [" + cli + "]"
 	rec.waitFor(t, want)
 }
 

@@ -123,7 +123,7 @@ func TestSkillsFetch_VendorsThenInstallsAndUninstallsWithoutTheSource(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "skill://" + skillMD; !strings.Contains(string(agent), want) {
+	if want := "skill://" + filepath.ToSlash(skillMD); !strings.Contains(string(agent), want) {
 		t.Errorf("installed agent = %s, want it to reference %s", agent, want)
 	}
 
@@ -256,7 +256,7 @@ func TestSkillsFetch_AllSkillsOfARepositoryWithExcludeEndToEnd(t *testing.T) {
 		if _, err := os.Stat(skillMD); err != nil {
 			t.Errorf("expected installed %s: %v", skillMD, err)
 		}
-		if !strings.Contains(string(agent), "skill://"+skillMD) {
+		if !strings.Contains(string(agent), "skill://"+filepath.ToSlash(skillMD)) {
 			t.Errorf("installed agent = %s, want it to reference %s", agent, skillMD)
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -33,7 +34,7 @@ func isRootFolderFor(goos, p string) bool {
 	if goos == "windows" {
 		return windowsRoot.MatchString(p)
 	}
-	return filepath.Clean(p) == "/"
+	return path.Clean(p) == "/" // a Unix path, judged the same on any machine
 }
 
 func (a *App) settingsPath() string { return filepath.Join(a.dataDir, "settings.json") }

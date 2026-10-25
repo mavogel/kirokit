@@ -165,7 +165,7 @@ func TestInstall_GlobalSteeringIsInstalledPerTeamAndReferencedByTheAgent(t *test
 	if err != nil {
 		t.Fatalf("read installed agent1.json: %v", err)
 	}
-	if !strings.Contains(string(agentJSON), "file://"+steering(team)) {
+	if !strings.Contains(string(agentJSON), "file://"+filepath.ToSlash(steering(team))) {
 		t.Errorf("installed agent1.json = %s, want a resources entry for %s", agentJSON, steering(team))
 	}
 
@@ -221,7 +221,7 @@ func TestInstall_WithKnowledgeBaseKeepsExistingResourcesAndWritesTheExactEntry(t
 	}
 	want := map[string]any{
 		"type":       "knowledgeBase",
-		"source":     "file://" + kbMount,
+		"source":     "file://" + filepath.ToSlash(kbMount),
 		"name":       "agent1-kb",
 		"indexType":  "best",
 		"include":    []any{"**/*.md"},

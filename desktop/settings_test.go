@@ -11,6 +11,7 @@ func newTestApp(t *testing.T) (*App, string, string) {
 	t.Helper()
 	home := t.TempDir()
 	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home) // the home folder Windows reports
 	data := filepath.Join(t.TempDir(), "kirokit-desktop")
 	return NewAppAt(data), data, home
 }
@@ -124,7 +125,7 @@ func TestSaveSettings_WritesPrivateFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if info.Mode().Perm() != 0o600 {
+	if !onWindows && info.Mode().Perm() != 0o600 { // Windows keeps no Unix permission bits
 		t.Errorf("settings.json mode = %v, want 0600", info.Mode().Perm())
 	}
 }

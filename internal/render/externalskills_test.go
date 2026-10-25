@@ -83,7 +83,7 @@ func TestRenderTeam_VendoredExternalSkillIsCopiedVerbatim(t *testing.T) {
 		t.Errorf("rendered script mode = %v (%v), want owner-executable", script.Mode().Perm(), err)
 	}
 	plain, err := os.Stat(filepath.Join(outDir, "skills", "pdf", "SKILL.md"))
-	if err != nil || plain.Mode().Perm() != 0o600 {
+	if err != nil || (testutil.ExecBitsKept && plain.Mode().Perm() != 0o600) {
 		t.Errorf("rendered SKILL.md mode = %v (%v), want 600", plain.Mode().Perm(), err)
 	}
 	for _, leaked := range []string{"external", "skills.lock.yaml"} {

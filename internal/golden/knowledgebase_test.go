@@ -59,7 +59,8 @@ func TestKnowledgeBaseRenderedIntoAgentJSONMatchesGolden(t *testing.T) {
 		t.Fatalf("installed devops.json is not valid JSON: %v", err)
 	}
 	pretty.WriteByte('\n')
-	got := strings.ReplaceAll(pretty.String(), kiroHome, "/kiro-home")
+	// install writes the Kiro home with forward slashes on every OS.
+	got := strings.ReplaceAll(pretty.String(), filepath.ToSlash(kiroHome), "/kiro-home")
 
 	goldenPath := filepath.Join("..", "..", "testdata", "golden", "platform-team", "installed-with-kb", "agents", "devops.json")
 	if *updateKnowledgeBaseGolden {
