@@ -1,0 +1,8 @@
+Spike 1 (2026-10-25): terminal recording, tmux + asciinema 3.2.1 + agg
+- tmux -u -L kkrec session 110x32, status off, bash --norc with PS1='$ ', KIRO_HOME and KIROKIT_REPO set to a throwaway /tmp folder.
+- Driver: tmux send-keys one character at a time (70 ms), waiting on capture-pane text:
+  "installed platform-team" -> "Trust this workspace" (Enter) -> "ask a question" -> type /jir -> "jira-search" -> Escape -> /quit -> "Session ended".
+- asciinema rec --headless --window-size 110x32 -c "tmux -u -L kkrec attach -t kk": rec=0, drive=0.
+- agg --idle-time-limit 2 --font-size 16 --theme github-dark: 1075x739 GIF, 23.4 s, 332 KB.
+- Frame check: completion list "/jira-search  Search and summarize Jira tickets for platform-team, using the atlassian server." and "/jira-triage (file prompt) (prompt)"; glyphs ↑↓ ↵ render (see spike-cli-jir-frame.png).
+- Failures found and fixed: expect(1) driving with send -h left Kiro in the /agent picker (twice); without tmux -u and a UTF-8 locale tmux replaced non-ASCII glyphs with "_"; tmux prints "[exited]" when the shell exits (trim the tail).

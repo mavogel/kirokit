@@ -1,0 +1,45 @@
+# T3/T5/T7 on a second record.sh --keep run of the judged tree (scratch copy); exit above
+showcase: cli: recording the terminal
+showcase: cli: cli.gif ready
+showcase: app: starting the app in Wails dev mode
+showcase: app: recording the app
+showcase: app: app.webm ready
+showcase: compose: composing showcase.mp4 and showcase.gif
+showcase: compose: showcase.mp4 and showcase.gif ready
+showcase: publish: wrote assets/kirokit-showcase.gif (2.4M) and assets/kirokit-showcase.mp4 (820K)
+showcase: kept /tmp/kirokit-demo
+$ ls /tmp/kirokit-demo/out
+app-dock.txt app-marks.json app.webm cap-1.png cap-2.png cap-3.png cap-4.png captions.txt cli-raw.cast cli.cast cli.gif cues.env end.png frame.png showcase.gif showcase.mp4 title.png wails.log 
+$ grep -c 'installed platform-team' cli.cast; grep -c 'jira-search' cli.cast
+2
+1
+$ input lines sent to kiro (asciinema 'i' events are not recorded headless; checking output for a model turn): grep -ciE 'thinking|> .*\?' cli.cast
+0
+$ text printed between 'ask a question' and 'Session ended' (ANSI stripped, unique words)
+question describe task resume clipboard devops auto Prefer previous Launch with Type your message attach file context without Kiro launches have upgraded brings cloud improved trust expanded hooks support legacy experience desktop expand List switch agents Turn autonomous mode Show recent release notes Load start Clear conversation fresh session Code intelligence codebase documentation Compact history reduce usage View configured cancel navigate select Search summarize Jira tickets using atlassian Quit application
+$ ffprobe showcase.mp4 / cap-1.png / frame.png
+width=1280 height=896 pix_fmt=yuv420p duration=37.766667 
+cap-1.png: 1280,96,rgba
+frame.png: 1180,760,rgba
+showcase.gif: 1000,700,bgra
+$ cues.env
+CLI_DURATION=21.66 CAP2_AT=5.11 APP_A0=0.60 APP_A1=4.99 APP_B0=5.31 APP_B1=12.32 APP_DURATION=11.40 CAP4_AT=6.59 
+frame.png sha: 437f3e8b  (437f… = broken variant, c779… = intact; see it1-d1-frame-repeat.txt)
+
+$ npm ls --prefix scripts/showcase playwright-core@1.63.0
+kirokit-showcase@ /Users/mavogel/Developer/projects/kirokit/scripts/showcase
+`-- playwright-core@1.63.0
+
+exit 0
+$ git check-ignore scripts/showcase/node_modules
+scripts/showcase/node_modules
+$ git status --short --ignored=no | grep node_modules (expect none)
+0
+$ shellcheck scripts/showcase/*.sh && bash -n scripts/showcase/cli-drive.sh
+exit 0
+$ node --check scripts/showcase/app-drive.mjs scripts/showcase/caption.mjs
+exit 0
+$ uvx --from pre-commit-hooks==6.0.0 check-yaml lefthook.yml
+exit 0
+$ grep -c 'assets/kirokit-showcase' README.md
+2

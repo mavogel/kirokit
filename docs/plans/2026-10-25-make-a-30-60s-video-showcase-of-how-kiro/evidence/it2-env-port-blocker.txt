@@ -1,0 +1,12 @@
+$ date; lsof -nP -iTCP:5173 -sTCP:LISTEN
+Sun Oct 25 12:29:13 CET 2026
+COMMAND   PID    USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+node    66565 mavogel   29u  IPv6 0x38b64f06dcd0851d      0t0  TCP [::1]:5173 (LISTEN)
+$ ps -o pid,etime,command -p 66565 (not started by this review)
+  PID ELAPSED COMMAND
+66565   04:11 node ~/Developer/projects/workshops/slides/node_modules/.bin/../.pnpm/vite@5.4.21_@types+node@20.19.41/node_modul
+$ scripts/showcase/record.sh --keep
+showcase: preflight: port 5173 is busy: close the running wails dev first
+exit 1
+lsd: /tmp/kirokit-demo: No such file or directory (os error 2).
+

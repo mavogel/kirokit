@@ -1,0 +1,34 @@
+# Scenario 1 at 3fe8fee (tree 5f0bf418d5ac); step 1 = recorded receipt 'task showcase · exit 0 · 45.1s'
+$ git log -1 --format='%h %s' -- assets/kirokit-showcase.gif
+62a5c28 chore(showcase): re-record the showcase with the final scripts
+$ ffprobe -v error -show_entries format=duration -of csv=p=0 assets/kirokit-showcase.mp4
+36.100000
+$ ffprobe gif duration
+36.080000
+$ ffprobe -v error -show_entries stream=codec_name,width,height,pix_fmt,r_frame_rate assets/kirokit-showcase.mp4
+codec_name=h264
+width=1280
+height=896
+pix_fmt=yuv420p
+r_frame_rate=30/1
+$ ffprobe gif stream
+codec_name=gif
+width=1000
+height=700
+r_frame_rate=12/1
+$ stat -f '%z %N' assets/kirokit-showcase.gif assets/kirokit-showcase.mp4  (limits 8388608 / 4194304)
+2395833 assets/kirokit-showcase.gif
+813601 assets/kirokit-showcase.mp4
+$ GIF loop extension (NETSCAPE2.0, loop count 0 = forever)
+4e45545343415045322e300301000000
+$ ffprobe format tags of the MP4
+TAG:major_brand=isom
+TAG:minor_version=512
+TAG:compatible_brands=isomiso2avc1mp41
+TAG:encoder=Lavf63.1.102
+$ strings on both files for /Users/, the user name, the git email
+assets/kirokit-showcase.gif: 0
+assets/kirokit-showcase.mp4: 0
+$ ls /tmp/kirokit-demo
+lsd: /tmp/kirokit-demo: No such file or directory (os error 2).
+

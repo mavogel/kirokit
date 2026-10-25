@@ -1,0 +1,14 @@
+# scenario 5 at ec70a9d (README unchanged since iteration 1; CONTRIBUTING gained one line)
+$ grep -n showcase/Quickstart/png README.md
+10:<p align="center"><a href="assets/kirokit-showcase.mp4"><img src="assets/kirokit-showcase.gif" width="800" alt="kirokit in 35 seconds: kirokit install platform-team in a terminal, kiro-cli chat sta
+11:<p align="center"><sub>Sharper version: <a href="assets/kirokit-showcase.mp4">kirokit-showcase.mp4</a></sub></p>
+13:## Quickstart
+44:and type `/jir` to see the example skill `jira-search` and the prompt `jira-triage` in the `devops` agent
+46:<p align="center"><img src="assets/kirokit-cli.png" width="720" alt="The kiro cli started with the devops agent, listing the jira-search skill and the jira-triage prompt"></p>
+62:<p align="center"><img src="assets/kirokit-desktop.png" width="720" alt="The kirokit desktop app showing two teams with an Install button each, and the terminal dock below"></p>
+$ grep -n CONTRIBUTING.md
+97:### Showcase video
+103:task showcase   # scripts/showcase/record.sh; --keep leaves /tmp/kirokit-demo for inspection
+108:`node --test scripts/showcase/` tests the recorder's own checks, caption timing and error paths without recording anything (about 40 s; the tests that need tmux, ffmpeg or Chrome skip without them
+$ grep -c assets/kirokit-showcase README.md
+2

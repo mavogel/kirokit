@@ -1,0 +1,9 @@
+# probe: a second run while the fresh run (pid 74063) records
+$ ls /tmp/kirokit-demo/out (before)
+cli-raw.cast cli.cast cli.gif wails.log 
+$ scripts/showcase/record.sh (second run, same tree)
+showcase: preflight: port 34115 is busy: close the running wails dev first
+exit 1
+$ ls /tmp/kirokit-demo/out (after); tmux server alive?
+cli-raw.cast cli.cast cli.gif wails.log 
+no server running on /private/tmp/tmux-501/kirokit-showcase

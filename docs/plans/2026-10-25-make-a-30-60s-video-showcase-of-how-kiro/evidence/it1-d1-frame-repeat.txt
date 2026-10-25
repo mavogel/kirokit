@@ -1,0 +1,14 @@
+cap-1: 1×491ba6ac 19×674a6348 
+cap-2: 20×bbe13d92 
+cap-3: 20×356e3881 
+cap-4: 20×39d00938 
+title: 20×4389a5a2 
+end: 20×64cd69f5 
+frame: 13×437f3e8b 7×c77948a0 
+
+# 20 runs of: node scripts/showcase/caption.mjs <dir> on the same cli.cast + app-marks.json (kept run at judged tree)
+# 437f… (13 of 20) = top rows repeated from y≈673, bottom border and corners missing; c779… (7 of 20) = intact rounded frame
+# the kept record.sh --keep run used the intact variant: c77948a0
+# committed assets/kirokit-showcase.mp4 at 18 s shows the seam at y≈693: evidence/it1-done-3-committed-seam.png
+# cap-1 491b… (1 of 20) is fully transparent: caption 1 would be missing from the video (top half of evidence/it1-d1-cap1-blank.png; bottom = normal render)
+# a second full record.sh --keep run of the judged tree drew 437f… (broken), passed every check and published it: evidence/it1-d1-rerun-seam.png (showcase.mp4 at 10 s, rows 600-860), evidence/it1-dod-keep2.txt

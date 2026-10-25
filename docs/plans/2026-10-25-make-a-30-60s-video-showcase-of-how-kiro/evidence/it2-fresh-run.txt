@@ -1,0 +1,42 @@
+# fresh run: git archive ec70a9d into a scratch tree, then PATH=<shim>:$PATH scripts/showcase/record.sh --keep
+# shim: an unrelated session's vite holds [::1]:5173 (evidence/it2-env-port-blocker.txt); the shim reports only that port free to preflight; wails' vite moved to 5174
+
+added 1 package in 179ms
+showcase: cli: recording the terminal
+showcase: cli: cli.gif ready
+showcase: app: starting the app in Wails dev mode
+showcase: app: recording the app
+showcase: app: app.webm ready
+caption: 7 images, CLI 20.18 s, app 11.41 s
+showcase: compose: composing showcase.mp4 and showcase.gif
+showcase: compose: showcase.mp4 and showcase.gif ready
+showcase: publish: wrote assets/kirokit-showcase.gif (2.4M) and assets/kirokit-showcase.mp4 (792K)
+showcase: kept /tmp/kirokit-demo
+exit 0
+# wails.log: Using Frontend DevServer URL: http://localhost:5174/
+# frame.png pixels (expect border 3a3450ff on all four edges, clear centre, 13111fff corner)
+top=3a3450ff bottom=3a3450ff left=3a3450ff right=3a3450ff centre=00000000 corner=13111fff bottom-left-corner=13111fff
+cap-1 centre alpha=ff size=1280,96
+cap-2 centre alpha=ff size=1280,96
+cap-3 centre alpha=ff size=1280,96
+cap-4 centre alpha=ff size=1280,96
+CLI_DURATION=20.18
+CAP2_AT=5.27
+APP_A0=0.62
+APP_A1=5.01
+APP_B0=5.83
+APP_B1=12.85
+APP_DURATION=11.41
+CAP4_AT=6.59
+# fresh media
+showcase.mp4 810355 B width=1280 height=896 pix_fmt=yuv420p duration=36.300000 
+showcase.gif 2461764 B width=1000 height=700 pix_fmt=bgra duration=36.330000 
+# scenario 2 step 4: privacy check on the kept cast, dock text and captions
+exit 0
+1
+1
+# processes: wails/vite started by the run still alive?
+       0
+       0
+       0
+# checkout assets untouched: 6b6eac5 b1b4950 

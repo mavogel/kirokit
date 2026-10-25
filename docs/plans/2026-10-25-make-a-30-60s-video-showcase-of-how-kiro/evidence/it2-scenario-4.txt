@@ -1,0 +1,19 @@
+# Scenario 4 in an isolated temp repo (git init in mktemp), lefthook.yml and media from ec70a9d, plus an evidence file with trailing spaces and no final newline
+$ shasum (before)
+6b6eac5af5361eddc5ea8f03689b04ae502a2466  assets/kirokit-showcase.gif
+b1b4950b06ae0a750c2a89e312f70acbdeeb10ee  assets/kirokit-showcase.mp4
+baf0923fc268e8cf935502d935c397c02fa32ae0  docs/plans/x/evidence/it9-out.txt
+$ lefthook run pre-commit
+┃  trailing-whitespace ❯ 
+┃  end-of-file-fixer ❯ 
+┃  check-yaml ❯ 
+summary: (done in 0.94 seconds)
+✔️ trailing-whitespace (0.74 seconds)
+✔️ end-of-file-fixer (0.06 seconds)
+✔️ check-yaml (0.06 seconds)
+exit 
+$ shasum (after)
+6b6eac5af5361eddc5ea8f03689b04ae502a2466  assets/kirokit-showcase.gif
+b1b4950b06ae0a750c2a89e312f70acbdeeb10ee  assets/kirokit-showcase.mp4
+baf0923fc268e8cf935502d935c397c02fa32ae0  docs/plans/x/evidence/it9-out.txt
+rerun for the exit status: lefthook run pre-commit exit 0; after: 6b6eac5 b1b4950 baf0923 => identical

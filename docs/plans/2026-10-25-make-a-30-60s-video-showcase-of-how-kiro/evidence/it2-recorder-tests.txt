@@ -1,0 +1,40 @@
+$ node --test scripts/showcase/
+cwd: /Users/mavogel/Developer/projects/kirokit
+exit: 0
+
+✔ privacy: a home path fails naming the file (22.003791ms)
+✔ privacy: the public clone address and brew tap pass although they hold the user name (27.175541ms)
+✔ privacy: the user name anywhere else fails (26.139667ms)
+✔ privacy: the git email fails, whatever its case (22.002666ms)
+✔ privacy: every file is checked, and the failing one is named (27.337792ms)
+✔ privacy: a missing file or no file at all fails instead of passing (33.015333ms)
+✔ size: the GIF may be exactly 8 MiB and the MP4 exactly 4 MiB, one byte more fails (31.816833ms)
+✔ length: 30 and 60 s pass, just outside fails naming the file (325.810209ms)
+✔ length: a file that is not media fails with the check's message (40.526833ms)
+✔ length: a still image without a length fails with the check's message (74.26375ms)
+✔ an unknown check prints the usage (5.631041ms)
+✔ caption: a missing recording exits naming the file (258.220333ms)
+✔ caption: a cast that never ends the session fails instead of guessing a length (260.764916ms)
+✔ caption: app marks without a step fail naming it (265.400209ms)
+✔ caption: a caption shorter than 2.5 s fails the run (264.063125ms)
+✔ caption: cue times follow the rendered CLI clip and the clone wait is cut (2002.150209ms)
+✔ caption: an asciicast v2 (absolute times) gives the same cues as v3 (4074.108208ms)
+✔ caption: every render paints the whole frame and every caption (12345.571667ms)
+✔ app-drive: no output folder prints the usage (266.816833ms)
+✔ app-drive: without a dev server it stops at the welcome step (858.750083ms)
+✔ cli-drive: no session prints the usage (5.318583ms)
+✔ cli-drive: a shell without kirokit times out naming the awaited text (33011.395375ms)
+✔ record.sh: an unknown flag prints the usage (7.901125ms)
+✔ record.sh: a missing tool fails preflight and leaves no work folder (10.34625ms)
+✔ record.sh: a missing age key fails preflight naming its path (10.299084ms)
+﹣ record.sh: a second run leaves a live run's folder alone (98.410958ms) # a dev server port is in use
+﹣ record.sh: a dead run's folder is taken over and removed when the run fails (94.283625ms) # a dev server port is in use
+✔ record.sh: a busy dev-server port fails preflight (112.349916ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 2
+ℹ todo 0
+ℹ duration_ms 54732.21175

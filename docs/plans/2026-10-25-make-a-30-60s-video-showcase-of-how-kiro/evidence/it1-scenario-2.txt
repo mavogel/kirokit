@@ -1,0 +1,28 @@
+# Scenario 2 at judged tree 3fe8fee, real HOME/USER/git email of this machine (values redacted)
+$ echo "$HOME" > s2/home.txt; checks.sh privacy s2/home.txt
+showcase: privacy: home path in <scratch>/s2/home.txt
+exit 1
+$ (git clone https://github.com/mavogel/kirokit.git + brew install --cask mavogel/tap/kirokit) > s2/public.txt; checks.sh privacy s2/public.txt
+exit 0
+$ git config user.email > s2/email.txt; checks.sh privacy s2/email.txt
+showcase: privacy: git email in <scratch>/s2/email.txt
+exit 1
+$ (step 4) checks.sh privacy /tmp/kirokit-demo/out/{cli.cast,app-dock.txt,captions.txt}   # kept by record.sh --keep of the judged tree (scratch copy)
+exit 0
+# probes past the script
+$ checks.sh privacy <empty file>
+exit 0
+$ checks.sh privacy <file with the user name upper-cased>
+showcase: privacy: user name in <scratch>/s2/upper.txt
+exit 1
+$ checks.sh privacy   (no files)
+showcase: privacy: no files to check
+exit 1
+$ checks.sh length <a text file>   (contract: "showcase: length: <reason>")
+<scratch>/s2/notmedia.txt: Invalid data found when processing input
+exit 1
+# kept cast, independent case-insensitive greps for HOME / USER / git email / resume-id (counts)
+0
+0
+0
+1
