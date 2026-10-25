@@ -35,13 +35,11 @@ Delivered 25 Oct, 20:35
 - The app builds, packages and starts on Linux and Windows · slice 5 · 3 tasks
 - 2 more slices · 7 of 7 built
 
-**Verified** · 0
-- None
+**Verified** · 2
+- Project checks passed · 6 of 6 · recorded
+- Security review · done · nothing severe in the change
 
-
-**Left** · 5
-- Security review · Security review · not done
-- Project checks · Project checks · not done
+**Left** · 3
 - Independent review · Review · not done
 - Fix rounds · Fix · not done
 - Push this task's branch and open a pull request, so CI and Desktop run on the windows-latest, ubuntu-latest and macos-latest runners · needs you · T10
@@ -100,6 +98,12 @@ Delivered 25 Oct, 20:35
 - T23 · 0ce9b53 · `actionlint` · exit 0 · 0.3s
 - T19 · 0ce9b53 · `(cd desktop && go test -run Smoke ./...) && task desktop:build && KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit` · exit 0 · 6.9s
 - T24 · b302fc8 · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.2s
+- all · daa8ce8 · `go test ./...` · exit 0 · 0.5s
+- all · daa8ce8 · `golangci-lint run` · exit 0 · 0.7s
+- all · daa8ce8 · `go vet ./...` · exit 0 · 0.1s
+- all · daa8ce8 · `go build ./...` · exit 0 · 0.6s
+- all · daa8ce8 · `task desktop:test` · exit 0 · 2.6s
+- all · daa8ce8 · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since it passed at 20:33
 
 ## Known limits
 

@@ -1,0 +1,37 @@
+# T20: Linux app build and Windows setup build in the container (arm64 host)
+$ scripts/linux-docker.sh task desktop:build
+build exit=0
+[31;107m[31;107m ♥  [0m[0m [92m[92mIf Wails is useful to you or your company, please consider sponsoring the project:[0m[0m
+https://github.com/sponsors/leaanthony
+built desktop/build/bin/kirokit-desktop for linux/arm64 (version 0.4.1-23-gdaa8ce8-dirty)
+total 14808
+-rwxr-xr-x 1 root root 5439648 Oct 25 19:48 kirokit
+-rwxr-xr-x 1 root root 9716144 Oct 25 19:48 kirokit-desktop
+sh: 1: file: not found
+	libwebkit2gtk-4.1.so.0 => /lib/aarch64-linux-gnu/libwebkit2gtk-4.1.so.0 (0x0000ffffa8c00000)
+	libgtk-3.so.0 => /lib/aarch64-linux-gnu/libgtk-3.so.0 (0x0000ffffa83a0000)
+kirokit 0.4.1-23-gdaa8ce8-dirty
+--- smoke start under xvfb
+Overriding existing handler for signal 10. Set JSC_SIGNAL_FOR_GC if you want WebKit to use a different signal
+smoke exit=0
+
+$ scripts/linux-docker.sh env GOOS=windows task desktop:build
+build exit=0
+https://github.com/sponsors/leaanthony
+built desktop/build/bin/installers (version 0.4.1-23-gdaa8ce8-dirty):
+kirokit-desktop_0.4.1-23-gdaa8ce8-dirty_windows_amd64-setup.exe
+kirokit-desktop_0.4.1-23-gdaa8ce8-dirty_windows_arm64-setup.exe
+== desktop/build/bin/installers/kirokit-desktop_0.4.1-23-gdaa8ce8-dirty_windows_amd64-setup.exe
+Listing archive: desktop/build/bin/installers/kirokit-desktop_0.4.1-23-gdaa8ce8-dirty_windows_amd64-setup.exe
+Path = desktop/build/bin/installers/kirokit-desktop_0.4.1-23-gdaa8ce8-dirty_windows_amd64-setup.exe
+2026-10-25 19:48:44 .....                   1694774  $PLUGINSDIR/webview2bootstrapper/MicrosoftEdgeWebview2Setup.exe
+2026-10-25 19:48:44 .....                   5136646  kirokit-desktop.exe
+2026-10-25 19:48:42 .....                   2411778  bin/kirokit.exe
+                    .....                     38032  uninstall.exe
+== desktop/build/bin/installers/kirokit-desktop_0.4.1-23-gdaa8ce8-dirty_windows_arm64-setup.exe
+Listing archive: desktop/build/bin/installers/kirokit-desktop_0.4.1-23-gdaa8ce8-dirty_windows_arm64-setup.exe
+Path = desktop/build/bin/installers/kirokit-desktop_0.4.1-23-gdaa8ce8-dirty_windows_arm64-setup.exe
+2026-10-25 19:48:48 .....                   1694774  $PLUGINSDIR/webview2bootstrapper/MicrosoftEdgeWebview2Setup.exe
+2026-10-25 19:48:48 .....                   4603530  kirokit-desktop.exe
+2026-10-25 19:48:46 .....                   2132363  bin/kirokit.exe
+                    .....                     38032  uninstall.exe

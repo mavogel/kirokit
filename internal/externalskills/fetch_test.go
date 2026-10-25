@@ -1,6 +1,7 @@
 package externalskills
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -371,6 +372,48 @@ func lockNames(l Lock) string {
 		names = append(names, e.Name)
 	}
 	return strings.Join(names, ",")
+}
+
+// A collection's lock must let a Windows checkout verify each skill: execute
+// bits are recorded relative to that skill's own folder, and with the files'
+// modes stripped (Windows keeps none) the hash still matches there.
+func TestFetch_CollectionLockVerifiesOnWindowsWithoutExecuteBits(t *testing.T) {
+	testutil.SkipWithoutExecBits(t) // stripping a mode only means something where modes exist
+	repo, _ := collectionRepo(t)
+	teamDir := teamDirFor(t)
+	lock, err := Fetch(teamDir, []manifest.ExternalSkill{collectionEntry(repo)})
+	if err != nil {
+		t.Fatalf("Fetch: %v", err)
+	}
+	execs := map[string][]string{}
+	for _, le := range lock.Skills {
+		execs[le.Name] = le.Executables
+	}
+	if want := []string{"run.sh"}; !reflect.DeepEqual(execs["a"], want) {
+		t.Errorf("a: executables = %q, want %q (relative to the skill folder)", execs["a"], want)
+	}
+	if execs["b"] != nil || execs["c"] != nil {
+		t.Errorf("b, c: executables = %q, %q; want none", execs["b"], execs["c"])
+	}
+
+	if err := os.Chmod(filepath.Join(SkillsDir(teamDir), "a", "run.sh"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	messages := func(goos string, le LockEntry) []string {
+		var msgs []string
+		checkVendoredOn(goos, teamDir, le, func(_, format string, args ...any) {
+			msgs = append(msgs, fmt.Sprintf(format, args...))
+		})
+		return msgs
+	}
+	for _, le := range lock.Skills {
+		if msgs := messages("windows", le); len(msgs) != 0 {
+			t.Errorf("%s on Windows: %q, want it verified", le.Name, msgs)
+		}
+	}
+	if msgs := messages("darwin", lock.Skills[0]); len(msgs) != 1 {
+		t.Errorf("darwin with a's execute bit gone: %q, want one drift message", msgs)
+	}
 }
 
 func TestFetch_CollectionVendorsEverySkillAndIgnoresDirectoriesWithoutSkillMD(t *testing.T) {

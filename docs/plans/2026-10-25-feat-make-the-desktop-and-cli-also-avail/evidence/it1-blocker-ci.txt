@@ -1,0 +1,12 @@
+# Blocker for CI and release steps (Scenarios 1 steps 1-2, 3 steps 1-5, 4)
+$ git branch --show-current
+feat/feat-make-desktop-cli-also
+$ git ls-remote --heads origin feat/feat-make-desktop-cli-also
+(empty: the branch is not on GitHub)
+$ gh run list --branch feat/feat-make-desktop-cli-also --limit 5
+(empty: no CI, Desktop or Release run exists)
+$ gh pr list --head feat/feat-make-desktop-cli-also
+(empty: no pull request)
+$ [ -n "$GORELEASER_KEY" ]
+GORELEASER_KEY not set: no local split snapshot (goreleaser-pro 2.19.0 installed)
+Pushing the branch, opening the PR and dispatching the release dry run are git/GitHub writes this review is not authorised to make; 06-verify.md already lists T10's push as the person's open item.

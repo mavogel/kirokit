@@ -1,0 +1,35 @@
+# Static and cross-OS compile checks (macOS host), tree daa8ce8 + review tests
+$ actionlint
+exit=0
+$ goreleaser --version | grep -i -E "version|pro"
+goreleaser-pro: Release engineering, simplified.
+https://goreleaser.com/pro
+GitVersion:    2.19.0
+$ goreleaser check
+  • checking                                  path=.goreleaser.yaml
+  • 1 configuration file(s) validated
+  • thanks for using GoReleaser Pro!
+exit=0
+$ GOOS=windows GOARCH=amd64 go vet ./... (root module)
+exit=0
+$ GOOS=windows GOARCH=amd64 go vet ./... (desktop module)
+exit=0
+$ GOOS=windows GOARCH=arm64 go vet ./... (root module)
+exit=0
+$ GOOS=windows GOARCH=arm64 go vet ./... (desktop module)
+exit=0
+$ GOOS=linux GOARCH=amd64 go vet ./... (root module)
+exit=0
+$ GOOS=linux GOARCH=amd64 go vet ./... (desktop module)
+exit=0
+$ GOOS=linux GOARCH=arm64 go vet ./... (root module)
+exit=0
+$ GOOS=linux GOARCH=arm64 go vet ./... (desktop module)
+exit=0
+$ GOOS=windows go test -c for the Windows-only test files
+ok ./internal/sopswrap
+ok ./internal/dirlink
+ok ./internal/backup
+ok ./cmd/kirokit/commands
+ok desktop/terminal
+ok desktop

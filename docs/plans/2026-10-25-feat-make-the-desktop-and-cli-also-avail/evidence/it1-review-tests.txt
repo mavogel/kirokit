@@ -1,0 +1,11 @@
+# Review tests added (unstaged), run once on macOS
+ M internal/externalskills/fetch_test.go
+ M internal/sopswrap/sopswrap_test.go
+$ go test -count=1 -v -run "CmdKeepsASecretsPath|CollectionLockVerifiesOnWindows" ./internal/sopswrap/ ./internal/externalskills/
+--- PASS: TestBuildWrapperFor_CmdKeepsASecretsPathWithSpacesAsItsOwnArgument (0.00s)
+ok  	github.com/mavogel/kirokit/internal/sopswrap	0.141s
+--- PASS: TestFetch_CollectionLockVerifiesOnWindowsWithoutExecuteBits (0.20s)
+ok  	github.com/mavogel/kirokit/internal/externalskills	0.356s
+$ gofmt -l internal/sopswrap internal/externalskills; golangci-lint run ./internal/sopswrap/... ./internal/externalskills/...
+0 issues.
+exit=0

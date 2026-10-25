@@ -1,0 +1,27 @@
+# Scenario 2 step 6 (macOS): task desktop:dev with an isolated HOME, page driven in headless Chrome over CDP (scratch cdp-dock.mjs)
+$ HOME=<tmp> task desktop:dev   -> 'Using DevServer URL: http://localhost:34115'
+Page read after load, dock opened (Show terminal), then the shell tab clicked:
+{
+  "url": "http://localhost:34115",
+  "shellTabBeforeOpen": "zsh",
+  "shellTab": "zsh",
+  "kirokitLines": [
+    "Buttons run their kirokit command here. Type your own commands in the zsh tab.",
+    " "
+  ],
+  "stateShell": "zsh",
+  "shellTerminalFirstLines": [
+    "mavogel@supernova ~ %  "
+  ]
+}
+
+Screenshots: evidence/it1-scenario-2-step-6-dock-kirokit.png, evidence/it1-scenario-2-step-6-dock-shell.png
+
+# Step 7 (SOPS hint): not reproducible here - Capture always appends /opt/homebrew/bin, where sops is installed on this Mac. The macOS string is checked in source instead:
+$ git show main:desktop/prereq.go | grep -n 'brew install sops'
+25:	checks = append(checks, toolCheck(env, "SOPS", "sops", "Install it with: brew install sops"))
+$ grep -n -A2 'case "darwin":' desktop/platform.go | grep sops
+238:		return "Install it with: brew install sops"
+$ go test -C desktop -run 'TestPlatform_SopsHint' -v -count=1
+--- PASS: TestPlatform_SopsHint (0.00s)
+ok  	github.com/mavogel/kirokit/desktop	0.325s

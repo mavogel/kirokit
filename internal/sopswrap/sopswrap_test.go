@@ -118,3 +118,16 @@ func TestBuildWrapperFor_CmdRefusesWhatCmdExeCannotPass(t *testing.T) {
 		t.Errorf("a command with a space: err = %v, want ErrUnsafeForCmd", err)
 	}
 }
+
+// The secrets file is sops's own argument, not part of the cmd.exe string, so
+// a Windows home with a space in it (C:/Users/Alex Doe) must still install.
+func TestBuildWrapperFor_CmdKeepsASecretsPathWithSpacesAsItsOwnArgument(t *testing.T) {
+	file := "C:/Users/Alex Doe/.kiro/kirokit-secrets/t/a/secrets.enc.yaml"
+	command, args, err := BuildWrapperFor(Cmd, file, "server", []string{"--port", "8080"})
+	if err != nil {
+		t.Fatalf("a secrets path with a space was refused: %v", err)
+	}
+	if want := []string{"exec-env", file, "server --port 8080"}; command != "sops" || !reflect.DeepEqual(args, want) {
+		t.Errorf("Cmd = %q %q, want %q %q", command, args, "sops", want)
+	}
+}

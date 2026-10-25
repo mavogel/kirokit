@@ -1,0 +1,56 @@
+# D1: install fails when a KIRO_HOME folder is a symbolic link (macOS, judged tree daa8ce8 vs base eaa4b31)
+
+$ go test ./internal/backup/ -run TestCopyAside_AFolderThatIsASymlink -v   (test kept out of the checkout)
+--- base
+=== RUN   TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink
+--- PASS: TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink (0.00s)
+PASS
+ok  	github.com/mavogel/kirokit/internal/backup	(cached)
+--- head
+    zz_link_test.go:27: CopyAside of a symlinked folder: backup: copy /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink3601250182/001/agents: /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink3601250182/001/agents is neither a file, a folder nor a symbolic link
+--- FAIL: TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink (0.00s)
+FAIL
+FAIL	github.com/mavogel/kirokit/internal/backup	0.127s
+FAIL
+
+$ ln -s <tmp>/real-agents <tmp>/kiro/agents; KIRO_HOME=<tmp>/kiro kirokit install platform-team
+--- base
+installed platform-team into <scratch>/kh2-base.EEjK/kiro
+exit=0
+--- head
+kirokit install: install: backup: copy <scratch>/kh2-head.cOQz/kiro/agents: <scratch>/kh2-head.cOQz/kiro/agents is neither a file, a folder nor a symbolic link
+exit=1
+
+--- the test file
+package backup
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+// A folder that is itself a symbolic link (a dotfiles manager linking
+// ~/.kiro/agents, say) is backed up as that link, as before Windows support:
+// install's backup must not fail on it.
+func TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink(t *testing.T) {
+	parent := t.TempDir()
+	real := filepath.Join(parent, "real-agents")
+	if err := os.MkdirAll(real, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(real, "a.json"), []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(parent, "agents")
+	if err := os.Symlink(real, dir); err != nil {
+		t.Skipf("symbolic links are not permitted here: %v", err)
+	}
+	dst, err := CopyAside(dir, "20261025-120000")
+	if err != nil {
+		t.Fatalf("CopyAside of a symlinked folder: %v", err)
+	}
+	if got, err := os.Readlink(dst); err != nil || got != real {
+		t.Errorf("backup = %q (%v), want a link to %q", got, err, real)
+	}
+}

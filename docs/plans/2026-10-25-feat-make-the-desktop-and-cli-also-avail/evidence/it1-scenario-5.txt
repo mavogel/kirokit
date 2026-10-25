@@ -1,0 +1,24 @@
+# Scenario 5 (README), tree daa8ce8
+$ grep -n 'scoop install kirokit\|\.deb\|\.rpm\|setup.exe\|brew install --cask mavogel/tap/kirokit' README.md
+21:| macOS | `brew install --cask mavogel/tap/kirokit` | `kirokit_<version>_darwin_<arch>.tar.gz` |
+22:| Linux | `brew install --cask mavogel/tap/kirokit`, or `sudo apt install ./kirokit_<version>_linux_<arch>.deb`, or `sudo dnf install ./kirokit_<version>_linux_<arch>.rpm` | `kirokit_<version>_linux_<arch>.tar.gz` |
+23:| Windows (PowerShell) | `scoop bucket add mavogel https://github.com/mavogel/scoop-bucket` then `scoop install kirokit` | `kirokit_<version>_windows_<arch>.zip` (put `kirokit.exe` on your `PATH`) |
+33:brew install --cask mavogel/tap/kirokit
+80:| macOS 13+ | `brew install --cask mavogel/tap/kirokit-desktop`, or open `kirokit-desktop_<version>_darwin_<arch>.dmg` |
+81:| Linux (Ubuntu 22.04+, Debian 12+, Fedora 40+) | `sudo apt install ./kirokit-desktop_<version>_linux_<arch>.deb` or `sudo dnf install ./kirokit-desktop_<version>_linux_<arch>.rpm`; it pulls in GTK 3 and WebKitGTK 4.1 and adds **kirokit** to the app menu (`
+82:| Windows 10/11 | run `kirokit-desktop_<version>_windows_<arch>-setup.exe`; it adds **kirokit** to the Start menu and the desktop |
+267:brew install --cask mavogel/tap/kirokit   # or see Quickstart for Linux and Windows
+308:- **macOS 13 or later** (Apple silicon and Intel): `kirokit-desktop_<version>_darwin_arm64.dmg` and `..._darwin_amd64.dmg`, both holding the same universal app, plus the `kirokit-desktop` cask (`brew install --cask mavogel/tap/kirokit-desktop`). The app is
+309:- **Linux** (amd64 and arm64): `kirokit-desktop_<version>_linux_<arch>.deb` and `.rpm`. They install `/usr/bin/kirokit-desktop`, its own CLI at `/usr/lib/kirokit-desktop/kirokit`, a menu entry and an icon, and depend on GTK 3 and WebKitGTK 4.1 (Ubuntu 22.0
+310:- **Windows 10/11** (amd64 and arm64): `kirokit-desktop_<version>_windows_<arch>-setup.exe`, which installs `kirokit-desktop.exe` with `bin\kirokit.exe` beside it, a Start menu and desktop shortcut, and an uninstaller. It is not signed: SmartScreen shows "
+$ grep -n 'More info\|Run anyway\|xattr -dr com.apple.quarantine' README.md
+85:- **Windows:** SmartScreen says "Windows protected your PC" when you start the setup program. Choose **More info**, then **Run anyway**.
+86:- **macOS:** the cask clears the quarantine attribute for you; if you open the DMG by hand, run `xattr -dr com.apple.quarantine kirokit.app` once, or macOS reports the app as damaged.
+308:- **macOS 13 or later** (Apple silicon and Intel): `kirokit-desktop_<version>_darwin_arm64.dmg` and `..._darwin_amd64.dmg`, both holding the same universal app, plus the `kirokit-desktop` cask (`brew install --cask mavogel/tap/kirokit-desktop`). The app is
+310:- **Windows 10/11** (amd64 and arm64): `kirokit-desktop_<version>_windows_<arch>-setup.exe`, which installs `kirokit-desktop.exe` with `bin\kirokit.exe` beside it, a Start menu and desktop shortcut, and an uninstaller. It is not signed: SmartScreen shows "
+$ grep -n 'keys.txt' README.md
+211:Without `SOPS_AGE_KEY_FILE`, sops reads the age key from `keys.txt` in its config folder: `~/Library/Application Support/sops/age/keys.txt` on macOS, `~/.config/sops/age/keys.txt` on Linux (or `$XDG_CONFIG_HOME/sops/age/keys.txt` on either), `%AppData%\sops\age\keys.txt` on Windows. The desktop 
+$ grep -n 'tar.gz\|\.zip' README.md
+21:| macOS | `brew install --cask mavogel/tap/kirokit` | `kirokit_<version>_darwin_<arch>.tar.gz` |
+22:| Linux | `brew install --cask mavogel/tap/kirokit`, or `sudo apt install ./kirokit_<version>_linux_<arch>.deb`, or `sudo dnf install ./kirokit_<version>_linux_<arch>.rpm` | `kirokit_<version>_linu
+23:| Windows (PowerShell) | `scoop bucket add mavogel https://github.com/mavogel/scoop-bucket` then `scoop install kirokit` | `kirokit_<version>_windows_<arch>.zip` (put `kirokit.exe` on your `PATH`) 

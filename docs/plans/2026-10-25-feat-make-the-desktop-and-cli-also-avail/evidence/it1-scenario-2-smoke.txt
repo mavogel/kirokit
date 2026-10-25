@@ -1,0 +1,14 @@
+(the build above completed: 'built desktop/build/bin/kirokit.app'; the blank exit= is zsh lacking PIPESTATUS)
+
+$ HOME=<tmp> KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit; echo $?
+exit=0 after 0s
+--- app log (tail)
+$ ls -la "<tmp>/Library/Application Support/kirokit-desktop"
+lsd: /private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/0be23c62-c665-41be-a071-95d067fcf95f/scratchpad/smokehome.K7W0/Library/Application Support/kirokit-desktop: No such file or directory (os error 2).
+
+$ find <tmp> -path '*kirokit*'
+<tmp>
+(nothing listed = no settings, clone or wrapper written)
+
+$ without the variable: started and stopped after 8s (runs until closed, as before)
+still running after 8s (pid 70431) -> stopping it
