@@ -46,3 +46,8 @@ tasks:
     desc: Build desktop/build/bin/kirokit.app (universal, macOS 13 or later, CLI bundled; VERSION overrides git describe)
     cmds:
       - scripts/desktop-build.sh
+
+  showcase:
+    desc: Record the README showcase (assets/kirokit-showcase.gif and .mp4) from the real CLI and app
+    cmds:
+      - scripts/showcase/record.sh
