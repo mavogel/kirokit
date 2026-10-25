@@ -213,6 +213,7 @@ func nonNil(s []string) []string {
 func repoTag(repo string) string {
 	cmd := exec.Command("git", "-C", repo, "describe", "--tags", "--exact-match", "HEAD")
 	cmd.Env = withoutGitEnv(os.Environ())
+	hideConsole(cmd)
 	out, err := cmd.Output()
 	if err != nil {
 		return ""

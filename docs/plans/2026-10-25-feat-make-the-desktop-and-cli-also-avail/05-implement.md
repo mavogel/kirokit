@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 10 of 24 tasks · 2 of 7 slices
 
-Building now: started 25 Oct, 19:12, 26 min so far.
+Building now: started 25 Oct, 19:12, 31 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -38,6 +38,7 @@ Written when the last task is ticked.
 - Slice 1 · T3 also regenerates the installed-with-kb golden (same one-line header change) and adds internal/golden/windows_launch_test.go, which renders every team in teams/ with the cmd.exe launch shell; its check runs './kirokit test platform-team' because data-team's context.json golden is already stale on main (Renovate bump dabb3eb), unrelated to this task.
 - The Plan · Slice 1 validation and Scenario 2 step 1 run './kirokit test platform-team', and Scenario 2 step 2 expects the two platform-team devops goldens, for the same reason as T3's amendment.
 - The Plan · T6 owns the shared internal/testutil helper; T8 owns its Windows-only junction tests for dirlink and backup.
+- Slice 3 · The Windows terminal backend calls the pseudo-console API through golang.org/x/sys/windows (v0.46.0, already in the desktop module via Wails) instead of github.com/UserExistsError/conpty v0.1.4; the Session API and taskkill tree kill are unchanged.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -54,6 +55,8 @@ Written when the last task is ticked.
 - T8 · f73c655 · `go test ./internal/dirlink/ ./internal/install/ ./internal/backup/ && GOOS=windows go vet ./internal/...` · exit 0 · 0.6s
 - T9 · f73c655 · `go test ./cmd/kirokit/commands/ -run Setup` · exit 0 · 1.4s
 - T10 · f73c655 · `actionlint && scripts/linux-docker.sh env KIROKIT_REQUIRE_SOPS=1 go test ./...` · exit 0 · 2.9s
+- T11 · 3718d63 · `cd desktop && go test ./terminal/ && GOOS=windows GOARCH=amd64 go vet ./terminal/ && GOOS=windows GOARCH=arm64 go vet ./terminal/` · exit 0 · 3.5s
+- T12 · 3718d63 · `cd desktop && go test ./... && GOOS=windows GOARCH=amd64 go build ./... && GOOS=windows GOARCH=arm64 go build ./... && GOOS=linux go vet ./...` · exit 0 · 4.1s
 
 ## Known limits
 
@@ -71,6 +74,7 @@ None recorded.
 - T3 (amended): T3 also regenerates the installed-with-kb golden (same one-line header change) and adds internal/golden/windows_launch_test.go, which renders every team in teams/ with the cmd.exe launch shell; its check runs './kirokit test platform-team' because data-team's context.json golden is already stale on main (Renovate bump dabb3eb), unrelated to this task
 - Plan (amended): Slice 1 validation and Scenario 2 step 1 run './kirokit test platform-team', and Scenario 2 step 2 expects the two platform-team devops goldens, for the same reason as T3's amendment
 - T6, T8 (amended): T6 owns the shared internal/testutil helper; T8 owns its Windows-only junction tests for dirlink and backup
+- T11 (amended): The Windows terminal backend calls the pseudo-console API through golang.org/x/sys/windows (v0.46.0, already in the desktop module via Wails) instead of github.com/UserExistsError/conpty v0.1.4; the Session API and taskkill tree kill are unchanged
 
 ## Plan amended
 
@@ -89,5 +93,21 @@ Amended by the agent on 2026-10-25; changed 04-outline.md.
 ### T6, T8 · amended
 
 T6 owns the shared internal/testutil helper; T8 owns its Windows-only junction tests for dirlink and backup
+
+Amended by the agent on 2026-10-25; changed 04-outline.md.
+
+### T11 · amended
+
+The Windows terminal backend calls the pseudo-console API through golang.org/x/sys/windows (v0.46.0, already in the desktop module via Wails) instead of github.com/UserExistsError/conpty v0.1.4; the Session API and taskkill tree kill are unchanged
+
+Why: reading conpty v0.1.4's source showed two defects for this app. It keeps the console's own
+pipe ends open in our process, so after the process exits `Read` never returns `io.EOF`, and the
+kirokit tab's `finishRun` and the shell goroutine would wait forever. Its `Close` also closes our
+read end together with the console, so output still in the pipe is lost. With `x/sys/windows` the
+console's ends are closed right after `CreatePseudoConsole`, and the console is closed when the
+process exits, so `Read` drains the last output and then ends. The child is started with
+`STARTF_USESTDHANDLES` and no handles, so it never inherits the app's own redirected handles. No
+third-party module is added (`golang.org/x/sys` moves from indirect to direct in `desktop/go.mod`).
+The Plan's "Decisions made for you" line naming the library is replaced by this one.
 
 Amended by the agent on 2026-10-25; changed 04-outline.md.

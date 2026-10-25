@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -98,10 +97,9 @@ func runLoginShell(shell string, timeout time.Duration) (map[string]string, stri
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, shell, "-ilc", "printf '%s' '"+captureMarker+"'; exec env -0")
-	// The shell and everything it starts form one group, so a timeout ends all
-	// of it and releases the output pipe.
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	cmd.Cancel = func() error { return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) }
+	// A timeout ends the shell and everything it starts, which releases the
+	// output pipe.
+	killTreeOnCancel(cmd)
 	cmd.WaitDelay = time.Second
 	var out bytes.Buffer
 	cmd.Stdout = &out

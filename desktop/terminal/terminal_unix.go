@@ -1,3 +1,5 @@
+//go:build !windows
+
 // Package terminal runs a process on a pseudo-terminal and streams its
 // output, so the app's dock can show a real shell or a kirokit command.
 package terminal
