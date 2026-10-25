@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- ql:summary -->
-23 of 24 tasks · 6 of 7 slices
+24 of 24 tasks · 7 of 7 slices
 
 Building now: started 25 Oct, 19:12, 1 h 22 min so far.
 <!-- /ql:summary -->
@@ -19,7 +19,7 @@ Building now: started 25 Oct, 19:12, 1 h 22 min so far.
 | 4 | The app finds its folders, tools, CLI and shell on each OS | After this slice, the app on Linux and Windows keeps its data where each OS expects, finds sops, kiro-cli and its bundled CLI, opens the right shell named after itself, and shows OS-correct setup hints. | done |
 | 5 | The app builds, packages and starts on Linux and Windows | After this slice, `task desktop:build` builds the app on each OS (Linux with WebKitGTK 4.1, Windows with an NSIS setup carrying `bin\kirokit.exe`), the app has a smoke start, and the Desktop workflow proves the build starts on all three runners. | done |
 | 6 | One release ships every OS from three runners | After this slice, GoReleaser builds Windows CLI zips, Linux `.deb` and `.rpm` for the CLI and the app, a Scoop manifest and the Windows setup files, and the release workflow builds on macOS, Linux and Windows runners and pushes the tag only after all of them succeed. | done |
-| 7 | The docs tell every OS how to install and what to expect | After this slice, README and CONTRIBUTING describe installing and running kirokit and its app on macOS, Linux and Windows, including prerequisites and the unsigned-app warnings. | next |
+| 7 | The docs tell every OS how to install and what to expect | After this slice, README and CONTRIBUTING describe installing and running kirokit and its app on macOS, Linux and Windows, including prerequisites and the unsigned-app warnings. | done |
 <!-- /ql:slices -->
 
 ## Delivered

@@ -171,7 +171,7 @@ own tests run there, and CI runs build, vet and tests on Ubuntu, Windows and mac
 - [x] T9 `kirokit setup --source` accepts Windows drive paths
   - **Objective:** The source pattern also accepts `C:\…` and `C:/…`, which still cannot be read as a git option.
   - **Design:** "plan:decision:d4"
-  - **Files:** `cmd/kirokit/commands/setup.go`, `cmd/kirokit/commands/setup_test.go`
+  - **Files:** `cmd/kirokit/commands/setup.go`, `cmd/kirokit/commands/setup_test.go`, `cmd/kirokit/commands/root.go`, `cmd/kirokit/commands/version_test.go`
   - **Test first:** `setup --source C:\repos\team` must pass the address check; it fails today with the `--source` error.
   - **Definition of done:**
     - `C:\repos\team`, `C:/repos/team` and `d:\x` pass the check; `C:`, `C:repo`, `-C:\x` and `C:\a b` are refused.
@@ -305,7 +305,7 @@ proves the build starts on all three runners.
 
 **Depends on:** Slice 4
 
-- [ ] T19 With `KIROKIT_DESKTOP_SMOKE=1` the app quits once its page has loaded
+- [x] T19 With `KIROKIT_DESKTOP_SMOKE=1` the app quits once its page has loaded
   - **Objective:** Wails' `OnDomReady` quits with exit code 0 when the variable is set; a timer exits 1 when the page has not loaded within 60 seconds.
   - **Design:** "plan:decision:d7"
   - **Files:** `desktop/main.go`, `desktop/smoke.go`, `desktop/smoke_test.go`
@@ -313,12 +313,12 @@ proves the build starts on all three runners.
   - **Definition of done:**
     - Without the variable the app starts exactly as today.
     - The smoke start never writes settings or clones (it quits before any page action).
-    - verify: `cd desktop && go test -run Smoke ./... && task desktop:build && KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit`
+    - verify: `(cd desktop && go test -run Smoke ./...) && task desktop:build && KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit`
 
-- [ ] T20 `task desktop:build` builds the Linux and Windows apps
+- [x] T20 `task desktop:build` builds the Linux and Windows apps
   - **Objective:** `scripts/desktop-build.sh` branches on `go env GOOS`: darwin unchanged, linux builds `kirokit-desktop` with `-tags webkit2_41` and the CLI beside it, windows builds both arches with `-nsis` and `bin\kirokit.exe` in the installer; the Windows and Linux assets are committed.
   - **Design:** "plan:decision:d5"
-  - **Files:** `scripts/desktop-build.sh`, `Taskfile.yml`, `desktop/build/windows/icon.ico`, `desktop/build/windows/info.json`, `desktop/build/windows/wails.exe.manifest`, `desktop/build/windows/installer/project.nsi`, `desktop/build/windows/installer/wails_tools.nsh`, `desktop/build/linux/kirokit-desktop.desktop`, `desktop/build/linux/kirokit-desktop.png`, `.gitignore`
+  - **Files:** `scripts/desktop-build.sh`, `Taskfile.yml`, `desktop/build/windows/icon.ico`, `desktop/build/windows/info.json`, `desktop/build/windows/wails.exe.manifest`, `desktop/build/windows/installer/project.nsi`, `desktop/build/windows/installer/wails_tools.nsh`, `desktop/build/linux/kirokit-desktop.desktop`, `desktop/build/linux/kirokit-desktop.png`, `.gitignore`, `desktop/.gitignore`, `lefthook.yml`
   - **Test first:** **Trivial:** `scripts/linux-docker.sh task desktop:build` fails today (the darwin-only script calls `lipo`); after the change it and `GOOS=windows` in the container produce the artifacts below.
   - **Definition of done:**
     - On macOS, the built `kirokit.app` has the same layout and `Info.plist` as before this change.
@@ -326,7 +326,7 @@ proves the build starts on all three runners.
     - Windows: `desktop/build/bin/installers/kirokit-desktop_<v>_windows_{amd64,arm64}-setup.exe`, each containing `bin\kirokit.exe` (listed by `7z l`).
     - verify: `scripts/linux-docker.sh task desktop:build && scripts/linux-docker.sh env GOOS=windows task desktop:build`
 
-- [ ] T21 The Desktop workflow tests, builds and smoke-starts the app on three runners
+- [x] T21 The Desktop workflow tests, builds and smoke-starts the app on three runners
   - **Objective:** `desktop.yaml` runs `task desktop:test`, `task desktop:build` and the smoke start on Ubuntu (under `xvfb-run`), Windows and macOS, and on Linux installs the snapshot's `.deb` with `apt install` and smoke-starts `/usr/bin/kirokit-desktop`.
   - **Design:** "plan:decision:d7"
   - **Files:** `.github/workflows/desktop.yaml`
@@ -347,7 +347,7 @@ Windows runners and pushes the tag only after all of them succeed.
 **Depends on:** Slice 5
 **Risky:** the split and merge publishing order runs for real only on `main`.
 
-- [ ] T22 GoReleaser config and staging cover Linux and Windows
+- [x] T22 GoReleaser config and staging cover Linux and Windows
   - **Objective:** `.goreleaser.yaml` gains `partial.by: goos`, the Windows CLI target and zip override, the two `nfpms`, the `kirokit-desktop-linux` prebuilt build, `scoops` (skipped without its token) and `release.extra_files`; `scripts/desktop-prebuilt.sh` stages per OS.
   - **Design:** "Release layout and file names"
   - **Files:** `.goreleaser.yaml`, `scripts/desktop-prebuilt.sh`
@@ -358,7 +358,7 @@ Windows runners and pushes the tag only after all of them succeed.
     - With `SCOOP_BUCKET_GITHUB_TOKEN` empty, the scoop publish is skipped, not failed.
     - verify: `goreleaser check`
 
-- [ ] T23 The release builds on three runners and pushes the tag last
+- [x] T23 The release builds on three runners and pushes the tag last
   - **Objective:** `release.yaml` becomes `version` → `app-linux-arm64` → `split` (macOS, Linux, Windows) → `merge`, which pushes the tag and runs `goreleaser continue --merge`; the dry run prints the casks and the Scoop manifest; `desktop.yaml` runs the split snapshot on pull requests.
   - **Design:** "Release workflow jobs"
   - **Files:** `.github/workflows/release.yaml`, `.github/workflows/desktop.yaml`
@@ -378,7 +378,7 @@ macOS, Linux and Windows, including prerequisites and the unsigned-app warnings.
 
 **Depends on:** Slice 6
 
-- [ ] T24 README, CONTRIBUTING and AGENTS cover Linux and Windows
+- [x] T24 README, CONTRIBUTING and AGENTS cover Linux and Windows
   - **Objective:** Install commands per OS (cask on macOS and Linux, `.deb`/`.rpm`, tar.gz, Scoop, zip, setup `.exe`), prerequisites (SOPS, age key path per OS, Kiro CLI), the SmartScreen steps beside the macOS quarantine note, the shell tab's name, the Windows argument rule, and the three-OS CI and Docker checks for contributors.
   - **Design:** none
   - **Files:** `README.md`, `CONTRIBUTING.md`, `AGENTS.md`
@@ -548,7 +548,7 @@ defaults and allowlists that one path.
 - `cd desktop/frontend && node --test "src/**/*.test.js"` · T16
 - `cd desktop && go test -run Settings ./...` · T17
 - `task desktop:test && scripts/linux-docker.sh task desktop:test && cd desktop && GOOS=windows go vet ./...` · T18
-- `cd desktop && go test -run Smoke ./... && task desktop:build && KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit` · T19
+- `(cd desktop && go test -run Smoke ./...) && task desktop:build && KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit` · T19
 - `scripts/linux-docker.sh task desktop:build && scripts/linux-docker.sh env GOOS=windows task desktop:build` · T20
 - `actionlint .github/workflows/desktop.yaml` · T21
 - `scripts/linux-docker.sh env KIROKIT_REQUIRE_SOPS=1 go test ./... ` · scenario 1
