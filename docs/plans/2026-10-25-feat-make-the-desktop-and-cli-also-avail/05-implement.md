@@ -40,7 +40,7 @@ Delivered 25 Oct, 20:35
 - Security review · done · nothing severe in the change
 - Independent review of the Done means points · 2 of 8 proved
 
-**Left** · 9
+**Left** · 8
 - Done means 1: Linux users install the kirokit CLI with a package, Homebrew or download · missing
 - Done means 2: Windows users install the kirokit CLI with Scoop or a zip and run it in PowerShell · missing
 - Done means 3: The CLI installs a team on Linux and Windows that Kiro CLI can run · missing
@@ -48,7 +48,6 @@ Delivered 25 Oct, 20:35
 - Done means 5: Windows users install the desktop app with a setup .exe · missing
 - Done means 7: Every release builds and checks all three platforms automatically · missing
 - Independent review · failed
-- Fix rounds · Fix · not done
 - Push this task's branch and open a pull request, so CI and Desktop run on the windows-latest, ubuntu-latest and macos-latest runners · needs you · T10
 <!-- /ql:delivered -->
 
@@ -75,6 +74,7 @@ Delivered 25 Oct, 20:35
 - Slice 5 · T19's check runs the smoke tests in a subshell, so the smoke start's desktop/build path is relative to the repository root.
 - The Plan · The scenarios' gh commands name this checkout's branch, feat/feat-make-desktop-cli-also, instead of the placeholder feat/linux-windows.
 - The Plan · Verification round 1 is kept although 2 files changed during it, because the only changes were the reviewer's own new tests (`internal/sopswrap/sopswrap_test.go`, `internal/externalskills/fetch_test.go`), which add checks and change no code its verdicts judged; nothing you approved changes.
+- The Plan · Verification round 2 was recorded while 2 files changed, 2 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -149,6 +149,7 @@ None recorded.
 - T19 (amended): T19's check runs the smoke tests in a subshell, so the smoke start's desktop/build path is relative to the repository root
 - Plan (amended): The scenarios' gh commands name this checkout's branch, feat/feat-make-desktop-cli-also, instead of the placeholder feat/linux-windows
 - Plan (tactical): verification round 1 is kept although 2 files changed during it, because the only changes were the reviewer's own new tests (`internal/sopswrap/sopswrap_test.go`, `internal/externalskills/fetch_test.go`), which add checks and change no code its verdicts judged; nothing you approved changes
+- Plan (tactical): verification round 2 was recorded while 2 files changed, 2 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes
 
 ## Plan amended
 

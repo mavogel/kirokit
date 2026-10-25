@@ -3,9 +3,9 @@
 ## Summary
 
 <!-- ql:summary -->
-8 of 8 points assessed · 2 passed
+8 of 8 points assessed · 2 passed · 1 fix round
 
-Independent review failed; the recorded findings need attention.
+Unverified after 2 judge runs: 17 items remain unresolved. No acceptance recorded.
 <!-- /ql:summary -->
 
 ## Open items
@@ -40,8 +40,8 @@ Independent review failed; the recorded findings need attention.
   - Result: not run
   - Why it runs here: Not run: Second opinion is off in Settings, though it would run here because the change crosses a trust boundary: secrets and other processes, Decrypted SOPS values reach MCP servers, the Plan says it is risky: yes, The shipped app loads a new dependency (a Windows ConPTY library), secrets cross and slice 3 and 6 is marked risky; say "get a second opinion" to have one.
 - **Fix rounds** · the build session
-  - State: waiting
-  - Result: not yet
+  - State: done
+  - Result: done · 1 round
 <!-- /ql:lanes -->
 
 ## Done means, checked
@@ -176,6 +176,8 @@ Executed tree: the judged commit (HEAD did not move) plus this review's two unst
 **Result:** fail
 
 ### Iteration 2
+
+**Revision:** e4ea947de239c32df05f0e6eb79763f33cda342aa32a8e679091bb9ecd36a865
 
 **Assignment:** 66d68a6f-ddb8-4a7a-97d6-d66755c8a2ab
 **Judge:** fresh helper
