@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 24 of 24 tasks · 7 of 7 slices
 
-Building now: started 25 Oct, 19:12, 1 h 22 min so far.
+Built: started 25 Oct, 19:12.
 <!-- /ql:summary -->
 
 ## Slices
@@ -25,7 +25,26 @@ Building now: started 25 Oct, 19:12, 1 h 22 min so far.
 ## Delivered
 
 <!-- ql:delivered -->
-Written when the last task is ticked.
+Delivered 25 Oct, 20:35
+
+**Built** · 6
+- Windows MCP servers get their SOPS secrets · slice 1 · 5 tasks
+- The CLI works on a Windows checkout, and CI tests it on three systems · slice 2 · 5 tasks
+- The desktop terminal runs on Windows · slice 3 · 2 tasks
+- The app finds its folders, tools, CLI and shell on each OS · slice 4 · 6 tasks
+- The app builds, packages and starts on Linux and Windows · slice 5 · 3 tasks
+- 2 more slices · 7 of 7 built
+
+**Verified** · 0
+- None
+
+
+**Left** · 5
+- Security review · Security review · not done
+- Project checks · Project checks · not done
+- Independent review · Review · not done
+- Fix rounds · Fix · not done
+- Push this task's branch and open a pull request, so CI and Desktop run on the windows-latest, ubuntu-latest and macos-latest runners · needs you · T10
 <!-- /ql:delivered -->
 
 ## Decided while building
@@ -49,6 +68,7 @@ Written when the last task is ticked.
 - Slice 5 · T20 keeps Wails' regenerated wails_tools.nsh and the downloaded WebView2 bootstrapper out of git (desktop/.gitignore) and tracks only project.nsi, the icon, info.json and the manifest; Taskfile runs the build script through bash so Windows (Git Bash) runs it.
 - Slice 5 · T20 also excludes *.ico and *.icns from lefthook's whitespace fixers, which corrupted the Windows icon on the first commit attempt.
 - Slice 5 · T19's check runs the smoke tests in a subshell, so the smoke start's desktop/build path is relative to the repository root.
+- The Plan · The scenarios' gh commands name this checkout's branch, feat/feat-make-desktop-cli-also, instead of the placeholder feat/linux-windows.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -108,6 +128,7 @@ None recorded.
 - T20 (amended): T20 keeps Wails' regenerated wails_tools.nsh and the downloaded WebView2 bootstrapper out of git (desktop/.gitignore) and tracks only project.nsi, the icon, info.json and the manifest; Taskfile runs the build script through bash so Windows (Git Bash) runs it
 - T20 (amended): T20 also excludes *.ico and *.icns from lefthook's whitespace fixers, which corrupted the Windows icon on the first commit attempt
 - T19 (amended): T19's check runs the smoke tests in a subshell, so the smoke start's desktop/build path is relative to the repository root
+- Plan (amended): The scenarios' gh commands name this checkout's branch, feat/feat-make-desktop-cli-also, instead of the placeholder feat/linux-windows
 
 ## Plan amended
 
@@ -166,5 +187,11 @@ Amended by the agent on 2026-10-25; changed 04-outline.md.
 ### T19 · amended
 
 T19's check runs the smoke tests in a subshell, so the smoke start's desktop/build path is relative to the repository root
+
+Amended by the agent on 2026-10-25; changed 04-outline.md.
+
+### Plan · amended
+
+The scenarios' gh commands name this checkout's branch, feat/feat-make-desktop-cli-also, instead of the placeholder feat/linux-windows
 
 Amended by the agent on 2026-10-25; changed 04-outline.md.

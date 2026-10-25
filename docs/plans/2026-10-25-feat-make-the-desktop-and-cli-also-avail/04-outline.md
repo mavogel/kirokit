@@ -452,7 +452,7 @@ defaults and allowlists that one path.
 
 | Step | Action | Expected |
 |---|---|---|
-| 1 | On a pushed branch, open the latest CI run: `gh run list --workflow CI --branch feat/linux-windows --limit 1` | one run, status `completed`, conclusion `success` |
+| 1 | On a pushed branch, open the latest CI run: `gh run list --workflow CI --branch feat/feat-make-desktop-cli-also --limit 1` | one run, status `completed`, conclusion `success` |
 | 2 | `gh run view <run-id> --log \| grep -E 'TestInstall_SopsLaunch'` | `--- PASS: TestInstall_SopsLaunch` in the `windows-latest`, `ubuntu-latest` and `macos-latest` jobs, with no `SKIP` |
 | 3 | Locally: `KIROKIT_REQUIRE_SOPS=1 go test ./cmd/kirokit/commands/ -run TestInstall_SopsLaunch -v` | `--- PASS: TestInstall_SopsLaunch` |
 | 4 | `scripts/linux-docker.sh env KIROKIT_REQUIRE_SOPS=1 go test ./... ` | exit 0, every package `ok` |
@@ -480,7 +480,7 @@ defaults and allowlists that one path.
 
 | Step | Action | Expected |
 |---|---|---|
-| 1 | `gh run list --workflow Desktop --branch feat/linux-windows --limit 1` | conclusion `success` |
+| 1 | `gh run list --workflow Desktop --branch feat/feat-make-desktop-cli-also --limit 1` | conclusion `success` |
 | 2 | `gh run view <run-id> --log \| grep -E 'ok +github.com/mavogel/kirokit/desktop'` | `ok` for `desktop` and `desktop/terminal` in the `ubuntu-latest`, `windows-latest` and `macos-latest` jobs |
 | 3 | `gh run view <run-id> --log \| grep -E 'TestShellCommand.*windows\|--- PASS: TestShellTab_StartsPowerShell'` | the Windows job passes the PowerShell shell-tab test |
 | 4 | Same log, smoke steps | each OS's smoke step exits 0; Linux runs under `xvfb-run` |
@@ -495,7 +495,7 @@ defaults and allowlists that one path.
 
 | Step | Action | Expected |
 |---|---|---|
-| 1 | `gh workflow run release.yaml --ref feat/linux-windows -f dry_run=true`, then `gh run watch` | the `version`, `app-linux-arm64`, three `split` and `merge` jobs succeed; no tag is created (`git ls-remote --tags origin` unchanged) |
+| 1 | `gh workflow run release.yaml --ref feat/feat-make-desktop-cli-also -f dry_run=true`, then `gh run watch` | the `version`, `app-linux-arm64`, three `split` and `merge` jobs succeed; no tag is created (`git ls-remote --tags origin` unchanged) |
 | 2 | Merge job log, `ls dist` | `kirokit_<v>_linux_{amd64,arm64}.tar.gz`, `.deb`, `.rpm`; `kirokit_<v>_windows_{amd64,arm64}.zip`; `kirokit-desktop_<v>_linux_{amd64,arm64}.deb` and `.rpm`; `kirokit-desktop_<v>_windows_{amd64,arm64}-setup.exe`; both darwin DMGs and tar.gz files as before |
 | 3 | Merge job log, printed casks and Scoop manifest | the `kirokit` cask has `on_linux` URLs for both arches; `kirokit.json` names the two Windows zips |
 | 4 | Download the run's Linux artifact, then `scripts/linux-docker.sh sh -c 'apt-get install -y ./dist/linux/kirokit_*_linux_arm64.deb && kirokit --version'` | the snapshot version |
@@ -555,7 +555,7 @@ defaults and allowlists that one path.
 - `git diff main --stat -- testdata/golden` · scenario 2
 - `task desktop:build && ls desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit` · scenario 2
 - `KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit; echo $?` · scenario 2
-- `gh run list --workflow Desktop --branch feat/linux-windows --limit 1` · scenario 3
+- `gh run list --workflow Desktop --branch feat/feat-make-desktop-cli-also --limit 1` · scenario 3
 - `grep -n 'keys.txt' README.md` · scenario 5
 - `go vet ./...` · project checks
 - `go build ./...` · project checks
