@@ -94,6 +94,17 @@ CI additionally runs `node scripts/sync-agent-assets.mjs --check`. `task ci` mus
 
 Add or extend tests for changed behaviour. For bug fixes, a test that fails before your change and passes after it is the best evidence.
 
+### Showcase video
+
+The README's showcase (`assets/kirokit-showcase.gif`, with the sharper `assets/kirokit-showcase.mp4`) is recorded from the real CLI and desktop app. When the CLI output or the app's UI changes, record it again on a Mac:
+
+```bash
+brew install tmux asciinema agg ffmpeg node
+task showcase   # scripts/showcase/record.sh; --keep leaves /tmp/kirokit-demo for inspection
+```
+
+It also needs Google Chrome in `/Applications`, a signed-in `kiro-cli`, the SOPS age key at its default location (or `SOPS_AGE_KEY_FILE`), network access to github.com, and free ports 34115 and 5173 (no `task desktop:dev` running). The run types into a real Kiro session but never sends a chat message. It refuses to write `assets/` if the recorded text shows your home path, user name or git email, if the GIF exceeds 8 MB or the MP4 4 MB, or if the cut falls outside 30 to 60 seconds.
+
 
 ## Working with templates and golden files
 

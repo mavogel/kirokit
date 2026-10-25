@@ -7,6 +7,9 @@
 
 The unoffical `kirokit` Go CLI plus repository layout that lets multiple teams own their own [Kiro CLI v3](https://kiro.dev) config sources as templates. Each team's agents, hooks, prompts, skills, and steering docs are rendered deterministically into Kiro's real config layout, MCP server versions are pinned centrally, secrets are injected via [SOPS](https://github.com/getsops/sops) at MCP-launch time (never baked into any committed or rendered file), and the rendering pipeline is locked down with golden-file tests that run in CI.
 
+<p align="center"><a href="assets/kirokit-showcase.mp4"><img src="assets/kirokit-showcase.gif" width="800" alt="kirokit in 35 seconds: kirokit install platform-team in a terminal, kiro-cli chat starting with the devops agent and listing the jira-search skill, then the desktop app cloning the config repository and installing platform-team from a button while its terminal dock shows each command"></a></p>
+<p align="center"><sub>Sharper version: <a href="assets/kirokit-showcase.mp4">kirokit-showcase.mp4</a></sub></p>
+
 ## Quickstart
 
 ### using the cli
@@ -38,9 +41,9 @@ kirokit install platform-team
 kiro-cli chat --agent devops --v3
 ```
 
-and see the example skill `jira-triage` in the `devops` agent
+and type `/jir` to see the example skill `jira-search` and the prompt `jira-triage` in the `devops` agent
 
-<p align="center"><img src="assets/kirokit-cli.png" width="720" alt="The kiro cli startet with the devops agent showing the existende of the jira triage skill"></p>
+<p align="center"><img src="assets/kirokit-cli.png" width="720" alt="The kiro cli started with the devops agent, listing the jira-search skill and the jira-triage prompt"></p>
 
 
 cleanup and verify KIRO_HOME is still set to the temporary directory

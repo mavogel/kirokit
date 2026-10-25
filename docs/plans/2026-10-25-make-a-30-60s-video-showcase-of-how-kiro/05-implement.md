@@ -3,9 +3,9 @@
 ## Summary
 
 <!-- ql:summary -->
-3 of 11 tasks · 1 of 3 slices
+8 of 11 tasks · 2 of 3 slices
 
-Building now: started 25 Oct, 11:07, 25 min so far.
+Building now: started 25 Oct, 11:07, 29 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -14,8 +14,8 @@ Building now: started 25 Oct, 11:07, 25 min so far.
 | # | Slice | In plain words | Now |
 |---|---|---|---|
 | 1 | The CLI part records itself from one script | After this slice, `scripts/showcase/record.sh --keep` builds the CLI, types the install-and-chat story into a real Kiro session and leaves `cli.cast` and `cli.gif` in `/tmp/kirokit-demo/out`. | done |
-| 2 | One command makes the checked GIF and MP4 | After this slice, `task showcase` records the app in Wails dev mode too, renders captions and frames, composes the MP4 and the GIF, and only writes them to `assets/` when the privacy, size and length checks pass. | next |
-| 3 | The README opens with the showcase and commits keep media intact | After this slice, the README shows the looping GIF right under the intro with a link to the MP4, CONTRIBUTING names `task showcase`, and the pre-commit fixers leave GIF and MP4 bytes alone. | after 2 |
+| 2 | One command makes the checked GIF and MP4 | After this slice, `task showcase` records the app in Wails dev mode too, renders captions and frames, composes the MP4 and the GIF, and only writes them to `assets/` when the privacy, size and length checks pass. | done |
+| 3 | The README opens with the showcase and commits keep media intact | After this slice, the README shows the looping GIF right under the intro with a link to the MP4, CONTRIBUTING names `task showcase`, and the pre-commit fixers leave GIF and MP4 bytes alone. | next |
 <!-- /ql:slices -->
 
 ## Delivered
@@ -31,6 +31,12 @@ Written when the last task is ticked.
 - Slice 1 · `tmux capture-pane` drops trailing spaces, so the driver waits for the prompt as `$`, and the session sets `BASH_SILENCE_DEPRECATION_WARNING=1` so macOS bash prints no zsh banner; nothing you approved changes.
 - Slice 1 · `agg` uses a 3 s idle limit instead of the spike's 2 s and the driver holds the `/jir` list 3.5 s, so the `jira-search` list stays readable for 3 s; nothing you approved changes.
 - Slice 2 · The privacy scan removes the public slugs `mavogel/kirokit` and `mavogel/tap/` before it looks for `$USER`, because the approved clone address and end card contain the GitHub owner, which equals the local user name; every other occurrence still fails; nothing you approved changes.
+- Slice 2 · `app-dock.txt` is sampled every 200 ms over the whole run (page text, dock rows, input values) instead of read once at the end, because dock lines such as the `git clone` line scroll away; half-typed copies of the public clone address are skipped, since they would otherwise trip the user-name check; nothing you approved changes.
+- Slice 2 · The dev server runs with `KIRO_HOME`, `KIROKIT_REPO`, `SOPS_AGE_KEY_FILE` and the `XDG_*` folders unset, so neither the app nor its setup dialog can reach or show a real path; nothing you approved changes.
+- Slice 2 · One `frame.png` (clear inside the rounded rectangle, `#13111f` in the corners, 1 px `#3a3450` border) laid over each clip replaces the `alphamerge` mask plus separate border, giving the same picture with one `overlay`; cue times go to a shell-sourceable `cues.env` instead of `cues.json`; nothing you approved changes.
+- Slice 2 · The title card fades into the CLI clip and the app clip into the end card with 0.4 s fades, besides the approved 0.5 s crossfade between the clips; the CLI clip is padded to the frame with the terminal's own background `#171b21` instead of being scaled; nothing you approved changes.
+- Slice 2 · `record.sh` calls `checks.sh` as a command rather than sourcing it, so each check stays runnable on its own with the same messages; nothing you approved changes.
+- Slice 3 · T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -47,6 +53,9 @@ Written when the last task is ticked.
 - T6 · b1325db · `node scripts/showcase/caption.mjs /tmp/kirokit-demo/out && ffprobe -v error -show_entries stream=width,height -of csv=p=0 /tmp/kirokit-demo/out/cap-1.png` · exit 0 · 1.1s
 - T7 · b1325db · `ffprobe -v error -show_entries stream=width,height,pix_fmt:format=duration -of default=nw=1 /tmp/kirokit-demo/out/showcase.mp4` · exit 0 · 0.1s
 - T8 · b1325db · `shellcheck scripts/showcase/*.sh && task showcase` · exit 0 · 45.4s
+- T9 · f3b04e1 · `uvx --from pre-commit-hooks==6.0.0 check-yaml lefthook.yml` · exit 0 · 0.1s
+- T10 · f3b04e1 · `ffprobe -v error -show_entries format=duration -of csv=p=0 assets/kirokit-showcase.mp4` · exit 0 · 0.1s
+- T11 · f3b04e1 · `grep -c 'assets/kirokit-showcase' README.md` · exit 0 · 0s
 
 ## Known limits
 
@@ -65,5 +74,12 @@ None recorded.
 - T6 (tactical): one `frame.png` (clear inside the rounded rectangle, `#13111f` in the corners, 1 px `#3a3450` border) laid over each clip replaces the `alphamerge` mask plus separate border, giving the same picture with one `overlay`; cue times go to a shell-sourceable `cues.env` instead of `cues.json`; nothing you approved changes
 - T7 (tactical): the title card fades into the CLI clip and the app clip into the end card with 0.4 s fades, besides the approved 0.5 s crossfade between the clips; the CLI clip is padded to the frame with the terminal's own background `#171b21` instead of being scaled; nothing you approved changes
 - T8 (tactical): `record.sh` calls `checks.sh` as a command rather than sourcing it, so each check stays runnable on its own with the same messages; nothing you approved changes
+- T11 (amended): T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase
 
 ## Plan amended
+
+### T11 · amended
+
+T11 also adds a one-line scripts/showcase pointer to AGENTS.md's layout, so agents find task showcase
+
+Amended by the agent on 2026-10-25; changed 04-outline.md.
