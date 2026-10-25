@@ -64,9 +64,10 @@ func CopyAside(dir, stamp string) (string, error) {
 			return err
 		}
 		switch {
-		case p != dir && dirlink.Is(p):
-			// A symbolic link, or a Windows junction (which reads as a folder):
-			// kept as a link, never followed into what it points at.
+		case dirlink.Is(p):
+			// A symbolic link, or a Windows junction (which reads as a folder),
+			// including dir itself: kept as a link, never followed into what it
+			// points at.
 			link, err := dirlink.Target(p)
 			if err != nil {
 				return err

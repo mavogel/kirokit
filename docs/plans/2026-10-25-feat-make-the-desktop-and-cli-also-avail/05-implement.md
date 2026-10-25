@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 24 of 24 tasks · 7 of 7 slices
 
-Built: started 25 Oct, 19:12.
+Building now: started 25 Oct, 19:12, 1 h 43 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -35,12 +35,20 @@ Delivered 25 Oct, 20:35
 - The app builds, packages and starts on Linux and Windows · slice 5 · 3 tasks
 - 2 more slices · 7 of 7 built
 
-**Verified** · 2
+**Verified** · 3
 - Project checks passed · 6 of 6 · recorded
 - Security review · done · nothing severe in the change
+- Independent review of the Done means points · 1 of 8 proved
 
-**Left** · 3
-- Independent review · Review · not done
+**Left** · 10
+- Done means 1: Linux users install the kirokit CLI with a package, Homebrew or download · missing
+- Done means 2: Windows users install the kirokit CLI with Scoop or a zip and run it in PowerShell · missing
+- Done means 3: The CLI installs a team on Linux and Windows that Kiro CLI can run · missing
+- Done means 4: Linux users install the desktop app from a .deb or .rpm · missing
+- Done means 5: Windows users install the desktop app with a setup .exe · missing
+- Done means 6: The Mac release keeps working exactly as today · failed
+- Done means 7: Every release builds and checks all three platforms automatically · missing
+- Independent review · failed
 - Fix rounds · Fix · not done
 - Push this task's branch and open a pull request, so CI and Desktop run on the windows-latest, ubuntu-latest and macos-latest runners · needs you · T10
 <!-- /ql:delivered -->
@@ -67,6 +75,7 @@ Delivered 25 Oct, 20:35
 - Slice 5 · T20 also excludes *.ico and *.icns from lefthook's whitespace fixers, which corrupted the Windows icon on the first commit attempt.
 - Slice 5 · T19's check runs the smoke tests in a subshell, so the smoke start's desktop/build path is relative to the repository root.
 - The Plan · The scenarios' gh commands name this checkout's branch, feat/feat-make-desktop-cli-also, instead of the placeholder feat/linux-windows.
+- The Plan · Verification round 1 is kept although 2 files changed during it, because the only changes were the reviewer's own new tests (`internal/sopswrap/sopswrap_test.go`, `internal/externalskills/fetch_test.go`), which add checks and change no code its verdicts judged; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -104,6 +113,7 @@ Delivered 25 Oct, 20:35
 - all · daa8ce8 · `go build ./...` · exit 0 · 0.6s
 - all · daa8ce8 · `task desktop:test` · exit 0 · 2.6s
 - all · daa8ce8 · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since it passed at 20:33
+- T8 · b4865cb · `go test ./internal/dirlink/ ./internal/install/ ./internal/backup/ && GOOS=windows go vet ./internal/...` · exit 0 · 0.3s
 
 ## Known limits
 
@@ -133,6 +143,7 @@ None recorded.
 - T20 (amended): T20 also excludes *.ico and *.icns from lefthook's whitespace fixers, which corrupted the Windows icon on the first commit attempt
 - T19 (amended): T19's check runs the smoke tests in a subshell, so the smoke start's desktop/build path is relative to the repository root
 - Plan (amended): The scenarios' gh commands name this checkout's branch, feat/feat-make-desktop-cli-also, instead of the placeholder feat/linux-windows
+- Plan (tactical): verification round 1 is kept although 2 files changed during it, because the only changes were the reviewer's own new tests (`internal/sopswrap/sopswrap_test.go`, `internal/externalskills/fetch_test.go`), which add checks and change no code its verdicts judged; nothing you approved changes
 
 ## Plan amended
 

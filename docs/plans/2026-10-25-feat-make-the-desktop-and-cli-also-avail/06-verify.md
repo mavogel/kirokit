@@ -3,12 +3,22 @@
 ## Summary
 
 <!-- ql:summary -->
-The independent review is next.
+8 of 8 points assessed · 1 passed
+
+Independent review failed; the recorded findings need attention.
 <!-- /ql:summary -->
 
 ## Open items
 
 <!-- ql:open-items -->
+- **Failed:** Point 6 · The Mac release keeps working exactly as today · Some Mac users now see install fail. With a symlinked folder in the Kiro home (D1), `kirokit install` stops with a backup error where it used to succeed; otherwise the `.app` layout, bundled universal CLI, smoke start, dock words and install output match today,
+- **Unverified:** Point 1 · Linux users install the kirokit CLI with a package, Homebrew or download · No Linux release exists to install from. environment: the branch is not on GitHub and no `GORELEASER_KEY` is set here, so no `.deb`, `.rpm`, tar.gz or Linux cask was produced; the nfpm and archive config passes `goreleaser check` and `kirokit --version` prints the version,
+- **Unverified:** Point 2 · Windows users install the kirokit CLI with Scoop or a zip and run it in PowerShell · No Windows release or Scoop manifest exists to install from. environment: same blocker; the windows/amd64 and arm64 CLI builds and the zip override were only checked statically
+- **Unverified:** Point 3 · The CLI installs a team on Linux and Windows that Kiro CLI can run · The Windows half was never run. environment: in the Linux container `kirokit install` plus the real `sops exec-env` launch passes (as on macOS); no Windows runner has run it,
+- **Unverified:** Point 4 · Linux users install the desktop app from a .deb or .rpm · No Linux app package was built. environment: in the arm64 container the app builds, links `libwebkit2gtk-4.1` and `libgtk-3`, smoke-starts under `xvfb-run` with exit 0, and the desktop tests pass; the `.deb`/`.rpm` need the Pro key's split snapshot, and amd64 needs the runner,
+- **Unverified:** Point 5 · Windows users install the desktop app with a setup .exe · The Windows app never started on Windows. environment: both setup programs build and list `kirokit-desktop.exe` and `bin/kirokit.exe` (`7z l`); the start, the desktop tests and the PowerShell tab need the Windows runner
+- **Unverified:** Point 7 · Every release builds and checks all three platforms automatically · No pull-request or release run exists on any runner. environment: CI, Desktop and Release workflows pass `actionlint`, but nothing has run them
+- **Unverified:** The release dry-run input does nothing. `release.yaml` declares `dry_run` for `workflow_dispatch` but never reads it, so a dispatch with `dry_run=false` still builds only a snapshot (safe, but the input misleads)
 - **Need:** T10 · Push this task's branch and open a pull request, so CI and Desktop run on the windows-latest, ubuntu-latest and macos-latest runners · queued for Review
 <!-- /ql:open-items -->
 
@@ -22,28 +32,37 @@ The independent review is next.
 - **Project checks** · QualityLayer itself · no agent
   - State: done
   - Result: done · 6 checks · 1 reused
-- **Independent review** · Claude Code · Opus 5.5 · never saw the build
-  - State: waiting
-  - Result: not yet
+- **Independent review** · fresh helper
+  - State: fail
+  - Result: failed · 7 of 8 points
 - **Second opinion** · another vendor's agent
   - State: skipped
   - Result: not run
   - Why it runs here: Not run: Second opinion is off in Settings, though it would run here because the change crosses a trust boundary: secrets and other processes, Decrypted SOPS values reach MCP servers, the Plan says it is risky: yes, The shipped app loads a new dependency (a Windows ConPTY library), secrets cross and slice 3 and 6 is marked risky; say "get a second opinion" to have one.
 - **Fix rounds** · the build session
-  - State: waiting
-  - Result: not yet
+  - State: running
+  - Result: running · fixing current findings
 <!-- /ql:lanes -->
 
 ## Done means, checked
 
 <!-- ql:proof -->
-Not checked yet.
+| Done means | Proof | |
+|---|---|---|
+| 1. Linux users install the kirokit CLI with a package, Homebrew or download | No Linux release exists to install from. environment: the branch is not on GitHub and no `GORELEASER_KEY` is set here, so no `.deb`, `.rpm`, tar.gz or Linux cask was produced; the nfpm and archive config passes `goreleaser check` and `kirokit --version` prints the version,. | missing |
+| 2. Windows users install the kirokit CLI with Scoop or a zip and run it in PowerShell | No Windows release or Scoop manifest exists to install from. environment: same blocker; the windows/amd64 and arm64 CLI builds and the zip override were only checked statically. | missing |
+| 3. The CLI installs a team on Linux and Windows that Kiro CLI can run | The Windows half was never run. environment: in the Linux container `kirokit install` plus the real `sops exec-env` launch passes (as on macOS); no Windows runner has run it,. | missing |
+| 4. Linux users install the desktop app from a .deb or .rpm | No Linux app package was built. environment: in the arm64 container the app builds, links `libwebkit2gtk-4.1` and `libgtk-3`, smoke-starts under `xvfb-run` with exit 0, and the desktop tests pass; the `.deb`/`.rpm` need the Pro key's split snapshot, and amd64 needs the runner,. | missing |
+| 5. Windows users install the desktop app with a setup .exe | The Windows app never started on Windows. environment: both setup programs build and list `kirokit-desktop.exe` and `bin/kirokit.exe` (`7z l`); the start, the desktop tests and the PowerShell tab need the Windows runner. | missing |
+| 6. The Mac release keeps working exactly as today | Some Mac users now see install fail. With a symlinked folder in the Kiro home (D1), `kirokit install` stops with a backup error where it used to succeed; otherwise the `.app` layout, bundled universal CLI, smoke start, dock words and install output match today,. | failed |
+| 7. Every release builds and checks all three platforms automatically | No pull-request or release run exists on any runner. environment: CI, Desktop and Release workflows pass `actionlint`, but nothing has run them. | missing |
+| 8. The README tells Linux and Windows users how to install and what to expect | README names every install command and file per OS, the age-key path per OS, SmartScreen's More info then Run anyway, and keeps the quarantine note. | passed |
 <!-- /ql:proof -->
 
 ## Fix rounds
 
 <!-- ql:fix-rounds -->
-None so far.
+- Round 1 · 19 points still open
 <!-- /ql:fix-rounds -->
 
 ## Second opinion
@@ -85,6 +104,8 @@ Not run: Second opinion is off in Settings, though it would run here because the
 ## Verification
 
 ### Iteration 1
+
+**Revision:** 5adcd4b329aee1160aad2463a6d12c726840b2ab8062dc423caea76347b10acc
 
 **Assignment:** 88cb4311-4210-46dc-88e5-a822c5647d0e
 **Judge:** fresh helper

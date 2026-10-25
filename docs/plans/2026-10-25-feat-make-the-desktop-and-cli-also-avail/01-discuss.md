@@ -7,9 +7,9 @@ depth: light
 level: engineering
 ui: true
 overrides: []
-stage: verify
-iterations: 0
-verification_failures: 0
+stage: implement
+iterations: 1
+verification_failures: 1
 gate: null
 created: 1792949198136
 startup_owner: a419c65251def52e
@@ -22,6 +22,7 @@ review_basis: affc22105c9b08df56a31d27f260573576e42c859ad3b526f0b33b7549966754
 branch: feat/feat-make-desktop-cli-also
 base: eaa4b319dc596336caf91ffb7fc8221bfd5ad765
 base_ref: main
+judge_runs: 1
 ---
 
 # Ship CLI and desktop app for Linux and Windows

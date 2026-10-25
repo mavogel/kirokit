@@ -98,6 +98,28 @@ func TestMoveAside_SameSecondCollisionGetsACounter(t *testing.T) {
 	}
 }
 
+// A folder that is itself a symbolic link (a dotfiles manager linking
+// ~/.kiro/agents, say) is backed up as that link, so install's backup never
+// fails on it.
+func TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink(t *testing.T) {
+	parent := t.TempDir()
+	real := filepath.Join(parent, "real-agents")
+	put(t, filepath.Join(real, "a.json"), "{}", 0o600)
+	dir := filepath.Join(parent, "agents")
+	testutil.Symlink(t, real, dir)
+
+	dst, err := CopyAside(dir, "20261025-120000")
+	if err != nil {
+		t.Fatalf("CopyAside of a symlinked folder: %v", err)
+	}
+	if got, err := os.Readlink(dst); err != nil || got != real {
+		t.Errorf("backup = %q (%v), want a link to %q", got, err, real)
+	}
+	if read(t, filepath.Join(real, "a.json")) != "{}" {
+		t.Error("the folder the link points at changed")
+	}
+}
+
 func TestCopyAside_CopiesTheWholeFolderAndLeavesTheSourceUntouched(t *testing.T) {
 	home := t.TempDir()
 	src := filepath.Join(home, "agents")
