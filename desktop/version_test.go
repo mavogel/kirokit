@@ -138,6 +138,28 @@ func TestSwitchRef_SavesTheChoiceOnlyAfterTheSwitch(t *testing.T) {
 	}
 }
 
+// Without an installed team the switch moves the checkout only: no team
+// argument, not even an empty one, reaches the CLI.
+func TestSwitchRef_WithoutAnInstalledTeamSwitchesTheCheckoutOnly(t *testing.T) {
+	a, log := clonedApp(t, versionOrigin(t))
+
+	if err := a.SwitchRef("feature"); err != nil {
+		t.Fatal(err)
+	}
+	if res := log.waitRef(t); !res.OK {
+		t.Fatalf("ref:done = %+v, want ok", res)
+	}
+	if !strings.Contains(log.output(), "▸ kirokit sync --branch feature\r\n") {
+		t.Errorf("want the team-less switch in the kirokit tab, got %q", log.output())
+	}
+	if got := a.State().Settings.Ref; got != "feature" {
+		t.Errorf("Ref = %q, want feature", got)
+	}
+	if b := git(t, a.repoDir(), "symbolic-ref", "HEAD"); b != "refs/heads/feature" {
+		t.Errorf("clone is on %q, want refs/heads/feature", b)
+	}
+}
+
 func TestSwitchRef_RefusesABadNameOrABusyTabBeforeAnyProcessStarts(t *testing.T) {
 	a, log := cloneApp(t)
 	for _, ref := range []string{"-b", "--upload-pack=x", "has space"} {

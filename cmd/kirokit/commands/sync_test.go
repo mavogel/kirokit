@@ -187,6 +187,9 @@ func TestSync_FailureLeavesTheInstalledTeamInPlace(t *testing.T) {
 		"--branch with local changes": {team: "demo", flags: []string{"--branch", "main"}, prepare: func(t *testing.T, clone string) {
 			writeTree(t, clone, map[string]string{"teams/demo/manifest.yaml": "team: demo\nglobalSteerings: [edited]\n"})
 		}},
+		"--branch with local commits": {team: "demo", flags: []string{"--branch", "main"}, prepare: func(t *testing.T, clone string) {
+			commitFile(t, clone, "local work")
+		}},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -427,5 +430,54 @@ func TestSync_PlainSyncFollowsTheChosenBranchAndStaysOnATag(t *testing.T) {
 	short = git(t, clone, "rev-parse", "--short", "HEAD")
 	if got, err := runRoot(t, "sync", "--repo", clone); err != nil || got != "checked out "+short+" at "+short+"\n" {
 		t.Errorf("plain sync on an untagged commit = %q, %v; want the commit as the name", got, err)
+	}
+}
+
+// A pinned tag is reinstalled from, not skipped: a plain sync with a team on a
+// detached HEAD must still install the team from that tag.
+func TestSync_PlainSyncWithATeamOnATagReinstallsFromIt(t *testing.T) {
+	origin := branchOrigin(t)
+	clone := cloneOf(t, origin)
+	home := t.TempDir()
+	t.Setenv("KIRO_HOME", home)
+
+	if got, err := runRoot(t, "sync", "demo", "--repo", clone, "--branch", "v1.0.0"); err != nil {
+		t.Fatalf("switch to a tag: %v\n%s", err, got)
+	}
+	commitFile(t, origin, "after the pin") // a new commit on main must not reach the pin
+	got, err := runRoot(t, "sync", "demo", "--repo", clone)
+	if err != nil {
+		t.Fatalf("plain sync on a tag with a team: %v\n%s", err, got)
+	}
+	short := git(t, origin, "rev-parse", "--short", "v1.0.0^{commit}")
+	want := "checked out v1.0.0 at " + short + "\nsynced demo into " + home + " at " + short + "\n"
+	if got != want {
+		t.Errorf("output = %q, want %q", got, want)
+	}
+	if recs := installedRecords(t, home); !reflect.DeepEqual(recs, []string{"demo.json"}) {
+		t.Errorf("records = %v, want demo.json", recs)
+	}
+}
+
+// A branch name with a slash is a full name, not a path: the tracking branch
+// keeps the whole name and the output names it whole.
+func TestSync_BranchWithASlashKeepsItsWholeName(t *testing.T) {
+	origin := branchOrigin(t)
+	git(t, origin, "branch", "team/try-x", "feature")
+	clone := cloneOf(t, origin)
+
+	got, err := runRoot(t, "sync", "--repo", clone, "--branch", "team/try-x")
+	if err != nil {
+		t.Fatalf("sync --branch team/try-x: %v\n%s", err, got)
+	}
+	if b := headBranch(t, clone); b != "team/try-x" {
+		t.Errorf("on branch %q, want team/try-x", b)
+	}
+	if u := git(t, clone, "rev-parse", "--abbrev-ref", "team/try-x@{upstream}"); u != "origin/team/try-x" {
+		t.Errorf("team/try-x tracks %q, want origin/team/try-x", u)
+	}
+	short := git(t, origin, "rev-parse", "--short", "feature")
+	if want := "checked out team/try-x at " + short + "\n"; !strings.HasSuffix(got, want) {
+		t.Errorf("output = %q, want it to end with %q", got, want)
 	}
 }

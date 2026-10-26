@@ -1,0 +1,17 @@
+$ go test ./cmd/kirokit/commands -run "TestSync_FailureLeavesTheInstalledTeamInPlace|TestSync_PlainSyncWithATeamOnATagReinstallsFromIt|TestSync_BranchWithASlashKeepsItsWholeName" -count=1 -v
+--- PASS: TestSync_FailureLeavesTheInstalledTeamInPlace (1.01s)
+    --- PASS: TestSync_FailureLeavesTheInstalledTeamInPlace/failing_git_pull (0.24s)
+    --- PASS: TestSync_FailureLeavesTheInstalledTeamInPlace/unknown_--branch (0.15s)
+    --- PASS: TestSync_FailureLeavesTheInstalledTeamInPlace/--branch_with_local_changes (0.15s)
+    --- PASS: TestSync_FailureLeavesTheInstalledTeamInPlace/--branch_with_local_commits (0.20s)
+    --- PASS: TestSync_FailureLeavesTheInstalledTeamInPlace/unknown_team (0.19s)
+--- PASS: TestSync_PlainSyncWithATeamOnATagReinstallsFromIt (0.63s)
+--- PASS: TestSync_BranchWithASlashKeepsItsWholeName (0.43s)
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	2.198s
+$ (cd desktop && go test -run TestSwitchRef_WithoutAnInstalledTeamSwitchesTheCheckoutOnly -count=1 -v .)
+--- PASS: TestSwitchRef_WithoutAnInstalledTeamSwitchesTheCheckoutOnly (0.96s)
+ok  	github.com/mavogel/kirokit/desktop	1.092s
+$ (cd desktop/frontend && node --test --test-name-pattern "Settings Update keeps the saved version" src/pages/pages.test.js)
+✔ Settings Update keeps the saved version when nothing else is picked, and Newest release is the way back (1.146083ms)
+ℹ pass 1
+ℹ fail 0

@@ -310,7 +310,7 @@ kirokit sync --repo ~/.kirokit-config --latest-tag      # no team: update the ch
 ```
 
 - `sync` runs `git fetch --tags`, then a fast-forward `git pull` of the checked-out branch (with `--latest-tag`: checkout of the newest `v*` tag, so only releases reach the machine), then the same install as `kirokit install`. When the checkout is on a tag (detached HEAD), a plain `sync` stays on it and reinstalls from it.
-- `--branch <name>` switches the checkout first: to `origin`'s branch of that name, fast-forwarded (a local branch is created to track it when there is none), or, when `origin` has no such branch, to the tag (detached HEAD). Later plain syncs keep the choice: they bring in new commits of the branch and stay on the tag, until `--latest-tag` goes back to releases. When a branch and a tag share a name, the branch wins. Branch and tag names only, no commit hashes.
+- `kirokit sync <team> --branch <name>` switches the checkout first: to `origin`'s branch of that name, fast-forwarded (a local branch is created to track it when there is none), or, when `origin` has no such branch, to the tag (detached HEAD). Later plain syncs keep the choice: they bring in new commits of the branch and stay on the tag, until `--latest-tag` goes back to releases. When a branch and a tag share a name, the branch wins. Branch and tag names only, no commit hashes.
 - A switch changes nothing when it is refused. Untracked files do not block it. The refusals:
   - `kirokit sync: local changes in <dir>: commit or discard them, then try again` (tracked files are edited)
   - `kirokit sync: --branch <name>: local branch <name> has commits that are not on origin/<name>`

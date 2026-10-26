@@ -149,10 +149,12 @@ async function cloneFromSettings(address) {
 async function switchVersion(ref, where) {
   view.refError = null;
   view.actionError = null;
+  // Marked before the call: ref:done may arrive before switchRef resolves.
+  view.switching = where;
   try {
     await api.switchRef(ref);
-    view.switching = where;
   } catch (e) {
+    view.switching = '';
     view.refError = { where, message: message(e) };
   }
   draw();

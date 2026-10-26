@@ -1,0 +1,25 @@
+# s4 against http://localhost:34115
+## Scenario 4 step 2: first launch, Clone
+  picture: evidence/it1-scenario-4-step-2-before.png
+  headers: ["▸ git clone -- <scratch>/app/origin /privat","▸ kirokit sync --latest-tag"]
+  selected="" button="Continue" options=["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"]
+  sidebar pages hidden: true
+  OK   Version shows with Newest release preselected and Continue
+  OK   list has Newest release, branches and tags
+  picture: evidence/it1-scenario-4-step-2.png
+## Scenario 4 step 3: pick feature, Switch to feature and continue
+  button: Switch to feature and continue
+  picture: evidence/it1-scenario-4-step-3-picked.png
+  headers: ["▸ kirokit sync --latest-tag","▸ kirokit sync --branch feature"]
+  Settings after first launch: {"inUse":"In use: branch feature at 322191b not a release","selected":"feature","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   Settings shows feature in use
+  picture: evidence/it1-scenario-4-step-3.png
+  teams: ["beta","demo"]
+
+## settings.json after Scenario 4 step 3
+{
+  "repoUrl": "<scratch>/app/origin",
+  "kiroHome": "",
+  "repoDir": "",
+  "ref": "feature"
+}

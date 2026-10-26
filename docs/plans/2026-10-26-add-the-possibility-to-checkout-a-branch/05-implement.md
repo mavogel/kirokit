@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 11 of 11 tasks · 3 of 3 slices
 
-Building now: started 26 Oct, 17:19, 28 min so far.
+Built: started 26 Oct, 17:19.
 <!-- /ql:summary -->
 
 ## Slices
@@ -21,7 +21,20 @@ Building now: started 26 Oct, 17:19, 28 min so far.
 ## Delivered
 
 <!-- ql:delivered -->
-Written when the last task is ticked.
+Delivered 26 Oct, 17:47
+
+**Built** · 3
+- the CLI switches to a branch or tag and keeps it · slice 1 · 4 tasks
+- the desktop app reads the clone's versions and switches them · slice 2 · 3 tasks
+- the desktop pages pick, keep and show the version · slice 3 · 4 tasks
+
+**Verified** · 2
+- Project checks passed · 6 of 6 · recorded
+- Security review · done · nothing severe in the change
+
+**Left** · 2
+- Independent review · Review · not done
+- Fix rounds · Fix · not done
 <!-- /ql:delivered -->
 
 ## Decided while building
@@ -48,6 +61,18 @@ Written when the last task is ticked.
 - T9 · faafd4d · `cd desktop/frontend && node --test && npm run build` · exit 0 · 0.8s
 - T10 · faafd4d · `cd desktop/frontend && node --test` · reused: nothing changed since it passed at 17:42
 - T11 · faafd4d · `grep -n -e 'Version' -e 'chosen version' README.md` · exit 0 · 0s
+- all · 51635fa · `go test ./...` · exit 0 · 7.1s
+- all · 51635fa · `task lint` · exit 0 · 0.5s
+- all · 51635fa · `go vet ./...` · exit 0 · 0.2s
+- all · 51635fa · `task ci` · exit 0 · 8s
+- all · 51635fa · `task desktop:test` · exit 0 · 2.6s
+- all · 51635fa · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
+- all · 594cacb · `go test ./...` · exit 0 · 7.9s
+- all · 594cacb · `task lint` · exit 0 · 0.7s
+- all · 594cacb · `go vet ./...` · exit 0 · 0.2s
+- all · 594cacb · `task ci` · exit 0 · 8.1s
+- all · 594cacb · `task desktop:test` · exit 0 · 8.9s
+- all · 594cacb · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
 
 ## Known limits
 

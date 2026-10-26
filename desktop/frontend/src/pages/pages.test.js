@@ -372,6 +372,26 @@ test('Settings keeps a picked version across redraws, switches with it, and show
   assert.equal(el('version').attrs['aria-invalid'], undefined);
 });
 
+test('Settings Update keeps the saved version when nothing else is picked, and Newest release is the way back', () => {
+  const updates = [];
+  const { el, page } = settingsPage({ stored: { repoUrl: '' }, onUpdate: (picked) => updates.push(picked) });
+  const view = { checkout: { ...refs, current: { kind: 'branch', name: 'main', commit: 'b81d0a7' } }, ref: 'main', installs: [{ Team: 'alpha' }] };
+
+  // A fresh page with a saved branch: Update follows it, never the newest release.
+  page.paint(view);
+  assert.equal(el('version').value, 'main');
+  assert.equal(el('update').textContent, 'Update');
+  el('update').handlers.click();
+  assert.deepEqual(updates, ['main']);
+
+  // Picking Newest release is how the person goes back to releases.
+  el('version').value = '';
+  el('version').handlers.change();
+  assert.equal(el('update').textContent, 'Switch to Newest release and update');
+  el('update').handlers.click();
+  assert.deepEqual(updates, ['main', '']);
+});
+
 // Owners and feedback: alpha routes feedback to a repository, gamma does not.
 const owned = {
   tag: '',

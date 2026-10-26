@@ -1,0 +1,6 @@
+$ go test ./cmd/kirokit/commands -run 'TestSync_BranchSwitchesToABranchOrTag|TestSync_PlainSyncFollowsTheChosenBranchAndStaysOnATag' -count=1
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	2.201s
+[exit 0]
+$ go test ./cmd/kirokit/commands -run TestSync_BranchRefusals -count=1
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	1.015s
+[exit 0]

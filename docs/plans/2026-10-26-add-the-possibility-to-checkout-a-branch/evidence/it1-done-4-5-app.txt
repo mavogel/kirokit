@@ -1,0 +1,16 @@
+# s3c against http://localhost:34115
+## After an app restart with feature saved: Update without a new pick
+  Settings after restart: {"inUse":"In use: branch feature at 322191b not a release","selected":"feature","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   saved feature preselected, button Update
+  headers: ["▸ kirokit sync demo --branch feature"]
+  OK   Update ran --branch feature, not --latest-tag
+  picture: evidence/it1-done-4-update-keeps-branch.png
+## Pin a tag: v1.0.0
+  pinned: {"inUse":"In use: tag v1.0.0 at 12e901f pinned · does not follow new releases","selected":"v1.0.0","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   In use names the tag with the pinned badge
+  picture: evidence/it1-done-5-settings-pinned.png
+  source line: Templates from tag v1.0.0 at 12e901f pinned · does not follow new releases
+  OK   Install names the tag with the pinned badge
+  rows of the Sync run: ["▸ kirokit sync demo --branch v1.0.0","checked out v1.0.0 at 12e901f","synced demo into /private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/e26b76e7-b383-4e5d-a323-1944b09752","c8/scratchpad/app/home/.kiro at 12e901f"]
+  OK   Sync stays on the pinned tag
+  picture: evidence/it1-done-5-install-pinned.png
