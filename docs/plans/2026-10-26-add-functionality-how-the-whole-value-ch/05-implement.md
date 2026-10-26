@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 13 of 13 tasks · 5 of 5 slices
 
-Building now: started 26 Oct, 13:07, 47 min so far.
+Built: started 26 Oct, 13:07.
 <!-- /ql:summary -->
 
 ## Slices
@@ -23,7 +23,22 @@ Building now: started 26 Oct, 13:07, 47 min so far.
 ## Delivered
 
 <!-- ql:delivered -->
-Written when the last task is ticked.
+Delivered 26 Oct, 13:53
+
+**Built** · 5
+- Every team can name owners and a feedback repository · slice 1 · 4 tasks
+- A team can install five role agents that consult each other · slice 2 · 3 tasks
+- `/feedback` in Kiro drafts a prefilled issue for the owner · slice 3 · 1 task
+- The desktop app shows owners and opens a feedback issue · slice 4 · 3 tasks
+- `analyze-session` turns a Kiro chat into owner issues, and the README explains it all · slice 5 · 2 tasks
+
+**Verified** · 2
+- Project checks passed · 6 of 6 · recorded
+- Security review · done · nothing severe in the change
+
+**Left** · 2
+- Independent review · Review · not done
+- Fix rounds · Fix · not done
 <!-- /ql:delivered -->
 
 ## Decided while building
@@ -63,6 +78,12 @@ Written when the last task is ticked.
 - T13 · edfbfaf · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.2s
 - slice 5 · edfbfaf · `go test ./...` · exit 0 · 0.7s
 - slice 5 · edfbfaf · `task ci` · exit 0 · 1.2s
+- all · 428a524 · `go test ./...` · reused: nothing changed since it passed at 13:53
+- all · 428a524 · `task lint` · exit 0 · 1s
+- all · 428a524 · `go vet ./...` · exit 0 · 0.1s
+- all · 428a524 · `task build` · exit 0 · 0.6s
+- all · 428a524 · `task desktop:test` · exit 0 · 2.7s
+- all · 428a524 · `node scripts/sync-agent-assets.mjs --check` · reused: nothing changed since it passed at 13:53
 
 ## Known limits
 
