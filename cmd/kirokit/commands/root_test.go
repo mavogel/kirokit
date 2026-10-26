@@ -26,7 +26,7 @@ func TestKirokitRepo_RenderAllTeamsFromAnUnrelatedFolder(t *testing.T) {
 	if _, err := runRoot(t, "render", "--out", out); err != nil {
 		t.Fatalf("render from an unrelated folder: %v", err)
 	}
-	for _, team := range []string{"platform-team", "data-team"} {
+	for _, team := range []string{"platform-team", "data-team", "product-team"} {
 		if _, err := os.Stat(filepath.Join(out, team)); err != nil {
 			t.Errorf("team %s was not rendered: %v", team, err)
 		}

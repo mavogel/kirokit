@@ -650,6 +650,16 @@ func TestRenderTeam_SubagentNamesMustBeAgentsOfTheTeam(t *testing.T) {
 		{"no subagent settings", `{"name": "agent1", "tools": ["read"]}`, ""},
 		{"unknown available", agent(`["agent2", "ghost"]`, `[]`), `render: agents/agent1/agent.json.tmpl: toolsSettings.subagent.availableAgents names "ghost", which is not an agent of fixture-team`},
 		{"unknown trusted", agent(`["agent2"]`, `["nobody"]`), `render: agents/agent1/agent.json.tmpl: toolsSettings.subagent.trustedAgents names "nobody", which is not an agent of fixture-team`},
+		{
+			"subagent permission rule",
+			`{"name": "agent1", "permissions": {"rules": [{"capability": "fs_read", "match": ["**"], "effect": "allow"}, {"capability": "subagent", "match": ["agent2", "x-*"], "effect": "allow"}]}}`,
+			"",
+		},
+		{
+			"unknown name in a subagent permission rule",
+			`{"name": "agent1", "permissions": {"rules": [{"capability": "fs_read", "match": ["ghost"], "effect": "allow"}, {"capability": "subagent", "match": ["agent2", "ghost"], "effect": "allow"}]}}`,
+			`render: agents/agent1/agent.json.tmpl: permissions.rules[1].match names "ghost", which is not an agent of fixture-team`,
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

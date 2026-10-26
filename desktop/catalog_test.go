@@ -54,8 +54,20 @@ func TestCatalog_ReadsRealTeams(t *testing.T) {
 	for _, tm := range cat.Teams {
 		names = append(names, tm.Name)
 	}
-	if !slices.Equal(names, []string{"data-team", "platform-team"}) {
-		t.Fatalf("teams = %v, want data-team and platform-team", names)
+	if !slices.Equal(names, []string{"data-team", "platform-team", "product-team"}) {
+		t.Fatalf("teams = %v, want data-team, platform-team and product-team", names)
+	}
+
+	product := findTeam(t, cat, "product-team")
+	roles := []string{}
+	for _, a := range product.Agents {
+		roles = append(roles, a.Name)
+		if !slices.Contains(a.Tools, "subagent") || a.NeedsKey || len(a.Servers) != 0 {
+			t.Errorf("product-team/%s tools = %v, needsKey = %v, servers = %v; want subagent, no key, no servers", a.Name, a.Tools, a.NeedsKey, a.Servers)
+		}
+	}
+	if !slices.Equal(roles, []string{"customer", "engineer", "product-owner", "qa", "ux-designer"}) {
+		t.Errorf("product-team agents = %v, want the five roles", roles)
 	}
 
 	devops := findAgent(t, findTeam(t, cat, "platform-team"), "devops")
