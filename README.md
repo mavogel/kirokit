@@ -305,13 +305,22 @@ export KIROKIT_REPO=~/.kirokit-config
 ```bash
 kirokit sync <team> --repo ~/.kirokit-config
 kirokit sync <team> --repo ~/.kirokit-config --latest-tag
+kirokit sync <team> --repo ~/.kirokit-config --branch <name>   # switch to a branch or tag, then install
 kirokit sync --repo ~/.kirokit-config --latest-tag      # no team: update the checkout only
 ```
 
-- `sync` runs `git fetch --tags`, then a fast-forward `git pull` of the checked-out branch (with `--latest-tag`: checkout of the newest `v*` tag, so only releases reach the machine), then the same install as `kirokit install`.
+- `sync` runs `git fetch --tags`, then a fast-forward `git pull` of the checked-out branch (with `--latest-tag`: checkout of the newest `v*` tag, so only releases reach the machine), then the same install as `kirokit install`. When the checkout is on a tag (detached HEAD), a plain `sync` stays on it and reinstalls from it.
+- `--branch <name>` switches the checkout first: to `origin`'s branch of that name, fast-forwarded (a local branch is created to track it when there is none), or, when `origin` has no such branch, to the tag (detached HEAD). Later plain syncs keep the choice: they bring in new commits of the branch and stay on the tag, until `--latest-tag` goes back to releases. When a branch and a tag share a name, the branch wins. Branch and tag names only, no commit hashes.
+- A switch changes nothing when it is refused. Untracked files do not block it. The refusals:
+  - `kirokit sync: local changes in <dir>: commit or discard them, then try again` (tracked files are edited)
+  - `kirokit sync: --branch <name>: local branch <name> has commits that are not on origin/<name>`
+  - `kirokit sync: --branch <name>: no branch or tag of that name on origin`
+  - `kirokit sync: --branch and --latest-tag cannot be used together`
+  - `kirokit sync: --branch: must be a branch or tag name, not empty, starting with '-' or containing whitespace` (the rule `setup --branch` uses)
+- Every sync prints `updated <before> -> <after>` when HEAD moved, then `checked out <branch or tag> at <commit>` (the commit itself as the name on a detached HEAD with no tag), with or without a team.
 - Unlike `install`, it removes files the previous install wrote that the new version no longer ships, plus directories left empty.
-- Like `install`, `sync <team>` uninstalls every other installed team (one `uninstalled <other> from <home>` line each), but only after the checkout updated and `<team>` rendered; a failed pull or an unknown team leaves the installed team in place.
-- Without a team, `sync` only updates the checkout and installs nothing: it prints `updated <before> -> <after>` when HEAD moved, then `checked out <tag or branch> at <commit>`. It needs no Kiro home, and the `--kb-*` flags are an error (`kirokit sync: --kb-agent needs a team`).
+- Like `install`, `sync <team>` uninstalls every other installed team (one `uninstalled <other> from <home>` line each), but only after the checkout updated and `<team>` rendered; a failed pull, a refused `--branch` or an unknown team leaves the installed team in place.
+- Without a team, `sync` only updates the checkout and installs nothing. It needs no Kiro home, and the `--kb-*` flags are an error (`kirokit sync: --kb-agent needs a team`).
 - `--repo` defaults to `$KIROKIT_REPO`, else the cwd; an explicit `--repo` wins over `KIROKIT_REPO`. `--kb-*` flags behave as for `install`; without them a previously attached knowledge base is dropped, so pass them on every run.
 
 **Migration:** one machine now holds one team. A second scheduled sync of a different team (a second run of `scripts/kirokit-sync-setup.sh --team <other>`) replaces the first team on every run instead of installing beside it, so keep one scheduled sync per machine.

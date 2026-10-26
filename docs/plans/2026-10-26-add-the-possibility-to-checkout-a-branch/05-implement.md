@@ -3,9 +3,9 @@
 ## Summary
 
 <!-- ql:summary -->
-0 of 11 tasks · 0 of 3 slices
+4 of 11 tasks · 1 of 3 slices
 
-Building now: started 26 Oct, 17:19, 7 min so far.
+Building now: started 26 Oct, 17:19, 13 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -13,8 +13,8 @@ Building now: started 26 Oct, 17:19, 7 min so far.
 <!-- ql:slices live -->
 | # | Slice | In plain words | Now |
 |---|---|---|---|
-| 1 | the CLI switches to a branch or tag and keeps it | After this slice `kirokit sync [team] --branch <name>` switches the checkout to a branch or tag, refusing local changes, local commits and unknown names, and a plain `sync` follows a branch and stays on a tag. | next |
-| 2 | the desktop app reads the clone's versions and switches them | After this slice the desktop's Go side can list the clone's branches and tags without the network, say what is checked out, switch through the CLI in the kirokit tab and remember the choice only once the switch worked. | after 1 |
+| 1 | the CLI switches to a branch or tag and keeps it | After this slice `kirokit sync [team] --branch <name>` switches the checkout to a branch or tag, refusing local changes, local commits and unknown names, and a plain `sync` follows a branch and stays on a tag. | done |
+| 2 | the desktop app reads the clone's versions and switches them | After this slice the desktop's Go side can list the clone's branches and tags without the network, say what is checked out, switch through the CLI in the kirokit tab and remember the choice only once the switch worked. | next |
 | 3 | the desktop pages pick, keep and show the version | After this slice Settings shows what is in use and a Version list, the first-launch page asks for the version after the clone, every Update and Sync button keeps the choice, and Install and sync names where the templates come from. | after 2 |
 <!-- /ql:slices -->
 
@@ -31,6 +31,11 @@ Written when the last task is ticked.
 <!-- /ql:decisions -->
 
 ## Checks
+
+- T1 · 0053b15 · `go test ./internal/checkout ./cmd/kirokit/commands -run 'TestCheckRefName|TestSetup'` · exit 0 · 1.2s
+- T2 · 0053b15 · `go test ./cmd/kirokit/commands -run 'TestSync|TestUpdateCheckout|TestSetup'` · exit 0 · 5.6s
+- T3 · 0053b15 · `go test ./cmd/kirokit/commands` · exit 0 · 7.2s
+- T4 · 0053b15 · `grep -n -e '--branch <name>' -e 'cannot be used together' README.md` · exit 0 · 0s
 
 ## Known limits
 
