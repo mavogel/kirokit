@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 11 of 11 tasks · 3 of 3 slices
 
-Building now: started 26 Oct, 17:19, 26 min so far.
+Building now: started 26 Oct, 17:19, 28 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -28,6 +28,11 @@ Written when the last task is ticked.
 
 <!-- ql:decisions -->
 - The Plan · Checkout.Read takes a third argument, a hook run on each git command, so the desktop can hide git's console window on Windows (hideConsole lives in package main and cannot be called from internal/). Affects T5, T7; files internal/checkout/checkout.go, desktop/version.go.
+- Slice 1 · The branch name in `checked out <branch> at <commit>` (and `checkout.Read`'s current branch) is cut from the full ref, because `git symbolic-ref --short` prints `heads/<name>` when a tag has the same name; the test with a branch and a tag both named `both` caught it; nothing you approved changes.
+- Slice 2 · The Windows console flag is the documented `CREATE_NO_WINDOW` value through `syscall`, because the root module does not depend on `golang.org/x/sys` and one flag does not justify adding it; nothing you approved changes.
+- Slice 2 · `ref:done`'s message drops terminal escape sequences before it looks for the `kirokit sync:` line, since the kirokit tab runs in a pseudo-terminal; nothing you approved changes.
+- Slice 3 · Under Newest release, a clone switched by hand to an older tag shows "tag <name> … not the newest release" instead of the newest-release badge, so the line never claims a release the clone is not on; nothing you approved changes.
+- The Plan · Outline only: T1's Files list adds cmd/kirokit/commands/setup_test.go, which T1 extended to assert the unchanged setup --branch message. No Plan text, Done means, scope or user decision changes.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -59,6 +64,7 @@ None recorded.
 - T7 (tactical): `ref:done`'s message drops terminal escape sequences before it looks for the `kirokit sync:` line, since the kirokit tab runs in a pseudo-terminal; nothing you approved changes.
 - T9 (tactical): under Newest release, a clone switched by hand to an older tag shows "tag <name> … not the newest release" instead of the newest-release badge, so the line never claims a release the clone is not on; nothing you approved changes.
 - Slices 2 and 3 (tactical): `qualitylayer commit slice` refused, saying `desktop/clone.go` and `desktop/frontend/src/pages/welcome.js` held uncommitted edits of the showcase-video task; their diffs held only this task's hunks, so the slice files were committed with plain git and the slice recorded afterwards; nothing you approved changes.
+- Plan (amended): Outline only: T1's Files list adds cmd/kirokit/commands/setup_test.go, which T1 extended to assert the unchanged setup --branch message. No Plan text, Done means, scope or user decision changes.
 
 ## Plan amended
 
@@ -75,3 +81,11 @@ Withdrew the agent's earlier change to checkout.Read: the Plan is back to the ap
 Agreed with the user on 2026-10-26; changed 03-plan.md, 04-outline.md.
 
 Why: the first amendment changed an approved interface on the agent's own judgment, and the build should rest on what the person approved. The Windows need (no console window when the desktop runs git) is met without touching the contract: `internal/checkout` starts its own git commands, so it can set `HideWindow` and `CREATE_NO_WINDOW` itself in a build-tagged file, the same per-OS pattern as `desktop/procgroup_windows.go` and `internal/dirlink`. The earlier amendment above is superseded and nothing in the build relies on it. The person asked for this record in chat: "record the revert".
+
+### Plan · amended
+
+Outline only: T1's Files list adds cmd/kirokit/commands/setup_test.go, which T1 extended to assert the unchanged setup --branch message. No Plan text, Done means, scope or user decision changes.
+
+Amended by the agent on 2026-10-26; changed 04-outline.md.
+
+Why: T1's Definition of done promises that `setup --branch` keeps its exact refusal message after the rule moved to `internal/checkout`. The existing `TestSetup_BranchRefusesBadOrUnknownRef` only checked that setup failed, so T1 extended it to compare the message, and the card's Files must name every source path the task edits.
