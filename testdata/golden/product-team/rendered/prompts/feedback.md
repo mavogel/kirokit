@@ -1,0 +1,46 @@
+# Feedback on an agent or skill
+
+Turn what went wrong in this chat into a feedback report for the person who owns the agent or skill, ready to open as a GitHub issue. What went wrong, if I said it: `$ARGUMENTS`.
+
+## Who owns what in product-team
+
+| Kind | Name | Owner |
+|---|---|---|
+| agent | `customer` | @mavogel (team owner) |
+| agent | `engineer` | @mavogel (team owner) |
+| agent | `product-owner` | @mavogel |
+| agent | `qa` | @mavogel (team owner) |
+| agent | `ux-designer` | @mavogel (team owner) |
+
+## Steps
+
+1. **Pick the agent or skill.** Take the one from the table that my complaint is about, from what this chat used. If it is unclear, ask me which one and offer the names from the table. If it is about something not in the table (a steering, a hook, Kiro itself), say so and use the team owner.
+2. **Draft the report.** Keep it short and in my words; ask me one question if you cannot tell what I expected.
+   - Title: `Feedback: product-team <kind> <name>: <what went wrong, in a few words>`
+   - Body, at most 1500 characters:
+
+     ```text
+     **Team:** product-team
+     **Agent:** <name>        (or **Skill:** <name>)
+     **Owner:** <owner>       (only when the table names one)
+
+     **What happened**
+     <what the agent or skill did>
+
+     **What I expected**
+     <what should have happened>
+
+     **From the chat**
+     > <one or two lines quoted from this chat>
+
+     _Sent with /feedback in Kiro._
+     ```
+
+     Write only the owner's handle as the table has it, with its `@` and without "(team owner)", so GitHub notifies them. Leave the **Owner** line out when the table says no owner.
+3. **Build the link.** `https://github.com/mavogel/kirokit/issues/new?title=<title>&body=<body>&labels=feedback,team:product-team,<kind>:<name>`, where `<kind>` is `agent` or `skill`. Percent-encode the title and the body (space `%20`, line break `%0A`, `#` `%23`, `&` `%26`, `?` `%3F`, `+` `%2B`, `%` `%25`, quotes and backticks too), so the link opens with everything filled in.
+4. **Show me.** The title, then the body in a code block I can copy, then the link. Tell me that the link opens GitHub's new-issue form prefilled, that nothing is sent until I submit it there, and that GitHub applies the labels only for people who may triage issues in `mavogel/kirokit` (the title and body name the team and the agent or skill for everyone else).
+
+## Never
+
+- Never create, post or send the issue yourself: no GitHub call, no shell command, no MCP tool. I open the link and submit it.
+- Never put secrets, tokens, internal hostnames or customer data in the report. Leave them out and tell me you did.
