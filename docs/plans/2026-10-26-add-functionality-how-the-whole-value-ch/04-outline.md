@@ -191,7 +191,7 @@ After this slice the Agents and Skills pages show each owner and a Feedback butt
          └── main.js               ~ wires onFeedback to api.openURL
 ```
 
-- [ ] T9 The desktop catalog carries owners and the feedback repository
+- [x] T9 The desktop catalog carries owners and the feedback repository
   - **Objective:** Fill `Team.Feedback` and each agent's and skill's `Owner` and `OwnerFromTeam` from `manifest.OwnerOf`, loading the manifest once in `readTeam`.
   - **Design:** "The desktop catalog carries owners and the feedback repository"
   - **Files:** `desktop/catalog.go`, `desktop/catalog_test.go`
@@ -201,7 +201,7 @@ After this slice the Agents and Skills pages show each owner and a Feedback butt
     - The real `product-team` reports `feedback: "mavogel/kirokit"`.
     - verify: `go -C desktop test ./...`
 
-- [ ] T10 `feedbackURL` builds the issue address and `api.openURL` opens only GitHub issue forms
+- [x] T10 `feedbackURL` builds the issue address and `api.openURL` opens only GitHub issue forms
   - **Objective:** Add the pure `feedbackURL(repo, team, kind, name, owner)` helper and `api.openURL`, which passes a URL to `window.runtime.BrowserOpenURL` only when it matches `^https://github\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/issues/new\?`.
   - **Design:** "The frontend opens only GitHub issue addresses"
   - **Files:** `desktop/frontend/src/pages/feedback.js`, `desktop/frontend/src/pages/feedback.test.js`, `desktop/frontend/src/api.js`, `desktop/frontend/src/api.test.js`
@@ -212,10 +212,10 @@ After this slice the Agents and Skills pages show each owner and a Feedback butt
     - A refused URL rejects with `refusing to open <url>`.
     - verify: `task desktop:test`
 
-- [ ] T11 Agents and Skills pages show the Owner column and a Feedback button
+- [x] T11 Agents and Skills pages show the Owner column and a Feedback button
   - **Objective:** Add the Owner and Feedback cells to both tables as the artifact shows, a disabled button and a note under the table for teams without a feedback repository, and wire clicks through `initAgents(section, onFeedback)` / `initSkills(section, onFeedback)` to `api.openURL`, showing a refusal beside the button.
   - **Design:** "The frontend opens only GitHub issue addresses"
-  - **Files:** `desktop/frontend/src/pages/agents.js`, `desktop/frontend/src/pages/skills.js`, `desktop/frontend/src/pages/pages.test.js`, `desktop/frontend/src/main.js`, `desktop/frontend/index.html`, `desktop/frontend/src/style.css`
+  - **Files:** `desktop/frontend/src/pages/agents.js`, `desktop/frontend/src/pages/skills.js`, `desktop/frontend/src/pages/feedback.js`, `desktop/frontend/src/pages/pages.test.js`, `desktop/frontend/src/main.js`, `desktop/frontend/index.html`, `desktop/frontend/src/style.css`
   - **Test first:** `pages.test.js` cases expecting an `Owner` cell with `team owner` for an inherited owner, `No owner` when empty, a `data-feedback` button with an `aria-label` naming the item, and a disabled button plus note for a team without feedback; they fail today.
   - **Definition of done:**
     - Owner text and data attributes are escaped; no page source names a sample team.

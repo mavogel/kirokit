@@ -1,0 +1,137 @@
+{
+  "agentRows": [
+    [
+      "godev",
+      "data-team",
+      "Go backend developer agent for data-team, with access to the build pipeline status via a local, non-secret MCP server.",
+      "readwriteglobknowledgeshell@pipeline-mcp",
+      "none",
+      "@mavogel team owner",
+      "Feedback"
+    ],
+    [
+      "javadev",
+      "data-team",
+      "Java backend developer agent for data-team, with access to the analytics warehouse via Snowflake.",
+      "readwriteglobknowledgeshell@snowflake-mcp",
+      "needs key",
+      "@mavogel team owner",
+      "Feedback"
+    ],
+    [
+      "devops",
+      "platform-team",
+      "Triages and resolves Jira tickets for platform-team, following the team's shared security baseline steering.",
+      "readwriteglobknowledgeshell@atlassian@context7",
+      "needs key",
+      "@mavogel team owner",
+      "Feedback"
+    ],
+    [
+      "platformdev",
+      "platform-team",
+      "Looks up Confluence documentation for platform-team, following the team's shared security baseline steering.",
+      "readwriteglobknowledgeshell@confluence-mcp",
+      "needs key",
+      "@mavogel team owner",
+      "Feedback"
+    ],
+    [
+      "customer",
+      "product-team",
+      "Speaks as product-team's customer persona: goals, frustrations and what a good experience looks like. The persona is an invented example until the team fills it from its own interviews.",
+      "readglobknowledgesubagent",
+      "none",
+      "@mavogel team owner",
+      "Feedback"
+    ],
+    [
+      "engineer",
+      "product-team",
+      "Engineer for product-team: turns agreed requirements into designs and code, and reviews designs for deep modules, information hiding and red flags.",
+      "readwriteglobknowledgeshellsubagent",
+      "none",
+      "@mavogel team owner",
+      "Feedback"
+    ],
+    [
+      "product-owner",
+      "product-team",
+      "Product owner for product-team: owns the vision and priorities, writes and reviews requirements, and consults the customer, engineer, QA and UX designer agents before deciding.",
+      "readglobknowledgesubagent",
+      "none",
+      "@mavogel",
+      "Feedback"
+    ],
+    [
+      "qa",
+      "product-team",
+      "QA engineer for product-team: finds how a requirement, design or change can fail and turns each case into a test with steps and an expected result.",
+      "readglobknowledgesubagent",
+      "none",
+      "@mavogel team owner",
+      "Feedback"
+    ],
+    [
+      "ux-designer",
+      "product-team",
+      "UX/UI designer for product-team: describes the user's path, every screen state, the words on screen and accessibility needs, reusing the product's existing patterns.",
+      "readglobknowledgesubagent",
+      "none",
+      "@mavogel team owner",
+      "Feedback"
+    ]
+  ],
+  "agentsNote": [
+    "data-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off.",
+    "platform-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off."
+  ],
+  "disabledAgentButtons": 4,
+  "engineerFocused": true,
+  "focusOutline": "solid 2px",
+  "skillRows": [
+    [
+      "sql-helper",
+      "data-team",
+      "Written by the team",
+      "@mavogel team owner",
+      "Feedback"
+    ],
+    [
+      "confluence-lookup",
+      "platform-team",
+      "Written by the team",
+      "@mavogel team owner",
+      "Feedback"
+    ],
+    [
+      "jira-search",
+      "platform-team",
+      "Written by the team",
+      "@mavogel team owner",
+      "Feedback"
+    ]
+  ],
+  "skillsNote": [
+    "data-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off.",
+    "platform-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off."
+  ],
+  "opened": [
+    "https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-team%20agent%20product-owner&body=%2A%2ATeam%3A%2A%2A%20product-team%0A%2A%2AAgent%3A%2A%2A%20product-owner%0A%2A%2AOwner%3A%2A%2A%20%40mavogel%0A%0A%2A%2AWhat%20happened%2A%2A%0A%3Cdescribe%20what%20the%20agent%20did%3E%0A%0A%2A%2AWhat%20you%20expected%2A%2A%0A%3Cdescribe%20what%20should%20have%20happened%3E%0A%0A_Sent%20from%20the%20kirokit%20desktop%20app._&labels=feedback,team%3Aproduct-team,agent%3Aproduct-owner",
+    "https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-team%20agent%20engineer&body=%2A%2ATeam%3A%2A%2A%20product-team%0A%2A%2AAgent%3A%2A%2A%20engineer%0A%2A%2AOwner%3A%2A%2A%20%40mavogel%0A%0A%2A%2AWhat%20happened%2A%2A%0A%3Cdescribe%20what%20the%20agent%20did%3E%0A%0A%2A%2AWhat%20you%20expected%2A%2A%0A%3Cdescribe%20what%20should%20have%20happened%3E%0A%0A_Sent%20from%20the%20kirokit%20desktop%20app._&labels=feedback,team%3Aproduct-team,agent%3Aengineer"
+  ],
+  "decoded": [
+    {
+      "path": "https://github.com/mavogel/kirokit/issues/new",
+      "title": "Feedback: product-team agent product-owner",
+      "labels": "feedback,team:product-team,agent:product-owner",
+      "body": "**Team:** product-team\n**Agent:** product-owner\n**Owner:** @mavogel\n\n**What happened**\n<describe what the agent did>\n\n**What you expected**\n<describe what should have happened>\n\n_Sent from the kirokit desktop app._"
+    },
+    {
+      "path": "https://github.com/mavogel/kirokit/issues/new",
+      "title": "Feedback: product-team agent engineer",
+      "labels": "feedback,team:product-team,agent:engineer",
+      "body": "**Team:** product-team\n**Agent:** engineer\n**Owner:** @mavogel\n\n**What happened**\n<describe what the agent did>\n\n**What you expected**\n<describe what should have happened>\n\n_Sent from the kirokit desktop app._"
+    }
+  ]
+}
