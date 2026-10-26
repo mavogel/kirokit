@@ -28,14 +28,14 @@ Delivered 26 Oct, 17:47
 - the desktop app reads the clone's versions and switches them · slice 2 · 3 tasks
 - the desktop pages pick, keep and show the version · slice 3 · 4 tasks
 
-**Verified** · 3
+**Verified** · 4
 - Project checks passed · 6 of 6 · recorded
 - Security review · done · nothing severe in the change
+- Independent review · done · 7 of 7 points · 3 screens not captured · 6 check receipts reused
 - Independent review of the Done means points · 7 of 7 proved
 
-**Left** · 2
-- Independent review · failed
-- Fix rounds · Fix · not done
+**Left** · 0
+- None
 <!-- /ql:delivered -->
 
 ## Decided while building

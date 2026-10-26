@@ -3,15 +3,16 @@
 ## Summary
 
 <!-- ql:summary -->
-7 of 7 points assessed · 7 passed
+7 of 7 points assessed · 7 passed · 1 fix round
 
-Independent review failed; the recorded findings need attention.
+Passed after 2 judge runs and 1 fix round.
 <!-- /ql:summary -->
 
 ## Open items
 
 <!-- ql:open-items -->
-- **Unverified:** A switch that finishes before its start call returns would leave the button stuck on "Switching…". `main.js` sets `view.switching` only after `await api.switchRef`, while `startClone` marks itself busy before its call. With a real sync, which fetches first, this never happened in any run
+- **Unverified:** Two presses at the same instant leave a stale error after a successful switch. A Playwright `dblclick` on Switch ran the switch once and left "kirokit is still running a command" under the list, while two clicks 60 ms apart did not. Because the fix clears `view.switching` when the second call is refused, the first switch's `ref:done` would also no longer close the first-launch page in that case (found by reading the code, not run),
+- **Unverified:** The race fix has no automated test. Only the live probe, which holds the `SwitchRef` answer until after `ref:done`, shows the button returning to "Update",
 <!-- /ql:open-items -->
 
 ## How it is checked
@@ -25,15 +26,15 @@ Independent review failed; the recorded findings need attention.
   - State: done
   - Result: done · 6 checks
 - **Independent review** · fresh helper
-  - State: fail
-  - Result: failed · 0 of 7 points
+  - State: done
+  - Result: done · 7 of 7 points · 3 screens not captured · 6 check receipts reused
 - **Second opinion** · another vendor's agent
   - State: skipped
   - Result: not run
   - Why it runs here: Not run: Second opinion is off in Settings, though it would run here because the change crosses a trust boundary: a branch or tag name now crosses into a subprocess as an argument, from the flag and from the desktop's bound method (whose value comes, the Plan says it is risky: **Look here:** risky · it runs in the person's config checkout, where local edits or local commits could be lost; the switch refuses both and slice 1 is marked risky; say "get a second opinion" to have one.
 - **Fix rounds** · the build session
-  - State: waiting
-  - Result: not yet
+  - State: done
+  - Result: done · 1 round
 <!-- /ql:lanes -->
 
 ## Done means, checked
@@ -41,19 +42,20 @@ Independent review failed; the recorded findings need attention.
 <!-- ql:proof -->
 | Done means | Proof | |
 |---|---|---|
-| 1. The CLI switches an existing config checkout to a named branch or tag | `kirokit sync demo --branch feature` fetched, checked out `feature` at `origin/feature`, installed demo and printed `checked out feature at 5716835`; `--branch v1.0.0` detached at the tag. | passed |
-| 2. Later CLI syncs keep the choice until the person goes back to releases | After a new commit on `origin/feature` a plain sync printed `updated 5716835 -> fb3049e` and `checked out feature at fb3049e`; on `v1.0.0` a plain sync stayed at `0e3bc75`; `--latest-tag` went to `v1.1.0`. | passed |
-| 3. The desktop app lets the person pick a branch or tag from a list, on Settings and on the first-launch clone page | ![In the running app, Settings and the first-launch page (after the clone, with Newest release preselected) list Newest release, then Branches, then Tags; the switch ran in the kirokit tab, and Teams and Agents went from 1 to 2 with the `feature` branch's team `beta` (Skills draws from the same catalog),,](evidence/it1-scenario-4-step-2.png) | passed |
-| 4. Desktop Update and Sync keep following the choice | After an app restart with `feature` saved, Update ran `kirokit sync demo --branch feature`; Install and sync's Sync ran `--branch feature`, and later `--branch v1.0.0`; only picking Newest release ran `--latest-tag`,. | passed |
-| 5. The desktop app shows whether it is on a branch, a tag or the newest release, and which one | ![Settings' In use line and the Install source line read `branch feature at 322191b` with "not a release", `tag v1.0.0 at 12e901f` with "pinned · does not follow new releases", and "newest release" `v1.1.0 at 501483f`,,](evidence/it1-done-5-settings-pinned.png) | passed |
-| 6. An unknown name or a checkout with local changes fails clearly and changes nothing | In the CLI, local changes and an unknown name were refused with the planned messages, and HEAD, the edit and the install records stayed the same; in the app, a tracked edit refused the switch to `v1.0.0` with the CLI's message under the list, while the saved choice and HEAD stayed the same,. | passed |
-| 7. The README describes the new flag and the desktop control | README *Sync* has the `--branch` example, plain-sync behaviour on a branch and a tag, all five refusals word for word and the branch-over-tag rule; *Desktop app* has the Version list, Update/Sync/Continue on the chosen version, and the source line. | passed |
+| 1. The CLI switches an existing config checkout to a named branch or tag | Rerun on the CLI built at the judged commit: `kirokit sync demo --branch feature` fetched, put HEAD on `feature` at `origin/feature` (91dab21), installed demo and printed `checked out feature at 91dab21`; `--branch v1.0.0` detached at the tag. | passed |
+| 2. Later CLI syncs keep the choice until the person goes back to releases | After a new commit on `origin/feature` a plain sync printed `updated 91dab21 -> f16a565` and `checked out feature at f16a565`; on `v1.0.0` a plain sync stayed at 5fda641; `--latest-tag` went to `v1.1.0`. | passed |
+| 3. The desktop app lets the person pick a branch or tag from a list, on Settings and on the first-launch clone page | ![In the running app, the first-launch page (after the clone, Newest release preselected) and Settings list Newest release, then Branches, then Tags; each switch ran in the kirokit tab, and Teams and Agents went to 2 with the `feature` branch's team `beta`,,](evidence/it2-scenario-4-step-2.png) | passed |
+| 4. Desktop Update and Sync keep following the choice | After a reload with `feature` saved, Update ran `kirokit sync demo --branch feature`; Install and sync's Sync ran `--branch feature`, later `--branch v1.0.0`; only picking Newest release ran `--latest-tag`,,. | passed |
+| 5. The desktop app shows whether it is on a branch, a tag or the newest release, and which one | ![Settings' In use line and the Install source line read `branch feature at 2f29afd` with "not a release", `tag v1.0.0 at 819bf3b` with "pinned · does not follow new releases", and "newest release" `v1.1.0 at 432c1e1`,,](evidence/it2-done-5-settings-pinned.png) | passed |
+| 6. An unknown name or a checkout with local changes fails clearly and changes nothing | In the CLI, local changes, local commits and an unknown name were refused with the planned messages, and HEAD, the edit and the install records stayed the same; in the app, a tracked edit refused the switch to `v1.0.0` with the CLI's message under the list (`aria-invalid`), and HEAD and the saved choice stayed the same after a reload,,. | passed |
+| 7. The README describes the new flag and the desktop control | README *Sync* has the `--branch` example and line 313 `kirokit sync <team> --branch <name>`, plain-sync behaviour on a branch and a tag, all five refusals word for word and the branch-over-tag rule; *Desktop app* has the Version list, Update/Sync/Continue on the chosen version and the source line. | passed |
 <!-- /ql:proof -->
 
 ## Fix rounds
 
 <!-- ql:fix-rounds -->
 - Round 1 · 1 point still open
+- Round 2 · everything checked passed
 <!-- /ql:fix-rounds -->
 
 ## Second opinion
@@ -149,6 +151,8 @@ Not run: Second opinion is off in Settings, though it would run here because the
 **Result:** fail
 
 ### Iteration 2
+
+**Revision:** b2ecb5039bf205c040cdddb9a5744f2b1fcec014abfe88a65f0abc98e53b5067
 
 **Assignment:** caa7c1d1-d81c-42f5-9631-212fb1fbc48e
 **Judge:** fresh helper

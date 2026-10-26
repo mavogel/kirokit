@@ -7,9 +7,9 @@ depth: light
 level: engineering
 ui: true
 overrides: []
-stage: verify
-iterations: 1
-verification_failures: 1
+stage: review
+iterations: 2
+verification_failures: 0
 gate: null
 created: 1793030325145
 startup_owner: 4208fa65abb54844
@@ -22,7 +22,7 @@ review_basis: 107bbdc41f9f96b6732c872f5bee96b898c8e41d1b2ff4f803128f1ac304ad60
 branch: feat/add-possibility-checkout-branch-config
 base: da801025453cef7f572bf1659c3366d36bce0cfd
 base_ref: main
-judge_runs: 1
+judge_runs: 0
 ---
 
 # Check out a config repo branch
