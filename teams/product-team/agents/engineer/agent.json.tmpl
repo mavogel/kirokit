@@ -13,6 +13,7 @@
     "rules": [
       { "capability": "fs_read", "match": ["**"], "effect": "allow" },
       { "capability": "subagent", "match": ["customer", "product-owner", "qa", "ux-designer"], "effect": "allow" },
+      { "capability": "skill", "match": ["analyze-session"], "effect": "allow" },
       { "capability": "fs_write", "match": ["/tmp/**"], "effect": "allow" },
       { "capability": "fs_write", "match": ["**/secrets.enc.yaml", "**/*.sops.yaml"], "effect": "deny" },
       { "capability": "shell", "match": ["rm *"], "effect": "deny" },
@@ -22,6 +23,7 @@
     ]
   },
   "resources": [
-    "file://{{ .KiroHome }}/steering/spec-review-gates.md"
+    "file://{{ .KiroHome }}/steering/spec-review-gates.md",
+    "skill://{{ .KiroHome }}/skills/analyze-session/SKILL.md"
   ]
 }

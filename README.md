@@ -96,7 +96,7 @@ The apps are not signed:
 This repository has the configs, the `cli` and desktop app. It can be used as a baseline for the configuration as follows:
 
 ```
-teams/<team>/manifest.yaml              # team identity + global steering opt-ins + externalSkills
+teams/<team>/manifest.yaml              # team identity + owners + feedback repository + global steering opt-ins + externalSkills
 teams/<team>/agents/<agent>/agent.json.tmpl
 teams/<team>/agents/<agent>/env/secrets.enc.yaml   # optional, SOPS-encrypted
 teams/<team>/hooks/*.json.tmpl          # shared across the team's agents
@@ -116,13 +116,21 @@ testdata/golden/<team>/context.json     # committed golden template-context snap
 - Template sources use a double extension `<ext>.tmpl`; the renderer globs `**/*.tmpl` and strips `.tmpl`.
 - Agent source `agents/<agent>/agent.json.tmpl` renders to flat `agents/<agent>.json` (Kiro CLI v3 layout).
 - Paths `teams/`, `global/steerings/`, `env/mcp-versions.yaml` and `testdata/golden/` resolve against the cwd, or against `KIROKIT_REPO` when that environment variable is set (a relative value is made absolute once at start; empty means unset). With `KIROKIT_REPO=<checkout>` every command (`render`, `test`, `update`, `install`, `sync`, `onboard`, `skills fetch`) runs from any folder. There is no repo-root discovery.
-- Example teams: `platform-team` (`devops`, `platformdev`; SOPS MCP servers; opted into `security-baseline`) and `data-team` (`javadev` with SOPS Snowflake MCP, `godev` with plain MCP; no global steerings). Copy one or use `kirokit onboard`; duplication between teams is expected.
+- Example teams: `platform-team` (`devops`, `platformdev`; SOPS MCP servers; opted into `security-baseline`), `data-team` (`javadev` with SOPS Snowflake MCP, `godev` with plain MCP; no global steerings) and `product-team` (five role agents that consult each other, spec review gates, `/feedback` and `analyze-session`; no MCP servers or secrets; see [Role agents and feedback](#role-agents-and-feedback)). Copy one or use `kirokit onboard`; duplication between teams is expected.
 - Prompts are slash commands: Kiro v3 lists every file in `$KIRO_HOME/prompts/` (`@name` on other engines) even if no agent uses it as `prompt`; `$ARGUMENTS` / `${1}` are filled from user input. Example: `teams/platform-team/prompts/create-steering.md.tmpl` becomes `/create-steering [focus]`.
 
 ## manifest.yaml Reference
 
 ```yaml
 team: my-team
+owner: "@my-org/my-team"   # optional; GitHub handle (@user or @org/team) owning every agent and skill
+owners:                    # optional; per-item owners instead of the team owner
+  agents:
+    devops: "@jane"
+  skills:
+    jira-search: "@nick"
+feedback:                  # optional; where feedback issues go (owner/repo on GitHub)
+  github: my-org/kiro-config
 globalSteerings:
   - security-baseline   # must match global/steerings/<slug>.md; [] opts out (see teams/data-team)
 externalSkills:         # optional, see "External Skills"
@@ -148,6 +156,23 @@ externalSkills:         # optional, see "External Skills"
 - Each opted-in global steering renders to `$KIRO_HOME/kirokit-steerings/<team>/<slug>.md` and is appended (created if missing) to the `resources` of every agent of the team as `file://$KIRO_HOME/kirokit-steerings/<team>/<slug>.md`. It is not written to Kiro's auto-loaded `steering/` dir, so only opted-in teams load it. Start the file with steering front matter (e.g. `inclusion: always`).
 - `{{ globalSteering "<slug>" }}` inlines a steering, front matter included; prefer the automatic resource.
 - Every agent of every team also gets `file://.kiro/steering/**/*.md` and `skill://.kiro/skills/**/SKILL.md` in `resources`, after global steerings. Relative paths load the steering/skills of the workspace Kiro starts in. `skill://` loads metadata at startup, the rest on demand. Existing identical entries are not duplicated.
+- `owner`, `owners` and `feedback` are optional; a team without them renders as before. Handles must look like `@user` or `@org/team` and `feedback.github` like `owner/repo`, else loading fails naming the field (`owners.agents.qa: "jane" is not a GitHub handle (write @jane)`). An `owners` key naming an agent or skill the team does not have fails render. Vendored skills have the team owner unless `owners.skills` names them. See [Role agents and feedback](#role-agents-and-feedback).
+
+## Role agents and feedback
+
+`product-team` is an example of the whole team working through Kiro, not only engineers: five role agents that ask each other before answering, review gates for Kiro's spec workflow, an owner for every agent and skill, and a way for anyone to send feedback to that owner.
+
+```bash
+kirokit install product-team
+kiro-cli chat --agent product-owner     # "Ask the customer agent what frustrates them about onboarding."
+```
+
+- **Role agents:** `product-owner`, `engineer`, `customer`, `qa` and `ux-designer`. Each has `subagent` in `tools` and may call the other four (`toolsSettings.subagent.availableAgents`). Calling one of the four that cannot write files runs without a prompt; calling the `engineer` (which can write files and run commands) asks first. In Kiro CLI v3 `trustedAgents` alone still prompts, so each agent also carries a permission rule whose `match` names the agents: `{ "capability": "subagent", "match": ["customer", "qa", "ux-designer"], "effect": "allow" }`. Render fails when `availableAgents`, `trustedAgents` or such a rule names something that is neither a glob nor an agent of the same team, since Kiro accepts any name there. The personas are examples to replace; the `customer` one is invented until you fill it from your own interviews.
+- **Spec review gates:** the steering `spec-review-gates` (`inclusion: always`, in every role agent's `resources`) tells the agent writing a spec to ask `product-owner` to review `requirements.md` (vision fit, completeness, testable acceptance criteria, priorities) and `engineer` to review `design.md` (deep modules, information hiding, red flags) before the next phase. Try it with `kiro-cli chat --agent engineer --mode spec`. A steering instructs the agent; it cannot force the review.
+- **Owners:** `owner`, `owners.agents.<name>` and `owners.skills.<name>` in `manifest.yaml` (see the [reference](#manifestyaml-reference)). Write a GitHub handle, so an issue that @-mentions it notifies them. Templates read the table with `{{ range owners }}{{ .Kind }} {{ .Name }} {{ .Owner }} {{ .FromTeam }}{{ end }}` (`Kind` is `agent` or `skill`, `Owner` is empty when nobody is named, `FromTeam` marks the team owner) and the repository with `{{ feedbackRepo }}`, which fails the render when `feedback.github` is not set.
+- **`/feedback` in Kiro:** `teams/product-team/prompts/feedback.md.tmpl` becomes `/feedback [what went wrong]`. The agent picks the agent or skill from the chat (or asks), drafts a title and a body that @-mentions its owner, and prints a link to `https://github.com/<feedback.github>/issues/new?…` with the labels `feedback`, `team:<team>` and `agent:<name>` or `skill:<name>`. Nothing is sent: the person opens the link, edits and submits. GitHub applies the labels only for people who may triage that repository; title and body name the team and item for everyone. To give another team `/feedback`, copy the prompt into its `prompts/` and set `feedback.github` in its manifest.
+- **Feedback in the desktop app:** the Agents and Skills pages show each owner (*team owner* under an inherited one, *No owner* when there is none) and a **Feedback** button that opens the same kind of prefilled issue in the browser. A team without `feedback.github` shows its buttons off, with the reason under the table. The app opens nothing but a `https://github.com/<owner>/<repo>/issues/new?…` address.
+- **`analyze-session`:** a skill every role agent has. Ask "Analyze my last session" (or give an id from `/session-id`); the agent reads `$KIRO_HOME/sessions/<hash>/sess_<id>/` (`session.json`, `messages.jsonl`) with file reads only, looks for denied or failed tools, repeated permission prompts and lookups, unused skills, corrections and heavy context use, and reports recommendations (a hook, a steering, a permission, a sharper prompt) grouped by owner. It then offers one prefilled issue per owner in the `/feedback` format. Each role agent allows loading this skill without a prompt (`{ "capability": "skill", "match": ["analyze-session"], "effect": "allow" }`).
 
 ## External Skills
 
@@ -315,6 +340,7 @@ The app keeps its settings and default clone in `kirokit-desktop` in the user's 
 
 - **First launch** asks for your team's repository address (https, ssh, `file://`, `git@host:path` or an absolute path, on Windows also `C:\…`; an address starting with `-` is refused), runs `git clone -- <address> <repository folder>`, then `kirokit sync --latest-tag`, so the clone sits on the newest `v*` tag. A repository with no `v*` tag is kept and the app says it has no release yet. Saving a different address in Settings clones it the same way (progress in the kirokit tab, catalog refreshed on success) and renames the old clone to `repo.old-<unix time>`; a failed clone puts it back, keeps the old address stored and shows the failure beside the address field, so Save can retry the same address. The new address is stored only after its clone succeeds. The repository folder defaults to `repo` in the app's folder above (`~/Library/Application Support/kirokit-desktop/repo` on macOS); the first-launch page and Settings both let you choose another absolute folder (new or empty, or an existing git checkout; the home folder itself is refused). Saving a different folder in Settings shows the setup page so you can clone there; the old folder is left as it is.
 - **Teams** has an Install button per team. It first shows the checks it needs (SOPS, the decryption key, Kiro CLI, read from your login shell; on Windows from the app's own environment, finding `.exe` and `.cmd` tools and Scoop's shims), then runs `kirokit install <team>`. A Kiro home holds one team, so installing another team asks before it replaces the installed one.
+- **Agents** and **Skills** show each agent's and skill's owner and a **Feedback** button that opens a prefilled GitHub issue in the team's `feedback.github` repository (see [Role agents and feedback](#role-agents-and-feedback)).
 - **Install and sync** has Sync (`kirokit sync <team> --latest-tag`) and Uninstall (`kirokit uninstall <team>`) per installed team; **Settings** has Update (`kirokit sync --latest-tag` for the installed team, or without a team when none is installed).
 - Every button command runs in the dock's **kirokit** tab, where a git sign-in prompt can be answered; the second tab is your own shell, named after it, with the bundled `kirokit` first on `PATH`: your login shell on macOS and Linux (**zsh**, **bash**, …; startup files of shells other than zsh may reorder `PATH`, which Settings notes), and **PowerShell** on Windows (PowerShell 7 when installed, else Windows PowerShell; PowerShell 7 puts its own folder first, and `kirokit` there still runs the bundled one). The app sets `KIROKIT_REPO` to its clone and `KIRO_HOME` to the Kiro home folder saved in Settings.
 - `KIROKIT_REPO` also works on the command line: with it set, `kirokit sync --latest-tag` (no team) updates a checkout from any folder.

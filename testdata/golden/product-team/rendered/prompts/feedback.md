@@ -11,6 +11,7 @@ Turn what went wrong in this chat into a feedback report for the person who owns
 | agent | `product-owner` | @mavogel |
 | agent | `qa` | @mavogel (team owner) |
 | agent | `ux-designer` | @mavogel (team owner) |
+| skill | `analyze-session` | @mavogel (team owner) |
 
 ## Steps
 
