@@ -62,17 +62,17 @@ After this slice `kirokit sync [team] --branch <name>` switches the checkout to 
 
 **Risky:** it runs `git checkout` in the person's config checkout; the refusals are its first tests.
 
-- [ ] T1 `setup --branch` and `sync --branch` share one name rule
+- [x] T1 `setup --branch` and `sync --branch` share one name rule
   - **Objective:** Move setup's branch-name check into `internal/checkout.CheckRefName` so `sync` can use the same rule and message.
   - **Design:** "`internal/checkout` holds the name rule and the read-only view of a checkout"
-  - **Files:** `internal/checkout/checkout.go`, `internal/checkout/checkout_test.go`, `cmd/kirokit/commands/setup.go`
+  - **Files:** `internal/checkout/checkout.go`, `internal/checkout/checkout_test.go`, `cmd/kirokit/commands/setup.go`, `cmd/kirokit/commands/setup_test.go`
   - **Test first:** `TestCheckRefName` in `internal/checkout/checkout_test.go` refuses `""`, `-b`, `--upload-pack=x`, `has space`, `a\tb` and accepts `main`, `feature/x`, `v1.2.0`; it fails today because the package does not exist.
   - **Definition of done:**
     - `CheckRefName` refuses an empty name, a leading `-` and any whitespace, and accepts any other name.
     - `kirokit setup --branch` still refuses the same names with `kirokit setup: --branch: must be a branch or tag name, not empty, starting with '-' or containing whitespace` (existing `TestSetup_BranchRefusesBadOrUnknownRef` keeps passing).
     - verify: `go test ./internal/checkout ./cmd/kirokit/commands -run 'TestCheckRefName|TestSetup'`
 
-- [ ] T2 `sync --branch` switches only when nothing local can be lost
+- [x] T2 `sync --branch` switches only when nothing local can be lost
   - **Objective:** Add `--branch` to `sync`; with it, `updateCheckout` fetches, refuses tracked changes, local commits and unknown names, then checks out the branch (fast-forwarded) or the tag (detached).
   - **Design:** "`kirokit sync --branch` and the detached plain sync", "plan:decision:d1", "plan:decision:d3"
   - **Files:** `cmd/kirokit/commands/sync.go`, `cmd/kirokit/commands/sync_test.go`, `cmd/kirokit/commands/setup.go`
@@ -87,7 +87,7 @@ After this slice `kirokit sync [team] --branch <name>` switches the checkout to 
     - Untracked files do not block a switch.
     - verify: `go test ./cmd/kirokit/commands -run 'TestSync|TestUpdateCheckout|TestSetup'`
 
-- [ ] T3 A plain `sync` stays on a tag and every sync says where it is
+- [x] T3 A plain `sync` stays on a tag and every sync says where it is
   - **Objective:** On a detached HEAD a plain `sync` skips the pull instead of failing, and `checked out <branch|tag> at <commit>` prints with a team too.
   - **Design:** "`kirokit sync --branch` and the detached plain sync", "plan:decision:d2"
   - **Files:** `cmd/kirokit/commands/sync.go`, `cmd/kirokit/commands/sync_test.go`
@@ -98,7 +98,7 @@ After this slice `kirokit sync [team] --branch <name>` switches the checkout to 
     - `--latest-tag` behaves as today (`TestUpdateCheckout`, `TestUpdateCheckout_LatestTagWithoutTagsFails`).
     - verify: `go test ./cmd/kirokit/commands`
 
-- [ ] T4 README's Sync section documents `--branch`
+- [x] T4 README's Sync section documents `--branch`
   - **Objective:** Describe the flag, what a plain sync does on a branch and on a tag, the refusals, the branch-over-tag rule and the `checked out` line with a team.
   - **Design:** "README documents the flag and the version list"
   - **Files:** `README.md`
@@ -124,7 +124,7 @@ After this slice the desktop's Go side can list the clone's branches and tags wi
 +└── version_test.go             + real kirokit against a throwaway origin
 ```
 
-- [ ] T5 `checkout.Read` lists the clone's branches, tags and current version offline
+- [x] T5 `checkout.Read` lists the clone's branches, tags and current version offline
   - **Objective:** Read what the checkout is on and the `origin` branches and tags from local refs only.
   - **Design:** "`internal/checkout` holds the name rule and the read-only view of a checkout", "plan:decision:d5"
   - **Files:** `internal/checkout/checkout.go`, `internal/checkout/checkout_test.go`, `internal/checkout/run_unix.go`, `internal/checkout/run_windows.go`
@@ -135,7 +135,7 @@ After this slice the desktop's Go side can list the clone's branches and tags wi
     - GIT_* variables of the caller do not redirect it.
     - verify: `go test ./internal/checkout`
 
-- [ ] T6 Settings remember the version; a new address resets it
+- [x] T6 Settings remember the version; a new address resets it
   - **Objective:** Add `Settings.Ref`; `SaveSettings` keeps the saved `Ref` whatever the form sends; a successful `Clone` stores the address and resets `Ref`.
   - **Design:** "Desktop: `Settings.Ref`, `App.Checkout`, `App.SwitchRef`", "plan:decision:d4"
   - **Files:** `desktop/settings.go`, `desktop/settings_test.go`, `desktop/clone.go`, `desktop/clone_test.go`
@@ -145,7 +145,7 @@ After this slice the desktop's Go side can list the clone's branches and tags wi
     - A failed clone keeps the old `Ref`.
     - verify: `cd desktop && go test -run 'TestSaveSettings|TestClone|TestRepoDir' .`
 
-- [ ] T7 `App.Checkout` and `App.SwitchRef` switch through the kirokit tab
+- [x] T7 `App.Checkout` and `App.SwitchRef` switch through the kirokit tab
   - **Objective:** Expose the clone's refs to the pages, and run `kirokit sync [team] --branch <ref>` (or `--latest-tag` for "") under the one-command lock, saving `Ref` only on exit 0 and emitting `ref:done`.
   - **Design:** "Desktop: `Settings.Ref`, `App.Checkout`, `App.SwitchRef`", "plan:decision:d4"
   - **Files:** `desktop/version.go`, `desktop/version_test.go`, `desktop/runner_test.go`
