@@ -231,17 +231,17 @@ After this slice the Agents and Skills pages show each owner and a Feedback butt
 
 After this slice every role agent has the `analyze-session` skill, which reads a past session and reports recommendations grouped by owner with one prefilled issue per owner, and the README documents the example team, owners, feedback and session analysis.
 
-- [ ] T12 The `analyze-session` skill reads a Kiro session and groups recommendations by owner
+- [x] T12 The `analyze-session` skill reads a Kiro session and groups recommendations by owner
   - **Objective:** Add `skills/analyze-session/SKILL.md.tmpl` that finds a session (`/session-id` or a listing of `<Kiro home>/sessions/*/sess_*/session.json`), reads its `messages.jsonl` for failed or denied tool calls, permission prompts, repeated lookups, unused skills and high context use, maps findings to an agent, skill, steering or hook with its owner from the rendered table, and offers one `/feedback`-format link per owner; list it in every role agent's `resources`.
   - **Design:** "plan:decision:d8"
-  - **Files:** `teams/product-team/skills/analyze-session/SKILL.md.tmpl`, `teams/product-team/agents/product-owner/agent.json.tmpl`, `teams/product-team/agents/engineer/agent.json.tmpl`, `teams/product-team/agents/customer/agent.json.tmpl`, `teams/product-team/agents/qa/agent.json.tmpl`, `teams/product-team/agents/ux-designer/agent.json.tmpl`, `testdata/golden/product-team/rendered/skills/analyze-session/SKILL.md`, `testdata/golden/product-team/rendered/agents/product-owner.json`, `testdata/golden/product-team/rendered/agents/engineer.json`, `testdata/golden/product-team/rendered/agents/customer.json`, `testdata/golden/product-team/rendered/agents/qa.json`, `testdata/golden/product-team/rendered/agents/ux-designer.json`
+  - **Files:** `teams/product-team/skills/analyze-session/SKILL.md.tmpl`, `teams/product-team/agents/product-owner/agent.json.tmpl`, `teams/product-team/agents/engineer/agent.json.tmpl`, `teams/product-team/agents/customer/agent.json.tmpl`, `teams/product-team/agents/qa/agent.json.tmpl`, `teams/product-team/agents/ux-designer/agent.json.tmpl`, `testdata/golden/product-team/rendered/skills/analyze-session/SKILL.md`, `testdata/golden/product-team/rendered/prompts/feedback.md`, `testdata/golden/product-team/rendered/agents/product-owner.json`, `testdata/golden/product-team/rendered/agents/engineer.json`, `testdata/golden/product-team/rendered/agents/customer.json`, `testdata/golden/product-team/rendered/agents/qa.json`, `testdata/golden/product-team/rendered/agents/ux-designer.json`
   - **Trivial:** golden comparison and `kiro-cli agent validate` in `go test ./internal/golden` cover the rendered skill and resources; behaviour is proved by Scenario 6.
   - **Definition of done:**
     - The skill names the session fields it reads and tells the person when a session has none of them instead of reporting nothing.
     - It sends nothing itself and uses no shell.
     - verify: `go test ./cmd/kirokit/... ./internal/golden`
 
-- [ ] T13 The README explains role agents, owners, feedback and session analysis
+- [x] T13 The README explains role agents, owners, feedback and session analysis
   - **Objective:** Add a "Role agents and feedback" section, the `owner`/`owners`/`feedback` fields in the manifest reference, the three-team "Example teams" bullet, the app's Owner column and Feedback button, and how to copy `/feedback` to another team.
   - **Design:** none
   - **Files:** `README.md`
