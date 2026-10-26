@@ -40,9 +40,10 @@ func (a *App) Clone(address string) error {
 		res := a.cloneAndSync(address, cli)
 		if res.OK {
 			// The address is stored only once its clone is the one in use, so a
-			// failed clone never leaves an address the app is not using.
+			// failed clone never leaves an address the app is not using. The new
+			// clone sits on its newest release, so the choice starts there too.
 			s := a.loadSettings()
-			s.RepoURL = address
+			s.RepoURL, s.Ref = address, ""
 			if err := a.writeSettings(s); err != nil {
 				res = cloneResult{Error: "The repository was cloned but its address could not be saved: " + err.Error()}
 			}

@@ -1,0 +1,46 @@
+# s3 against http://localhost:34115
+## Setup for Scenario 3: back to Newest release (the first launch left feature)
+  button: Switch to Newest release and update
+## Scenario 3 step 3: Settings on Newest release
+  Settings: {"inUse":"In use: newest release v1.1.0 at 501483f","selected":"","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   In use: newest release v1.1.0 at <commit>
+  OK   Version lists Newest release, Branches, Tags
+  picture: evidence/it1-scenario-3-step-3.png
+## Scenario 3 step 4: pick feature and switch
+  picked: {"inUse":"In use: newest release v1.1.0 at 501483f","selected":"feature","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Switch to feature and update","error":"","invalid":null}
+  OK   button reads Switch to feature and update
+  picture: evidence/it1-scenario-3-step-4-picked.png
+  after switch: {"inUse":"In use: branch feature at 322191b not a release","selected":"feature","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   In use: branch feature at … not a release; button back to Update
+  picture: evidence/it1-scenario-3-step-4.png
+  teams: ["beta","demo"]
+  OK   Teams shows the feature branch team beta
+  picture: evidence/it1-scenario-3-step-4-teams.png
+## Scenario 3 step 5: Install and sync, Sync
+  source line: Templates from branch feature at 322191b not a release
+  OK   Templates from branch feature … not a release
+  headers: ["▸ kirokit sync demo --branch feature"] (before: 1)
+  FAIL Sync started a new run with --branch feature, not --latest-tag
+  picture: evidence/it1-scenario-3-step-5.png
+## Scenario 3 step 6: Newest release, Update
+  back to newest: {"inUse":"In use: newest release v1.1.0 at 501483f","selected":"","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   line shows newest release
+  picture: evidence/it1-scenario-3-step-6.png
+## Probe: a tracked edit in the clone, then switch to v1.0.0 (Done means 6 in the app)
+  refused switch: {"inUse":"In use: newest release v1.1.0 at 501483f","selected":"v1.0.0","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Switch to v1.0.0 and update","error":"kirokit sync: local changes in <scratch>/app/home/Library/Application Support/kirokit-desktop/repo: commit or discard them, then try again","invalid":"true"}
+  OK   error under the select, aria-invalid
+  OK   nothing changed: still newest release, HEAD same, pick kept for retry
+  picture: evidence/it1-scenario-3-probe-refused.png
+## Probe: reload the app; the saved choice is still Newest release
+  after reload: {"inUse":"In use: newest release v1.1.0 at 501483f","selected":"","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   saved choice unchanged after a refused switch
+
+# Step 5 above FAILed only in this driver's check: it counted ▸ lines in the visible rows, and the earlier header had scrolled out, so the picture was taken before the Sync run printed. Re-run with a cleared tab:
+# s3b against http://localhost:34115
+## Scenario 3 step 5 (re-run with a cleared tab): choose feature, then Sync on Install and sync
+  rows after clear: ["Buttons run their kirokit command here. Type your own commands in the zsh tab.","▸ kirokit sync demo --branch feature","updated 501483f -> 322191b","checked out feature at 322191b","synced demo into /private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/e26b76e7-b383-4e5d-a323-1944b09752","c8/scratchpad/app/home/.kiro at 322191b"]
+  rows of the Sync run: ["▸ kirokit sync demo --branch feature","checked out feature at 322191b","synced demo into /private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/e26b76e7-b383-4e5d-a323-1944b09752","c8/scratchpad/app/home/.kiro at 322191b"]
+  OK   Sync ran kirokit sync demo --branch feature, not --latest-tag
+  source line: Templates from branch feature at 322191b not a release
+  OK   Templates from branch feature … not a release
+  picture: evidence/it1-scenario-3-step-5.png

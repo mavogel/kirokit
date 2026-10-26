@@ -1,0 +1,8 @@
+# s3b against http://localhost:34115
+## Scenario 3 step 5 (re-run with a cleared tab): choose feature, then Sync on Install and sync
+  rows after clear: ["Buttons run their kirokit command here. Type your own commands in the zsh tab.","▸ kirokit sync demo --branch feature","updated 432c1e1 -> 2f29afd","checked out feature at 2f29afd","synced demo into /private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/e26b76e7-b383-4e5d-a323-1944b09752","c8/scratchpad/it2/home/.kiro at 2f29afd"]
+  rows of the Sync run: ["▸ kirokit sync demo --branch feature","checked out feature at 2f29afd","synced demo into /private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/e26b76e7-b383-4e5d-a323-1944b09752","c8/scratchpad/it2/home/.kiro at 2f29afd"]
+  OK   Sync ran kirokit sync demo --branch feature, not --latest-tag
+  source line: Templates from branch feature at 2f29afd not a release
+  OK   Templates from branch feature … not a release
+  picture: evidence/it2-scenario-3-step-5.png

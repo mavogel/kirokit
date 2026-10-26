@@ -1,0 +1,12 @@
+# race against http://localhost:34115
+## Probe for the fix: ref:done arrives before SwitchRef resolves
+  after the late answer: {"inUse":"In use: branch main at 432c1e1 not a release","selected":"main","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  update disabled: false
+  OK   button back to Update and enabled; In use branch main (old code stays on "Switching…")
+  picture: evidence/it2-probe-late-answer.png
+## Probe: two presses in one task (faster than any person) on Switch
+  after two presses: {"inUse":"In use: branch feature at 2f29afd not a release","selected":"feature","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"kirokit is still running a command","invalid":"true"}
+  picture: evidence/it2-probe-double-press.png
+## Probe: a person-speed double-click (Playwright dblclick, then two clicks 60 ms apart) on Switch
+  dblclick → main: in use "In use: branch main at 432c1e1 not a release", error under the list "kirokit is still running a command"
+  two clicks 60 ms apart → v1.0.0: in use "In use: tag v1.0.0 at 819bf3b pinned · does not follow new releases", error under the list ""

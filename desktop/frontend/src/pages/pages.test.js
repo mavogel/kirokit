@@ -4,7 +4,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { teamsView } from './teams.js';
 import { agentsView } from './agents.js';
 import { installView, syncArgs, uninstallArgs } from './install.js';
-import { updateArgs, saveAndMaybeClone, initSettings } from './settings.js';
+import { updateArgs, updateLabel, saveAndMaybeClone, initSettings } from './settings.js';
+import { refArgs, versionOptions, sourceLine } from './version.js';
 import { skillsView } from './skills.js';
 import { welcomeView, showWelcome } from './welcome.js';
 import { feedbackFor } from './feedback.js';
@@ -107,10 +108,64 @@ test('Install rows have Sync and Uninstall buttons for their team', () => {
 });
 
 test('Buttons run the commands the design names', () => {
-  assert.deepEqual(syncArgs('alpha'), ['sync', 'alpha', '--latest-tag']);
+  assert.deepEqual(syncArgs('alpha', ''), ['sync', 'alpha', '--latest-tag']);
   assert.deepEqual(uninstallArgs('alpha'), ['uninstall', 'alpha']);
-  assert.deepEqual(updateArgs([]), ['sync', '--latest-tag']);
-  assert.deepEqual(updateArgs([{ Team: 'alpha' }]), ['sync', 'alpha', '--latest-tag']);
+  assert.deepEqual(updateArgs([], ''), ['sync', '--latest-tag']);
+  assert.deepEqual(updateArgs([{ Team: 'alpha' }], ''), ['sync', 'alpha', '--latest-tag']);
+});
+
+test('Update and Sync keep the saved version instead of the newest release', () => {
+  assert.deepEqual(syncArgs('alpha', 'feature'), ['sync', 'alpha', '--branch', 'feature']);
+  assert.deepEqual(updateArgs([{ Team: 'alpha' }], 'v1.0.0'), ['sync', 'alpha', '--branch', 'v1.0.0']);
+  assert.deepEqual(updateArgs([], 'main'), ['sync', '--branch', 'main']);
+  assert.deepEqual(refArgs(''), ['--latest-tag']);
+});
+
+const refs = {
+  current: { kind: 'branch', name: 'main', commit: 'b81d0a7' },
+  branches: ['feature/<x>', 'main', 'both'],
+  tags: ['v1.3.0', 'v1.2.0', 'both'],
+  newest: 'v1.3.0',
+};
+
+test('The version list offers Newest release, then the branches, then the tags', () => {
+  const html = versionOptions(refs, '', '');
+  assert.match(html, /^<option value="" selected>Newest release · follows new releases \(now v1.3.0\)<\/option>/);
+  assert.match(html, /<optgroup label="Branches"><option value="feature\/&lt;x&gt;">feature\/&lt;x&gt;<\/option><option value="main">main<\/option><option value="both">both<\/option><\/optgroup>/);
+  // A branch wins over a tag of the same name, so that tag cannot be chosen.
+  assert.match(html, /<optgroup label="Tags"><option value="v1.3.0">v1.3.0<\/option><option value="v1.2.0">v1.2.0<\/option><\/optgroup>$/);
+  assert.match(versionOptions(refs, '', 'v1.2.0'), /<option value="v1.2.0" selected>/);
+  assert.match(versionOptions({ ...refs, newest: '' }, '', 'main'), /^<option value="">Newest release \(none yet\)<\/option>/);
+});
+
+test('A saved version that is gone from origin still shows in the list', () => {
+  assert.match(versionOptions(refs, 'old', 'old'), /<optgroup label="Saved"><option value="old" selected>old \(not on origin\)<\/option><\/optgroup>/);
+  // Before the clone's refs are read nothing is known to be gone.
+  assert.doesNotMatch(versionOptions({ branches: [], tags: [] }, 'old', 'old'), /not on origin/);
+});
+
+test('The source line names the branch, tag or newest release and marks anything else', () => {
+  const at = (current, ref) => sourceLine({ checkout: { ...refs, current }, ref }, 'Templates from');
+  assert.equal(at({ kind: 'branch', name: 'main', commit: 'b81d0a7' }, 'main'),
+    'Templates from branch <b>main</b> at <b>b81d0a7</b> <span class="badge warn">not a release</span>');
+  assert.equal(at({ kind: 'tag', name: 'v1.3.0', commit: '4f2c9e1' }, ''),
+    'Templates from <span class="badge off">newest release</span> <b>v1.3.0</b> at <b>4f2c9e1</b>');
+  // A pinned tag is a pin, even when it is today's newest release.
+  assert.equal(at({ kind: 'tag', name: 'v1.3.0', commit: '4f2c9e1' }, 'v1.3.0'),
+    'Templates from tag <b>v1.3.0</b> at <b>4f2c9e1</b> <span class="badge warn">pinned · does not follow new releases</span>');
+  // What git says is checked out is shown, even when it differs from the choice.
+  assert.match(at({ kind: 'tag', name: 'v1.2.0', commit: '1111111' }, ''), /tag <b>v1.2.0<\/b>.*not the newest release/);
+  assert.match(at({ kind: 'branch', name: 'x<y>', commit: 'c' }, ''), /branch <b>x&lt;y&gt;<\/b>.*not a release/);
+  assert.equal(at({ kind: '', name: '', commit: 'abc1234' }, ''),
+    'Templates from commit <b>abc1234</b> <span class="badge warn">not a release</span>');
+  assert.equal(sourceLine({ checkout: { current: { kind: '', name: '', commit: '' } }, ref: '' }, 'In use:'), '');
+});
+
+test('Settings names the switch on its Update button', () => {
+  assert.equal(updateLabel('', ''), 'Update');
+  assert.equal(updateLabel('feature', 'feature'), 'Update');
+  assert.equal(updateLabel('feature', ''), 'Switch to feature and update');
+  assert.equal(updateLabel('', 'feature'), 'Switch to Newest release and update');
 });
 
 test('First launch asks for the address, prefilled from Settings', () => {
@@ -142,10 +197,52 @@ test('The sidebar is hidden until a clone exists', () => {
   assert.equal(showWelcome({ cloned: true, welcome: { busy: true } }), true);
 });
 
+const choosing = (welcome, extra = {}) => ({
+  cloned: true,
+  checkout: refs,
+  ref: '',
+  welcome: { address: 'https://example.com/x.git', choosing: true, ...welcome },
+  ...extra,
+});
+
+test('First launch stays up after the clone to ask for the version', () => {
+  assert.equal(showWelcome({ cloned: true, welcome: { choosing: true } }), true);
+  const html = welcomeView(choosing({}));
+  assert.match(html, /<h1>Set up kirokit<\/h1>/);
+  assert.match(html, /Cloned <b>https:\/\/example.com\/x.git<\/b>/);
+  assert.match(html, /<select id="welcome-version"[^>]*><option value="" selected>Newest release · follows new releases/);
+  assert.match(html, /<button class="btn primary" type="submit">Continue<\/button>/);
+  assert.doesNotMatch(html, /id="clone-address"/);
+});
+
+test('First launch names the switch, then says it is switching', () => {
+  assert.match(welcomeView(choosing({ pick: 'main' })), /<option value="main" selected>main<\/option>[\s\S]*type="submit">Switch to main and continue</);
+  const busy = welcomeView(choosing({ pick: 'main' }, { switching: 'welcome' }));
+  assert.match(busy, /<select id="welcome-version"[^>]* disabled>/);
+  assert.match(busy, /type="submit" disabled>Switching…</);
+});
+
+test('First launch shows a failed switch under the list and lets the person pick again', () => {
+  const failed = welcomeView(choosing({ pick: 'gone' }, { refError: { where: 'welcome', message: 'kirokit sync: --branch gone: <no> branch' } }));
+  assert.match(failed, /aria-invalid="true"/);
+  assert.match(failed, /id="welcome-version-error" role="alert">kirokit sync: --branch gone: &lt;no&gt; branch</);
+  assert.match(failed, /type="submit">Switch to gone and continue</);
+  // An error from Settings does not show here.
+  assert.doesNotMatch(welcomeView(choosing({}, { refError: { where: 'settings', message: 'x' } })), /role="alert">x</);
+});
+
+test('First launch without a release says so and preselects the checked-out branch', () => {
+  const html = welcomeView(choosing({}, { checkout: { ...refs, newest: '' } }));
+  assert.match(html, /no release yet/);
+  assert.match(html, /<option value="main" selected>/);
+  assert.match(html, /Switch to main and continue/);
+});
+
 test('A clone started from Settings keeps the pages showing', () => {
   const view = { cloned: true, welcome: { busy: true, fromSettings: true } };
   assert.equal(showWelcome(view), false);
   assert.equal(showWelcome({ ...view, cloned: false }), false);
+  assert.equal(showWelcome({ cloned: true, welcome: { fromSettings: true, choosing: true } }), false);
 });
 
 test('Saving a different address in Settings clones it; the same one does not', async () => {
@@ -180,7 +277,7 @@ test('A refused save does not start a clone, and a refused clone rejects', async
 });
 
 // A Settings page on a fake document: elements keep their handlers and text.
-function settingsPage({ stored, cloneRejects }) {
+function settingsPage({ stored, cloneRejects, onUpdate = () => {} }) {
   const els = {};
   const el = (id) => (els[id] ||= {
     id, value: '', textContent: '', disabled: false, attrs: {}, handlers: {},
@@ -197,7 +294,7 @@ function settingsPage({ stored, cloneRejects }) {
       SaveSettings: async (s) => { calls.push(['save', s.repoUrl]); stored.repoUrl = s.repoUrl; },
     } } },
   };
-  const page = initSettings(() => {}, async (address) => {
+  const page = initSettings(onUpdate, async (address) => {
     calls.push(['clone', address]);
     if (cloneRejects) throw new Error(cloneRejects);
   });
@@ -238,6 +335,61 @@ test('A finished clone clears the Cloning status in Settings', async () => {
 
   page.cloneDone({ ok: true, error: 'This repository has no release yet.' });
   assert.match(el('save-status').textContent, /no release yet/);
+});
+
+test('Settings keeps a picked version across redraws, switches with it, and shows a failed switch', () => {
+  const updates = [];
+  const { el, page } = settingsPage({ stored: { repoUrl: '' }, onUpdate: (picked) => updates.push(picked) });
+  const view = { checkout: { ...refs, current: { kind: 'tag', name: 'v1.3.0', commit: '4f2c9e1' } }, ref: '', installs: [] };
+
+  page.paint(view);
+  assert.match(el('version').innerHTML, /<option value="" selected>Newest release/);
+  assert.equal(el('update').textContent, 'Update');
+  assert.match(el('version-source').innerHTML, /^In use: <span class="badge off">newest release<\/span> <b>v1.3.0<\/b>/);
+
+  el('version').value = 'main';
+  el('version').handlers.change();
+  page.paint({ ...view }); // a poll redraws: the pick stays
+  assert.equal(el('version').value, 'main');
+  assert.equal(el('update').textContent, 'Switch to main and update');
+  el('update').handlers.click();
+  assert.deepEqual(updates, ['main']);
+
+  page.paint({ ...view, running: true, switching: 'settings' });
+  assert.equal(el('version').disabled, true);
+  assert.equal(el('update').disabled, true);
+  assert.equal(el('update').textContent, 'Switching…');
+
+  page.paint({ ...view, refError: { where: 'settings', message: 'kirokit sync: --branch main: no branch' } });
+  assert.equal(el('version-error').textContent, 'kirokit sync: --branch main: no branch');
+  assert.equal(el('version').attrs['aria-invalid'], 'true');
+  assert.equal(el('version').value, 'main', 'the failed pick stays so it can be retried');
+
+  // Once the switch is saved the button is plain Update again.
+  page.paint({ ...view, ref: 'main', checkout: { ...refs } });
+  assert.equal(el('update').textContent, 'Update');
+  assert.equal(el('version-error').textContent, '');
+  assert.equal(el('version').attrs['aria-invalid'], undefined);
+});
+
+test('Settings Update keeps the saved version when nothing else is picked, and Newest release is the way back', () => {
+  const updates = [];
+  const { el, page } = settingsPage({ stored: { repoUrl: '' }, onUpdate: (picked) => updates.push(picked) });
+  const view = { checkout: { ...refs, current: { kind: 'branch', name: 'main', commit: 'b81d0a7' } }, ref: 'main', installs: [{ Team: 'alpha' }] };
+
+  // A fresh page with a saved branch: Update follows it, never the newest release.
+  page.paint(view);
+  assert.equal(el('version').value, 'main');
+  assert.equal(el('update').textContent, 'Update');
+  el('update').handlers.click();
+  assert.deepEqual(updates, ['main']);
+
+  // Picking Newest release is how the person goes back to releases.
+  el('version').value = '';
+  el('version').handlers.change();
+  assert.equal(el('update').textContent, 'Switch to Newest release and update');
+  el('update').handlers.click();
+  assert.deepEqual(updates, ['main', '']);
 });
 
 // Owners and feedback: alpha routes feedback to a repository, gamma does not.

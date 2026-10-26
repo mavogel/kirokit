@@ -1,0 +1,100 @@
+# scratch: /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9   KIRO_HOME=/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/home   kirokit at 7ae1b97 (tree clean apart from docs/plans)
+
+## Scenario 1 step 2: switch to feature
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync demo --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch feature
+updated 24377e1 -> 91dab21
+checked out feature at 91dab21
+synced demo into /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/home at 91dab21
+[exit 0]
+symbolic-ref: feature  HEAD=91dab21  origin/feature=91dab21
+demo.json
+
+## Scenario 1 step 3: new commit on origin feature, plain sync
+origin feature now f16a565
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync demo --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone
+updated 91dab21 -> f16a565
+checked out feature at f16a565
+synced demo into /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/home at f16a565
+[exit 0]
+
+## Scenario 1 step 4: --branch v1.0.0 then plain sync
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync demo --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch v1.0.0
+updated f16a565 -> 5fda641
+checked out v1.0.0 at 5fda641
+synced demo into /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/home at 5fda641
+[exit 0]
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync demo --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone
+checked out v1.0.0 at 5fda641
+synced demo into /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/home at 5fda641
+[exit 0]
+v1.0.0 commit: 5fda641  HEAD=5fda641
+
+## Scenario 1 step 5: --latest-tag
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync demo --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --latest-tag
+updated 5fda641 -> 24377e1
+checked out v1.1.0 at 24377e1
+synced demo into /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/home at 24377e1
+[exit 0]
+v1.1.0 commit: 24377e1
+
+## Scenario 2 step 2: tracked edit, --branch main
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync demo --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch main
+kirokit sync: local changes in /private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone: commit or discard them, then try again
+[exit 1]
+HEAD unchanged: yes
+edit kept: edited
+installed records unchanged: yes
+
+## Scenario 2 step 3: restore, --branch nope
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync demo --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch nope
+kirokit sync: --branch nope: no branch or tag of that name on origin
+[exit 1]
+HEAD unchanged: yes
+
+## Scenario 2 step 4: --branch --upload-pack=x
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch --upload-pack=x
+kirokit sync: --branch: must be a branch or tag name, not empty, starting with '-' or containing whitespace
+[exit 1]
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch=--upload-pack=x
+kirokit sync: --branch: must be a branch or tag name, not empty, starting with '-' or containing whitespace
+[exit 1]
+
+## Scenario 2 step 5: --branch main --latest-tag
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch main --latest-tag
+kirokit sync: --branch and --latest-tag cannot be used together
+[exit 1]
+
+## Probes past the script
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch 
+kirokit sync: --branch: must be a branch or tag name, not empty, starting with '-' or containing whitespace
+[exit 1]
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch    
+kirokit sync: --branch: must be a branch or tag name, not empty, starting with '-' or containing whitespace
+[exit 1]
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch a b
+kirokit sync: --branch: must be a branch or tag name, not empty, starting with '-' or containing whitespace
+[exit 1]
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/no-such-checkout --branch main
+kirokit sync: chdir /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/no-such-checkout: no such file or directory
+[exit 1]
+-- local commits on feature, then --branch feature from main
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch feature
+updated 24377e1 -> f16a565
+checked out feature at f16a565
+[exit 0]
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync demo --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch feature
+kirokit sync: --branch feature: local branch feature has commits that are not on origin/feature
+[exit 1]
+HEAD unchanged on main: yes
+-- untracked file does not block
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch v1.1.0
+checked out v1.1.0 at 24377e1
+[exit 0]
+untracked kept: mine
+-- same switch twice is a no-op
+$ /Users/mavogel/Developer/projects/kirokit/kirokit sync --repo /var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/tmp.5Gv7sSHbV9/clone --branch v1.1.0
+checked out v1.1.0 at 24377e1
+[exit 0]
+-- help names the flag
+With --branch <name> the checkout switches to origin's branch of that name
+      --branch string      switch the checkout to this branch or tag of origin first; later plain syncs keep it (a branch wins over a tag of the same name)

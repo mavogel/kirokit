@@ -103,6 +103,16 @@ func (l *eventLog) waitClone(t *testing.T) cloneResult {
 	return *l.clone
 }
 
+// saveRef stores a version choice as a finished switch would.
+func saveRef(t *testing.T, a *App, ref string) {
+	t.Helper()
+	s := a.loadSettings()
+	s.Ref = ref
+	if err := a.writeSettings(s); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestClone_FetchesTheRepositoryAndTheNewestReleaseTag(t *testing.T) {
 	origin := newOrigin(t, "v1.0.0")
 	git(t, origin, "commit", "-q", "--allow-empty", "-m", "later")
@@ -176,12 +186,16 @@ func TestClone_ASecondAddressKeepsTheOldCloneUnderAnotherName(t *testing.T) {
 	}
 	log.waitClone(t)
 	log.clearClone()
+	saveRef(t, a, "v1.0.0")
 
 	if err := a.Clone(second); err != nil {
 		t.Fatal(err)
 	}
 	if res := log.waitClone(t); !res.OK {
 		t.Fatalf("clone:done = %+v", res)
+	}
+	if got := a.State().Settings.Ref; got != "" {
+		t.Errorf("Ref after a new address = %q, want Newest release (\"\")", got)
 	}
 
 	repo := filepath.Join(a.dataDir, "repo")
@@ -205,6 +219,7 @@ func TestClone_AFailedCloneRestoresTheOldOneAndKeepsTheOldAddress(t *testing.T) 
 	}
 	log.waitClone(t)
 	log.clearClone()
+	saveRef(t, a, "v1.0.0")
 
 	missing := filepath.Join(t.TempDir(), "no-such-origin")
 	if err := a.Clone(missing); err != nil {
@@ -214,6 +229,9 @@ func TestClone_AFailedCloneRestoresTheOldOneAndKeepsTheOldAddress(t *testing.T) 
 
 	if res.OK || res.Error == "" {
 		t.Fatalf("clone:done = %+v, want a failure with a message", res)
+	}
+	if got := a.State().Settings.Ref; got != "v1.0.0" {
+		t.Errorf("Ref after a failed clone = %q, want the old choice v1.0.0", got)
 	}
 	repo := filepath.Join(a.dataDir, "repo")
 	if tag := git(t, repo, "describe", "--tags", "--exact-match", "HEAD"); tag != "v1.0.0" {

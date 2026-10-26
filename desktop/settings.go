@@ -13,11 +13,13 @@ import (
 
 // Settings are the values the person chooses; settings.json in the app folder
 // holds them. An empty RepoURL means no repository is configured yet; an empty
-// RepoDir means the clone lives in <app folder>/repo.
+// RepoDir means the clone lives in <app folder>/repo. Ref is the branch or tag
+// every sync uses, empty for Newest release; only a finished switch sets it.
 type Settings struct {
 	RepoURL  string `json:"repoUrl"`
 	KiroHome string `json:"kiroHome"`
 	RepoDir  string `json:"repoDir"`
+	Ref      string `json:"ref"`
 }
 
 // repoURLPattern accepts https://, ssh:// and file:// addresses, scp-style
@@ -51,10 +53,12 @@ func (a *App) loadSettings() Settings {
 	return s
 }
 
-// SaveSettings validates the values and stores them. A refusal names each
-// bad field on its own line as "KiroHome: ...", "RepoURL: ..." or
-// "RepoDir: ...", and saves nothing.
+// SaveSettings validates the form's values and stores them. A refusal names
+// each bad field on its own line as "KiroHome: ...", "RepoURL: ..." or
+// "RepoDir: ...", and saves nothing. The saved Ref is kept: the form does not
+// hold it, and only a finished switch changes it.
 func (a *App) SaveSettings(s Settings) error {
+	s.Ref = a.loadSettings().Ref
 	s.RepoURL = strings.TrimSpace(s.RepoURL)
 	s.KiroHome = strings.TrimSpace(s.KiroHome)
 	s.RepoDir = strings.TrimSpace(s.RepoDir)

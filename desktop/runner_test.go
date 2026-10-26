@@ -19,6 +19,7 @@ type eventLog struct {
 	exits  []termExit
 	last   []install.Record
 	clone  *cloneResult // the last clone:done
+	ref    *refResult   // the last ref:done
 }
 
 func (l *eventLog) clearClone() {
@@ -35,6 +36,9 @@ func (l *eventLog) emit(event string, data any) {
 	case "clone:done":
 		res := data.(cloneResult)
 		l.clone = &res
+	case "ref:done":
+		res := data.(refResult)
+		l.ref = &res
 	case "term:kirokit":
 		raw, _ := base64.StdEncoding.DecodeString(data.(termChunk).B64)
 		l.out.Write(raw)

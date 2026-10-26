@@ -30,6 +30,28 @@ func TestSaveSettings_SurvivesNewApp(t *testing.T) {
 	}
 }
 
+// The form never sends the version choice; saving it must keep the saved one.
+func TestSaveSettings_KeepsTheSavedRef(t *testing.T) {
+	app, data, home := newTestApp(t)
+	if err := app.writeSettings(Settings{KiroHome: filepath.Join(home, "kiro"), Ref: "feature"}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := app.SaveSettings(Settings{KiroHome: filepath.Join(home, "kiro2"), Ref: "ignored"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := NewAppAt(data).State().Settings; got.Ref != "feature" || got.KiroHome != filepath.Join(home, "kiro2") {
+		t.Errorf("Settings = %+v, want the new Kiro home and Ref still feature", got)
+	}
+
+	if err := app.SaveSettings(Settings{KiroHome: "/", Ref: "other"}); err == nil {
+		t.Fatal("a refused save must fail")
+	}
+	if got := NewAppAt(data).State().Settings.Ref; got != "feature" {
+		t.Errorf("Ref after a refused save = %q, want feature", got)
+	}
+}
+
 // A refused Kiro home must name its field and save nothing, so a bad value
 // never replaces a good one.
 func TestSaveSettings_RefusesKiroHome(t *testing.T) {

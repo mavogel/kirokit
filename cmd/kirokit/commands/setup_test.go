@@ -86,11 +86,16 @@ func TestSetup_BranchRefusesBadOrUnknownRef(t *testing.T) {
 	origin := t.TempDir()
 	git(t, origin, "init", "-q", "-b", "main")
 	commitFile(t, origin, "one")
+	const ruleMessage = "kirokit setup: --branch: must be a branch or tag name, not empty, starting with '-' or containing whitespace"
 	for _, ref := range []string{"--upload-pack=x", "-b", "has space", "nonexistent"} {
 		t.Run(ref, func(t *testing.T) {
 			chdir(t, t.TempDir())
-			if got, err := runRoot(t, "setup", "--source", origin, "--target", filepath.Join(t.TempDir(), "r"), "--branch", ref); err == nil {
+			got, err := runRoot(t, "setup", "--source", origin, "--target", filepath.Join(t.TempDir(), "r"), "--branch", ref)
+			if err == nil {
 				t.Fatalf("setup --branch %q succeeded:\n%s", ref, got)
+			}
+			if ref != "nonexistent" && err.Error() != ruleMessage {
+				t.Errorf("err = %q, want %q", err, ruleMessage)
 			}
 		})
 	}

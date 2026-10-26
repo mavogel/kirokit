@@ -1,0 +1,40 @@
+git: git version 2.54.0 (Apple Git-157)
+== 1 list refs offline
+refs/tags/v1.1.0
+refs/tags/v1.0.0
+refs/tags/same
+refs/remotes/origin/same
+refs/remotes/origin/main
+refs/remotes/origin/feature
+refs/remotes/origin/HEAD
+== 2 switch to remote-only branch from detached tag
+has-remote
+no-local
+feature
+== 3 plain pull on detached tag fails today
+You are not currently on a branch.
+symbolic-ref exit (1 = detached): 1
+== 4 non-conflicting tracked edit is carried silently
+error: Your local changes to the following files would be overwritten by checkout:
+	f
+Please commit your changes or stash them before you switch branches.
+Aborting
+checkout exit 1
+porcelain:  M f
+== 5 diverged local branch is detectable before switching
+is-ancestor exit 1 (1 = not fast-forward)
+== 6 a name that is both branch and tag
+branch same
+tag same
+== 7 detach at a tag explicitly
+v1.0.0
+== 8 unknown name
+no branch nope
+no tag nope
+== 9 check-ref-format
+ok   main
+ok   feature/x
+ok   v1.0.0
+bad  a..b
+bad  -x
+bad  a b

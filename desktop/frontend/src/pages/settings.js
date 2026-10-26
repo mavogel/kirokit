@@ -1,4 +1,5 @@
 import * as api from '../api.js';
+import { refArgs, versionOptions, sourceLine } from './version.js';
 
 // SaveSettings refuses with one "KiroHome: ...", "RepoURL: ..." or "RepoDir: ..." line per bad
 // field. Anything else is a failure that belongs to no field.
@@ -26,20 +27,37 @@ export async function saveAndMaybeClone(save, clone, saved, form) {
   return changed;
 }
 
-// Update fetches the newest release: for the installed team when there is one,
-// else only the checkout.
-export const updateArgs = (installs) => {
+// Update fetches the saved version (ref, '' for Newest release): for the
+// installed team when there is one, else only the checkout.
+export const updateArgs = (installs, ref) => {
   const team = (installs || [])[0]?.Team;
-  return team ? ['sync', team, '--latest-tag'] : ['sync', '--latest-tag'];
+  return team ? ['sync', team, ...refArgs(ref)] : ['sync', ...refArgs(ref)];
 };
 
-// onUpdate() runs Update; onClone(address) starts a clone of a new address and
-// rejects with the reason it was refused. The returned paint(view) keeps the
-// button disabled while a command runs and shows a refusal beside it.
+// Update's label says when pressing it switches to another version.
+export const updateLabel = (picked, saved) =>
+  picked === saved ? 'Update' : `Switch to ${picked || 'Newest release'} and update`;
+
+// onUpdate(picked) runs Update with the version picked in the select;
+// onClone(address) starts a clone of a new address and rejects with the reason
+// it was refused. The returned paint(view) keeps the controls disabled while a
+// command runs and shows a refusal beside them.
 export function initSettings(onUpdate, onClone) {
   const updateBtn = document.getElementById('update');
   const updateErr = document.getElementById('update-error');
-  updateBtn.addEventListener('click', () => onUpdate());
+  const version = document.getElementById('version');
+  const versionErr = document.getElementById('version-error');
+  const source = document.getElementById('version-source');
+  // The entry the person picked; null follows the saved choice, so a redraw
+  // never takes a pick away and a finished switch shows the new choice.
+  let picked = null;
+  let lastView = null;
+  let lastOptions = '';
+  version.addEventListener('change', () => {
+    picked = version.value;
+    if (lastView) paint(lastView);
+  });
+  updateBtn.addEventListener('click', () => onUpdate(picked ?? lastView?.ref ?? ''));
 
   const home = document.getElementById('kirohome');
   const repo = document.getElementById('repo');
@@ -117,11 +135,31 @@ export function initSettings(onUpdate, onClone) {
     }
   });
 
-  const paint = (view) => {
-    updateBtn.disabled = Boolean(view.running);
+  function paint(view) {
+    lastView = view;
+    const saved = view.ref || '';
+    if (picked === saved) picked = null;
+    const current = picked ?? saved;
+    const options = versionOptions(view.checkout, saved, current);
+    if (options !== lastOptions) {
+      lastOptions = options;
+      version.innerHTML = options;
+    }
+    version.value = current;
+    source.innerHTML = sourceLine(view, 'In use:');
+
+    const busy = Boolean(view.running) || Boolean(view.switching);
+    version.disabled = busy;
+    updateBtn.disabled = busy;
+    updateBtn.textContent = view.switching === 'settings' ? 'Switching…' : updateLabel(current, saved);
     const e = view.actionError;
     updateErr.textContent = e && e.where === 'update' ? e.message : '';
-  };
+    const r = view.refError;
+    const failed = r && r.where === 'settings' ? r.message : '';
+    versionErr.textContent = failed;
+    if (failed) version.setAttribute('aria-invalid', 'true');
+    else version.removeAttribute('aria-invalid');
+  }
 
   // The end of a clone this page started: a failure shows beside the address,
   // and the status stops saying the clone is running.

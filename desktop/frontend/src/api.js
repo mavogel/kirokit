@@ -31,6 +31,16 @@ export const run = (args) => app().Run(args);
 // clone:done reports the end.
 export const clone = (address) => app().Clone(address);
 
+// The clone's current version and the branches and tags it can switch to,
+// read from its own refs (no network). Empty lists before a clone.
+export const checkout = () => app().Checkout();
+
+// Switches the clone to a branch or tag ('' for Newest release) by running
+// kirokit sync in the kirokit tab; resolves when it starts, rejects with the
+// reason it was refused. ref:done reports the end, and the choice is saved only
+// when the switch succeeded.
+export const switchRef = (ref) => app().SwitchRef(ref);
+
 // Wails runs every bound call on its own goroutine, so keystrokes sent without
 // waiting can reach a terminal out of order. Each terminal sends its input
 // through one line: a call starts after the one before it has ended, whether

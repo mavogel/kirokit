@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mavogel/kirokit/internal/checkout"
 	"github.com/mavogel/kirokit/internal/externalskills"
 	"github.com/spf13/cobra"
 )
@@ -44,8 +45,10 @@ install or sync.`,
 				return errors.New("kirokit setup: --source: use an https, ssh or file address, git@host:path, or an absolute path")
 			}
 			branch = strings.TrimSpace(branch)
-			if cmd.Flags().Changed("branch") && (branch == "" || strings.HasPrefix(branch, "-") || strings.ContainsAny(branch, " \t\r\n")) {
-				return errors.New("kirokit setup: --branch: must be a branch or tag name, not empty, starting with '-' or containing whitespace")
+			if cmd.Flags().Changed("branch") {
+				if err := checkout.CheckRefName(branch); err != nil {
+					return fmt.Errorf("kirokit setup: --branch: %w", err)
+				}
 			}
 			dir, err := filepath.Abs(strings.TrimSpace(target))
 			if err != nil {
@@ -70,7 +73,7 @@ install or sync.`,
 			if err := os.Chdir(dir); err != nil {
 				return fmt.Errorf("kirokit setup: %w", err)
 			}
-			switch err := updateCheckout(true); {
+			switch err := updateCheckout(true, ""); {
 			case err == nil:
 				tag, _ := gitOutput("describe", "--tags", "--exact-match", "HEAD")
 				_, _ = fmt.Fprintf(out, "checked out %s in %s\n", tag, dir)
