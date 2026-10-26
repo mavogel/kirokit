@@ -72,7 +72,7 @@ The desktop's data shapes:
 ## Built, slice by slice
 
 <!-- ql:slices -->
-3 slices · 11 tasks · 10 commits · 25 files · +1396 −64
+3 slices · 11 tasks · 11 commits · 25 files · +1396 −64
 
 **Slice 1 · the CLI switches to a branch or tag and keeps it** · T1, T2, T3, T4 · 7 files · +618 −27
 

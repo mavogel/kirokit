@@ -7,7 +7,7 @@ depth: light
 level: engineering
 ui: true
 overrides: []
-stage: review
+stage: shipped
 iterations: 2
 verification_failures: 0
 gate: null
@@ -15,7 +15,7 @@ created: 1793030325145
 startup_owner: 4208fa65abb54844
 layout: seven
 profile: full
-status: approved
+status: verified
 approved: true
 review_digest: dae46be72ca02773927087d2433228a59acc891f03e03bb622da72a76d1b39cd
 review_basis: 107bbdc41f9f96b6732c872f5bee96b898c8e41d1b2ff4f803128f1ac304ad60
@@ -23,6 +23,10 @@ branch: feat/add-possibility-checkout-branch-config
 base: da801025453cef7f572bf1659c3366d36bce0cfd
 base_ref: main
 judge_runs: 0
+shipped: 2026-10-26
+commits: ["e46c042","0053b15","0a8792a","faafd4d","af08a2a","185e2ed","51635fa","594cacb","7ae1b97","eb8ab2e","b808b43"]
+touched: ["README.md","cmd/kirokit/","desktop/clone.go","desktop/clone_test.go","desktop/frontend/","desktop/runner_test.go","desktop/settings.go","desktop/settings_test.go","desktop/version.go","desktop/version_test.go","internal/checkout/"]
+slices: 3
 ---
 
 # Check out a config repo branch
