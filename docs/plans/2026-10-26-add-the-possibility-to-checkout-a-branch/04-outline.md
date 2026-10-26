@@ -182,7 +182,7 @@ After this slice Settings shows what is in use and a Version list, the first-lau
  README.md                       ~ Desktop app section
 ```
 
-- [ ] T8 Update and Sync build their command from the saved choice
+- [x] T8 Update and Sync build their command from the saved choice
   - **Objective:** `refArgs(ref)` gives `['--branch', ref]` or `['--latest-tag']`; `syncArgs(team, ref)` and `updateArgs(installs, ref)` use it, and `main.js` passes `view.ref` (from `State().settings.ref`); `api.js` gains `checkout()` and `switchRef(ref)`.
   - **Design:** "Desktop: `Settings.Ref`, `App.Checkout`, `App.SwitchRef`", "plan:decision:d4"
   - **Files:** `desktop/frontend/src/pages/version.js`, `desktop/frontend/src/pages/install.js`, `desktop/frontend/src/pages/settings.js`, `desktop/frontend/src/api.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/pages/pages.test.js`
@@ -191,7 +191,7 @@ After this slice Settings shows what is in use and a Version list, the first-lau
     - With `ref` "" both still send `--latest-tag`; with a ref neither sends `--latest-tag`.
     - verify: `cd desktop/frontend && node --test`
 
-- [ ] T9 Install and Settings show where the templates come from; Settings offers the list
+- [x] T9 Install and Settings show where the templates come from; Settings offers the list
   - **Objective:** `sourceLine(view, lead)` draws "Templates from …" on Install and "In use: …" on Settings; Settings gains the Version select (Newest release, Branches, Tags) and Update switches when another entry is picked.
   - **Design:** "Desktop: `Settings.Ref`, `App.Checkout`, `App.SwitchRef`", "plan:decision:d3", "plan:decision:d5"
   - **Files:** `desktop/frontend/index.html`, `desktop/frontend/src/style.css`, `desktop/frontend/src/pages/version.js`, `desktop/frontend/src/pages/install.js`, `desktop/frontend/src/pages/settings.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/pages/pages.test.js`
@@ -203,7 +203,7 @@ After this slice Settings shows what is in use and a Version list, the first-lau
     - Before a clone no source line is drawn.
     - verify: `cd desktop/frontend && node --test && npm run build`
 
-- [ ] T10 First launch asks for the version after the clone
+- [x] T10 First launch asks for the version after the clone
   - **Objective:** After `clone:done` ok from the welcome page, the page stays (`welcome.choosing`) and shows the Version select with Newest release preselected (the default branch when there is no release); Continue keeps it, another entry switches first.
   - **Design:** "Desktop: `Settings.Ref`, `App.Checkout`, `App.SwitchRef`"
   - **Files:** `desktop/frontend/src/pages/welcome.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/pages/pages.test.js`
@@ -214,7 +214,7 @@ After this slice Settings shows what is in use and a Version list, the first-lau
     - A clone started from Settings never shows this page.
     - verify: `cd desktop/frontend && node --test`
 
-- [ ] T11 README's desktop section describes the version list
+- [x] T11 README's desktop section describes the version list
   - **Objective:** Describe the Version select on Settings and after the first clone, that Update, Sync and Continue use the saved choice, that new branches appear after the next Update, and the source line; replace the `--latest-tag` wording for Sync and Update with "the chosen version".
   - **Design:** "README documents the flag and the version list"
   - **Files:** `README.md`

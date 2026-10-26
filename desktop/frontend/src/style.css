@@ -41,7 +41,7 @@
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--window); color: var(--text); font: 14px/1.5 var(--font); }
-button, input { font: inherit; color: inherit; }
+button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 [hidden] { display: none !important; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -112,6 +112,11 @@ td.num { font-variant-numeric: tabular-nums; }
 .field label { font-weight: 600; }
 .field input { height: 36px; padding: 0 10px; border: 1px solid var(--control-border); border-radius: 6px; background: var(--surface); font-family: var(--mono); font-size: 13px; }
 .field input[aria-invalid="true"] { border-color: var(--warn); }
+.field select { height: 36px; padding: 0 8px; border: 1px solid var(--control-border); border-radius: 6px; background: var(--surface); font-family: var(--mono); font-size: 13px; }
+.field select[aria-invalid="true"] { border-color: var(--warn); }
+.field select:disabled { opacity: .55; cursor: not-allowed; }
+.source { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 12px; color: var(--muted); }
+.source b { color: var(--text); font-family: var(--mono); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
 .field .hint { color: var(--muted); font-size: 13px; }
 .field .error { color: var(--warn); font-size: 13px; }
 .actions .error, .row-actions .error { color: var(--warn); font-size: 13px; align-self: center; }

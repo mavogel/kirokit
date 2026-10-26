@@ -3,9 +3,9 @@
 ## Summary
 
 <!-- ql:summary -->
-7 of 11 tasks · 2 of 3 slices
+11 of 11 tasks · 3 of 3 slices
 
-Building now: started 26 Oct, 17:19, 18 min so far.
+Building now: started 26 Oct, 17:19, 23 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -15,7 +15,7 @@ Building now: started 26 Oct, 17:19, 18 min so far.
 |---|---|---|---|
 | 1 | the CLI switches to a branch or tag and keeps it | After this slice `kirokit sync [team] --branch <name>` switches the checkout to a branch or tag, refusing local changes, local commits and unknown names, and a plain `sync` follows a branch and stays on a tag. | done |
 | 2 | the desktop app reads the clone's versions and switches them | After this slice the desktop's Go side can list the clone's branches and tags without the network, say what is checked out, switch through the CLI in the kirokit tab and remember the choice only once the switch worked. | done |
-| 3 | the desktop pages pick, keep and show the version | After this slice Settings shows what is in use and a Version list, the first-launch page asks for the version after the clone, every Update and Sync button keeps the choice, and Install and sync names where the templates come from. | next |
+| 3 | the desktop pages pick, keep and show the version | After this slice Settings shows what is in use and a Version list, the first-launch page asks for the version after the clone, every Update and Sync button keeps the choice, and Install and sync names where the templates come from. | done |
 <!-- /ql:slices -->
 
 ## Delivered
@@ -39,6 +39,10 @@ Written when the last task is ticked.
 - T5 · 0a8792a · `go test ./internal/checkout` · exit 0 · 0.9s
 - T6 · 0a8792a · `cd desktop && go test -run 'TestSaveSettings|TestClone|TestRepoDir' .` · exit 0 · 3.1s
 - T7 · 0a8792a · `cd desktop && go test -run 'TestSwitchRef|TestCheckout|TestRunner|TestClone' .` · exit 0 · 5.3s
+- T8 · faafd4d · `cd desktop/frontend && node --test` · exit 0 · 0.3s
+- T9 · faafd4d · `cd desktop/frontend && node --test && npm run build` · exit 0 · 0.8s
+- T10 · faafd4d · `cd desktop/frontend && node --test` · reused: nothing changed since it passed at 17:42
+- T11 · faafd4d · `grep -n -e 'Version' -e 'chosen version' README.md` · exit 0 · 0s
 
 ## Known limits
 

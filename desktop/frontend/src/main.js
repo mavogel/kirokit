@@ -33,6 +33,10 @@ const view = {
   actionError: null, // { where, message } of a refused command
   notice: '', // the no-release message, or why the last clone failed
   welcome: { address: '', error: '', busy: false },
+  ref: '', // the saved version every sync uses; '' is Newest release
+  checkout: { current: { kind: '', name: '', commit: '' }, branches: [], tags: [], newest: '' },
+  switching: '', // where a version switch was started: 'settings' or 'welcome'
+  refError: null, // { where, message } of the last failed switch
 };
 const setup = () => view.loaded && showWelcome(view);
 
@@ -137,13 +141,46 @@ async function cloneFromSettings(address) {
   }
 }
 
-const settings = initSettings(() => runCommand(updateArgs(view.installs), 'update'), cloneFromSettings);
+// Switches to another version in the kirokit tab; ref:done reports the end.
+// where ('settings' or 'welcome') is the page that shows a failure.
+async function switchVersion(ref, where) {
+  view.refError = null;
+  view.actionError = null;
+  try {
+    await api.switchRef(ref);
+    view.switching = where;
+  } catch (e) {
+    view.refError = { where, message: message(e) };
+  }
+  draw();
+}
+
+// Settings' Update runs the saved version, or switches when another is picked.
+const settings = initSettings(
+  (picked) => (picked === view.ref ? runCommand(updateArgs(view.installs, view.ref), 'update') : switchVersion(picked, 'settings')),
+  cloneFromSettings,
+);
 const paint = [
-  initWelcome(document.getElementById('page-welcome'), startClone),
+  initWelcome(
+    document.getElementById('page-welcome'),
+    startClone,
+    (pick) => {
+      view.welcome = { ...view.welcome, pick };
+      draw();
+    },
+    (pick) => {
+      // The clone is on the newest release, which is already the saved choice.
+      if (pick === '') {
+        view.welcome = { ...view.welcome, choosing: false };
+        view.refError = null;
+        draw();
+      } else switchVersion(pick, 'welcome');
+    },
+  ),
   initTeams(document.getElementById('teams-grid'), installTeam),
   initAgents(document.getElementById('page-agents'), giveFeedback),
   initInstall(document.getElementById('page-install'), (action, team) =>
-    runCommand(action === 'sync' ? syncArgs(team) : uninstallArgs(team), action + ':' + team)),
+    runCommand(action === 'sync' ? syncArgs(team, view.ref) : uninstallArgs(team), action + ':' + team)),
   initSkills(document.getElementById('page-skills'), giveFeedback),
   settings.paint,
 ];
@@ -169,8 +206,15 @@ async function loadCatalog() {
     if (!view.welcome.address) view.welcome = { ...view.welcome, address: st.settings.repoUrl || '' };
     if (!view.welcome.busy && !view.welcome.dirError) view.welcome = { ...view.welcome, dir: st.settings.repoDir || '' };
     view.defaultRepoDir = st.env.defaultRepoDir || '';
+    view.ref = st.settings.ref || '';
     view.catalog = await api.catalog();
     view.error = '';
+    try {
+      view.checkout = await api.checkout();
+    } catch {
+      // A clone git cannot read shows no version line; the catalog reports the clone's problems.
+      view.checkout = { current: { kind: '', name: '', commit: '' }, branches: [], tags: [], newest: '' };
+    }
   } catch (e) {
     view.error = message(e);
     terminalDock.setShell(shellLabel());
@@ -209,9 +253,19 @@ api.on('term:kirokit:exit', ({ id }) => {
   refresh();
 });
 api.on('clone:done', ({ ok, error }) => {
-  if (view.welcome.fromSettings) settings.cloneDone({ ok, error });
-  view.welcome = { ...view.welcome, busy: false, fromSettings: false, error: ok ? '' : error };
+  const fromSettings = view.welcome.fromSettings;
+  if (fromSettings) settings.cloneDone({ ok, error });
+  // A first clone keeps the setup page up to ask which version to use.
+  view.welcome = { ...view.welcome, busy: false, fromSettings: false, error: ok ? '' : error, choosing: ok && !fromSettings, pick: null };
   view.notice = error || '';
   settings.load(); // the Settings address field now shows the cloned address
+  refresh();
+});
+// A switch saved its choice only when ok; the pages read it back in refresh.
+api.on('ref:done', ({ ok, error }) => {
+  const where = view.switching;
+  view.switching = '';
+  if (ok && where === 'welcome') view.welcome = { ...view.welcome, choosing: false };
+  if (!ok) view.refError = { where, message: error || 'The switch failed. See the kirokit tab.' };
   refresh();
 });

@@ -74,8 +74,10 @@
         <p class="note" id="env-note" role="status"></p>
         <div class="actions"><button class="btn primary" id="save">Save</button><span class="status-line" id="save-status" role="status"></span></div>
         <h2>Templates</h2>
-        <p class="note">Update fetches the newest release of your team's repository, and re-installs the installed team from it.</p>
+        <p class="source" id="version-source"></p>
+        <div class="field"><label for="version">Version</label><select id="version" aria-describedby="version-hint version-error"></select><span class="hint" id="version-hint">Newest release follows each new release. A branch follows its new commits; a tag stays fixed. New branches show up here after the next Update.</span><span class="error" id="version-error" role="alert"></span></div>
         <div class="actions"><button class="btn" id="update">Update</button><span class="error" id="update-error" role="alert"></span></div>
+        <p class="note">Update fetches the selected version of your team's repository, and re-installs the installed team from it.</p>
       </section>
     </main>
 

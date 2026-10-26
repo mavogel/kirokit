@@ -1,4 +1,5 @@
 import { esc, timeTag, problem, busyAttr, actionError } from './html.js';
+import { refArgs, sourceLine } from './version.js';
 
 // The rows of the install table: one per team with an install record. The
 // records are on this computer, so a catalog error or a missing clone does
@@ -23,7 +24,8 @@ export function installView(view) {
   return { blocked: false, html: rows.join('\n') };
 }
 
-export const syncArgs = (team) => ['sync', team, '--latest-tag'];
+// Sync keeps the saved version (ref, '' for Newest release).
+export const syncArgs = (team, ref) => ['sync', team, ...refArgs(ref)];
 export const uninstallArgs = (team) => ['uninstall', team];
 
 // onAction(action, team) runs the button's command; action is "sync" or
@@ -33,11 +35,16 @@ export function initInstall(section, onAction) {
   const table = section.querySelector('table');
   const message = document.createElement('div');
   table.after(message);
+  const source = document.createElement('p');
+  source.className = 'source';
+  table.before(source);
   body.addEventListener('click', (e) => {
     const b = e.target.closest('button[data-action]');
     if (b && !b.disabled) onAction(b.dataset.action, b.dataset.team);
   });
   return (view) => {
+    source.innerHTML = sourceLine(view, 'Templates from');
+    source.hidden = !source.innerHTML;
     const out = installView(view);
     table.hidden = out.blocked;
     message.innerHTML = out.blocked ? out.html : '';
