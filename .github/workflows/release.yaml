@@ -200,6 +200,14 @@ jobs:
           HOMEBREW_TAP_GITHUB_TOKEN: unused-in-a-split
           SCOOP_BUCKET_GITHUB_TOKEN: unused-in-a-split
 
+      # GoReleaser builds each DMG from a staging folder holding the app and an
+      # `Applications -> /Applications` link. The upload follows links, so it
+      # would copy the runner's whole /Applications; the merge needs only the
+      # DMG beside each folder.
+      - name: Drop the DMG staging folders
+        if: matrix.goos == 'darwin'
+        run: find dist/darwin/dmg -mindepth 2 -maxdepth 2 -type d -exec rm -rf {} +
+
       - name: Upload this OS's part
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
