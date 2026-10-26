@@ -3,12 +3,16 @@
 ## Summary
 
 <!-- ql:summary -->
-Independent review is running.
+6 of 7 points assessed · 6 passed
+
+Passed after 1 judge run.
 <!-- /ql:summary -->
 
 ## Open items
 
 <!-- ql:open-items -->
+- **Unverified:** On narrow windows the new Owner and Feedback columns of the Agents table sit off-screen. At the app's 720px minimum the main area overflows by 294px (88px before the change), and at 1000px the first Feedback button ends at 1001px; it stays reachable by horizontal scroll and Tab,
+- **Unverified:** The review gates fire only when an agent writes a spec. Asked to draft requirements outside spec mode, the `qa` agent did not consult `product-owner`; the README already says a steering cannot force the review
 - **Only you can confirm:** The issue reads well to an owner
 <!-- /ql:open-items -->
 
@@ -22,28 +26,36 @@ Independent review is running.
 - **Project checks** · QualityLayer itself · no agent
   - State: done
   - Result: done · 6 checks · 2 reused
-- **Independent review** · Claude Code · Opus 5.5 · never saw the build
-  - State: running
-  - Result: not yet
+- **Independent review** · fresh helper
+  - State: done
+  - Result: done · 6 of 6 points · 1 yours to confirm · 2 screens stale
 - **Second opinion** · another vendor's agent
   - State: skipped
   - Result: not run
   - Why it runs here: Not run: Second opinion is off in Settings, though it would run here because the change crosses a trust boundary: the desktop app opens the system browser at an address built from content of a cloned repository; the skill reads the person's local Kiro, the Plan says it is risky: the desktop app gains its first path that opens the system browser, with an address built from repository content; and the review gates and slice 2 and 4 is marked risky; say "get a second opinion" to have one.
 - **Fix rounds** · the build session
-  - State: waiting
-  - Result: not yet
+  - State: done
+  - Result: done · none needed
 <!-- /ql:lanes -->
 
 ## Done means, checked
 
 <!-- ql:proof -->
-Not checked yet.
+| Done means | Proof | |
+|---|---|---|
+| 1. A team can install a ready example of cooperating role agents | `kirokit install product-team` into a temporary Kiro home gave `customer`, `engineer`, `product-owner`, `qa`, `ux-designer`; `kiro-cli chat --agent product-owner --v3` ran `Sub-agent: customer` → Completed and reported Sam's answer. | passed |
+| 2. The spec workflow has review gates by role | With `product-team` installed, `kiro-cli chat --agent engineer --v3 --mode spec` wrote `requirements.md`, had `product-owner` review it as a subagent and folded its gaps in before `design.md`, then reviewed `design.md` itself as the engineer, as `spec-review-gates.md` tells the reviewing agent. | passed |
+| 3. Every agent and skill of a team names its owner | `owner` and `owners` are validated (a bare `jane` and an unknown key fail render naming the field); vendored skills fall back to the team owner (render and catalog tests in the receipt); the running app's Agents and Skills pages show `@mavogel` and *team owner* under inherited owners, as the artifact draws them. QualityLayer's own capture ran but its browser got no catalog from the `wails dev` backend, so the pictures are Playwright captures of the same running app,,,. | passed |
+| 4. A non-engineer can send feedback on a skill or agent from where they work | `/feedback` in Kiro drafted a report naming the `customer` agent; the app's Feedback button on `product-owner` and on `analyze-session` opened prefilled issues naming the item,. | passed |
+| 5. The feedback reaches the owner | Does the prefilled issue read well to you as its owner? Both entry points produce a `https://github.com/mavogel/kirokit/issues/new?…` link labelled `feedback,team:product-team,<kind>:<name>` whose body carries `Owner: @mavogel`, and nothing is sent (GitHub answered the anonymous link with a sign-in redirect that keeps the whole address). Open the link in signed in to GitHub and judge the form; do not submit unless you want the issue. | yours to confirm |
+| 6. A session-analysis skill suggests harness improvements from a Kiro chat | `analyze-session`, run by `qa` on a session with two denied `engineer` calls, read it with file tools only, reported two recommendations under `@mavogel` naming `teams/product-team/agents/product-owner/agent.json.tmpl`, and printed one prefilled issue link; an unknown session id is reported as missing with the list of sessions. | passed |
+| 7. The README explains the role setup and the feedback loop | The README's "Role agents and feedback" section and manifest reference cover `product-team`, `owner`/`owners`/`feedback.github`, `/feedback`, the app's Owner column and Feedback button, and `analyze-session`. | passed |
 <!-- /ql:proof -->
 
 ## Fix rounds
 
 <!-- ql:fix-rounds -->
-None so far.
+- Round 1 · everything checked passed
 <!-- /ql:fix-rounds -->
 
 ## Second opinion
@@ -83,6 +95,8 @@ Not run: Second opinion is off in Settings, though it would run here because the
 ## Verification
 
 ### Iteration 1
+
+**Revision:** a67a2d303474d7e6490b7e208d938045ad5f453fd53e08cbd08317dc01b68c08
 
 **Assignment:** 9afc1170-f5ed-43f3-a31b-4f34caee8632
 **Judge:** fresh helper

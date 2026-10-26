@@ -32,13 +32,14 @@ Delivered 26 Oct, 13:53
 - The desktop app shows owners and opens a feedback issue · slice 4 · 3 tasks
 - `analyze-session` turns a Kiro chat into owner issues, and the README explains it all · slice 5 · 2 tasks
 
-**Verified** · 2
+**Verified** · 4
 - Project checks passed · 6 of 6 · recorded
 - Security review · done · nothing severe in the change
+- Independent review · done · 6 of 6 points · 1 yours to confirm · 2 screens stale
+- Independent review of the Done means points · 6 of 7 proved
 
-**Left** · 2
-- Independent review · Review · not done
-- Fix rounds · Fix · not done
+**Left** · 1
+- Done means 5: The feedback reaches the owner · yours to confirm in Review
 <!-- /ql:delivered -->
 
 ## Decided while building
@@ -51,6 +52,7 @@ Delivered 26 Oct, 13:53
 - Slice 4 · `feedbackURL` percent-encodes `! ' ( ) * ~` on top of `encodeURIComponent`, because Wails v2.17's `BrowserOpenURL` refuses them as shell metacharacters (found driving the real app); nothing you approved changes.
 - Slice 1 · `feedback.github` also rejects `.` or `..` as the repository name, so the address cannot step out of `owner/repo`; nothing you approved changes.
 - The Plan · Outline bookkeeping after the build: T11 Files gains desktop/frontend/src/pages/feedback.js (the Owner and Feedback cells live there, shared by both pages), and T12 Files gains testdata/golden/product-team/rendered/prompts/feedback.md (the /feedback owner table now lists the analyze-session skill). No task, Done means or user decision changes.
+- The Plan · Verification round 1 stands without a rerun: the five files that changed during it are the reviewer's own added tests, which touch no product code, all pass, and found no defect; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -102,6 +104,7 @@ Delivered 26 Oct, 13:53
 - T10 (tactical): `feedbackURL` percent-encodes `! ' ( ) * ~` on top of `encodeURIComponent`, because Wails v2.17's `BrowserOpenURL` refuses them as shell metacharacters (found driving the real app); nothing you approved changes
 - T1 (tactical): `feedback.github` also rejects `.` or `..` as the repository name, so the address cannot step out of `owner/repo`; nothing you approved changes
 - Plan (amended): Outline bookkeeping after the build: T11 Files gains desktop/frontend/src/pages/feedback.js (the Owner and Feedback cells live there, shared by both pages), and T12 Files gains testdata/golden/product-team/rendered/prompts/feedback.md (the /feedback owner table now lists the analyze-session skill). No task, Done means or user decision changes.
+- Plan (tactical): verification round 1 was recorded while 5 files changed, 5 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes
 
 ## Plan amended
 

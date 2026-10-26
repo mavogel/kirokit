@@ -7,8 +7,8 @@ depth: product
 level: engineering
 ui: true
 overrides: []
-stage: verify
-iterations: 0
+stage: review
+iterations: 1
 verification_failures: 0
 gate: null
 created: 1793012565552
@@ -22,6 +22,7 @@ review_basis: f04128d75568416222744db8abf20eb943051d413c233a213bf5bb1cb4a54276
 branch: feat/add-functionality-how-whole-value
 base: 3dcf20fa1669f956c07530487954be10184cee27
 base_ref: main
+judge_runs: 0
 ---
 
 # Cross-role agent harness with feedback loop
