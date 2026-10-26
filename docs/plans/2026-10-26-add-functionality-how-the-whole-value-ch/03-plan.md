@@ -3,8 +3,8 @@ type: plan
 status: approved
 profile: full
 approved: true
-review_digest: c5546a29a97a6c45f1afbf9edf62bbcd60bf6ea0953014b8f4113ccf2eb928b8
-review_basis: 96684053b44f6ea8f929051e8071cc2000f0de541863f9afb5218c4bc2fe1e36
+review_digest: 82abb7d523b6491f0628e873fd445fd3c4d9ba4e1bc9e867bff421aab7940ce5
+review_basis: 4f2b7b38c76ad1987b58c4fff11e17d3d5e0a1b2fcb4320f4a5a40682c3d3ff2
 ---
 
 # Cross-role agent harness with feedback loop
@@ -88,7 +88,7 @@ flowchart LR
 
 ### Each role agent may call the other four, and kirokit rejects a name that is not an agent of the team
 
-Every role agent lists `subagent` in `tools` and `toolsSettings.subagent.availableAgents` with the other four role agents; `trustedAgents` lists the four that cannot write files (`product-owner`, `customer`, `qa`, `ux-designer`), so consulting them needs no permission prompt while calling the engineer asks first. `kiro-cli agent validate` accepts unknown agent names, so render fails when `availableAgents` or `trustedAgents` names something that is neither a glob nor an agent of the same team. kirokit does not add a `subagent` permission rule, because what its `match` compares against is undocumented.
+Every role agent lists `subagent` in `tools` and `toolsSettings.subagent.availableAgents` with the other four role agents; `trustedAgents` and a `{ "capability": "subagent", "match": [...], "effect": "allow" }` permission rule list the ones that cannot write files (`product-owner`, `customer`, `qa`, `ux-designer`), so consulting them needs no permission prompt while calling the engineer asks first. In Kiro CLI 2.34.0 v3, `trustedAgents` alone still prompted; the permission rule, whose `match` compares against the agent name, is what skips the prompt (run during the build, slice 2). `kiro-cli agent validate` accepts unknown agent names, so render fails when `availableAgents`, `trustedAgents` or a `subagent` rule's `match` names something that is neither a glob nor an agent of the same team.
 
 ```mermaid
 flowchart LR
@@ -291,7 +291,7 @@ func (m Manifest) OwnerOf(kind, name string) (owner string, fromTeam bool)
 ### Render checks owner keys and subagent names against the team, and offers two template functions
 
 - `RenderTeamWith` (`internal/render/render.go:41`) collects the team's agent names (`agents/<name>/`) and skill names (`skills/<name>/` plus external names) before the walk, keeps them on `Context` as `json:"-"` fields, and fails with `render: manifest.yaml: owners.agents.<name>: <team> has no agent <name>` for an unknown key.
-- After rendering `agents/<a>.json`, render reads `toolsSettings.subagent.availableAgents` and `trustedAgents`; every entry without `*`, `?` or `[` must be a team agent, else `render: agents/<a>/agent.json.tmpl: toolsSettings.subagent.availableAgents names "<x>", which is not an agent of <team>`.
+- After rendering `agents/<a>.json`, render reads `toolsSettings.subagent.availableAgents`, `trustedAgents` and the `match` of every `permissions.rules` entry with `capability: subagent`; every entry without `*`, `?` or `[` must be a team agent, else `render: agents/<a>/agent.json.tmpl: toolsSettings.subagent.availableAgents names "<x>", which is not an agent of <team>` (for a rule: `permissions.rules[<i>].match names …`).
 - `owners` returns `[]OwnerRow{Kind, Name, Owner, FromTeam}` sorted by kind then name; `feedbackRepo` returns `Feedback.GitHub` or fails like `mcpVersion` does: `feedbackRepo: <team>'s manifest.yaml sets no feedback.github`.
 
 ### The desktop catalog carries owners and the feedback repository
@@ -320,7 +320,9 @@ type Skill struct { /* existing */ Owner string `json:"owner"`; OwnerFromTeam bo
   "toolsSettings": { "subagent": {
     "availableAgents": ["customer", "engineer", "qa", "ux-designer"],
     "trustedAgents": ["customer", "qa", "ux-designer"] } },
-  "permissions": { "rules": [ { "capability": "fs_read", "match": ["**"], "effect": "allow" } ] },
+  "permissions": { "rules": [
+    { "capability": "fs_read", "match": ["**"], "effect": "allow" },
+    { "capability": "subagent", "match": ["customer", "qa", "ux-designer"], "effect": "allow" } ] },
   "resources": [
     "file://{{ .KiroHome }}/steering/spec-review-gates.md",
     "skill://{{ .KiroHome }}/skills/analyze-session/SKILL.md"

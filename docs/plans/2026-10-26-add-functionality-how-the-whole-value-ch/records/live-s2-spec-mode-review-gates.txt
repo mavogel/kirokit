@@ -1,0 +1,71 @@
+I'll write a short spec for this CLI feature. Let me first check the workspace layout.
+[tool] List Directory
+[tool] status: InProgress
+[tool] status: Completed
+Empty workspace. I'll create the spec files in order: requirements, then design, then tasks. Per the review gates, the product-owner reviews requirements before I move to design, and I (the engineer) review design before tasks.
+
+Let me start with requirements.
+[tool] Write File
+[tool] status: Pending
+[tool] status: Completed
+Now I'll have the product-owner review the requirements before moving to design.
+[tool] Sub-agent: product-owner
+[tool] status: InProgress
+[tool] Read File
+[tool] status: InProgress
+[tool] status: Completed
+[tool] Sub-agent: qa
+[tool] Sub-agent: customer
+[tool] status: InProgress
+[tool] status: InProgress
+[tool] Read File
+[tool] status: InProgress
+[tool] status: Completed
+[tool] Read File
+[tool] status: InProgress
+[tool] status: Completed
+[tool] status: Completed
+[tool] status: Completed
+[tool] status: Completed
+[tool] status: Completed
+[tool] status: Completed
+[tool] status: Completed
+[tool] status: Completed
+The product-owner found real gaps. I'll fold in the legitimate ones — error cases, formula injection, empty cells, deterministic ordering, exit codes, escaping completeness, and the AC contradiction — and explicitly scope out the column additions since you asked for exactly name, description, tools. Rewriting requirements to stay short but complete.
+[tool] Write File
+[tool] status: Pending
+[tool] status: Completed
+Requirements are solid now. Moving to design. I'll keep it short, with a deep CSV module that hides all the escaping and safety rules behind a simple interface.
+[tool] Write File
+[tool] status: Pending
+[tool] status: Completed
+Per the review gates, the engineer reviews the design — that's me, so I'll review it directly rather than calling myself.
+
+Reviewing design.md against the criteria:
+
+- Deep modules: `csv.writeRows(rows, out)` is the deep module — one function hiding RFC 4180 quoting, formula-injection tab-prefixing, line endings, and empty-value normalization. `export-csv` is thin but that's correct; it owns exit codes and row-building, not a pass-through.
+- Information hiding: escaping rules stay in `csv`; data source stays in `agents`; exit-code mapping stays in the command. A change to any one rarely touches another.
+- Red flags: the only gap is that the `Agent` shape is implicit. Adding it makes the row-building contract explicit and prevents a future column change from rippling into guesses. I'll fold that in.
+[tool] Replace in File
+[tool] status: Pending
+[tool] status: Completed
+Design is clean. Now I'll write tasks.md, ordered test-first per the build discipline.
+[tool] Write File
+[tool] status: Pending
+[tool] status: Completed
+Let me confirm all three files are in place.
+[tool] List Directory
+[tool] status: InProgress
+[tool] status: Completed
+Spec is done. Three short files in the workspace:
+
+- `requirements.md` — the feature, user, assumptions, must/should requirements, exit-code table, and checkable WHEN/THEN acceptance criteria.
+- `design.md` — three modules: a deep `csv` serializer that hides all escaping and formula-injection safety, an `agents` repository that hides the data source, and a thin `export-csv` command that owns row-building and exit codes.
+- `tasks.md` — test-first build order across the three modules plus CLI wiring.
+
+Process notes:
+- The product-owner reviewed requirements and found real gaps (error cases, formula injection, empty cells, deterministic ordering, exit codes, and a contradiction in the acceptance criteria). I folded all of those in. I scoped out the suggested extra columns (`status`, `owner`) and `--format json` since you asked for exactly name, description, tools — noted that explicitly as out of scope.
+- As the engineer I reviewed the design directly (the gate says not to call myself). It was clean; the one fix was making the `Agent` shape explicit so a future column change can't ripple.
+- I did not ask QA to enumerate failure cases because this was a spec-writing task, not a build, and the requirements already cover the failure paths thoroughly from the PO pass. When you're ready to build, that's the point to pull QA in.
+
+Want me to start on the implementation?

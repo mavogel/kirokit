@@ -11,11 +11,26 @@ Five slices and fourteen tasks: owners and the feedback repository in the manife
 ## How the build runs
 
 <!-- ql:waves -->
+- Wave 1 · Slice 1 (Every team can name owners and a feedback repository) · first
+- Wave 2 · Slice 2 (A team can install five role agents that consult each other) · on its own
+- Wave 3 · Slice 3 (`/feedback` in Kiro drafts a prefilled issue for the owner), Slice 4 (The desktop app shows owners and opens a feedback issue) · side by side
+- Wave 4 · Slice 5 (`analyze-session` turns a Kiro chat into owner issues, and the README explains it all) · on its own
+
+4 waves · longest path 10 of 13 tasks
+
+A fresh agent runs the scenarios after slice 2 (first live run of Kiro's `subagent` tool and of a spec in Kiro CLI v3.) and slice 4 (the app's first call that opens the system browser, with an address built from repository content.) before the build goes on.
 <!-- /ql:waves -->
 
 ## How each point is proved
 
 <!-- ql:proof-map -->
+- Done means 1 · A team can install a ready example of cooperating role agents → "A product owner consults the customer agent" · runs after slice 2
+- Done means 2 · The spec workflow has review gates by role → "A spec's requirements and design are reviewed by role" · runs after slice 2
+- Done means 3 · Every agent and skill of a team names its owner → "Owners are validated and inherited" · runs after slice 1; "The desktop app shows owners and opens a feedback issue" · runs after slice 4
+- Done means 4 · A non-engineer can send feedback on a skill or agent from where they work → "`/feedback` in Kiro drafts the owner's issue" · runs after slice 3; "The desktop app shows owners and opens a feedback issue" · runs after slice 4
+- Done means 5 · The feedback reaches the owner → "`/feedback` in Kiro drafts the owner's issue" · runs after slice 3; "The desktop app shows owners and opens a feedback issue" · runs after slice 4
+- Done means 6 · A session-analysis skill suggests harness improvements from a Kiro chat → "Session analysis suggests improvements by owner" · runs after slice 5
+- Done means 7 · The README explains the role setup and the feedback loop → "The README explains the role setup and the feedback loop" · runs after slice 5
 <!-- /ql:proof-map -->
 
 ## Oracle
@@ -44,7 +59,7 @@ After this slice `manifest.yaml` accepts `owner`, `owners` and `feedback.github`
  teams/data-team/manifest.yaml      ~ owner: "@mavogel"
 ```
 
-- [ ] T1 `manifest.yaml` accepts owners and a feedback repository, and rejects malformed values
+- [x] T1 `manifest.yaml` accepts owners and a feedback repository, and rejects malformed values
   - **Objective:** Add `Owner`, `Owners` and `Feedback` to `manifest.Manifest` with field-named validation at load, and `OwnerOf(kind, name)` with the team-owner fallback, so every consumer reads one owner rule.
   - **Design:** "`manifest.Manifest` gains `Owner`, `Owners` and `Feedback`, validated at load", "plan:decision:d5"
   - **Files:** `internal/manifest/manifest.go`, `internal/manifest/manifest_test.go`
@@ -55,7 +70,7 @@ After this slice `manifest.yaml` accepts `owner`, `owners` and `feedback.github`
     - `OwnerOf` returns the override with `fromTeam=false`, else the team owner with `fromTeam=true`, else `""`; a manifest without `owner` loads (d5: optional).
     - verify: `go test ./internal/manifest`
 
-- [ ] T2 Render checks owner keys against the team and offers `owners` and `feedbackRepo`
+- [x] T2 Render checks owner keys against the team and offers `owners` and `feedbackRepo`
   - **Objective:** Collect the team's agent and skill names (including vendored ones) before the walk, fail on an `owners` key the team does not have, and add the two template functions the `/feedback` prompt uses.
   - **Design:** "Render checks owner keys and subagent names against the team, and offers two template functions"
   - **Files:** `internal/render/context.go`, `internal/render/funcs.go`, `internal/render/render.go`, `internal/render/render_test.go`
@@ -67,7 +82,7 @@ After this slice `manifest.yaml` accepts `owner`, `owners` and `feedback.github`
     - The new `Context` fields stay out of `context.json` (existing goldens unchanged).
     - verify: `go test ./internal/render`
 
-- [ ] T3 Render rejects a subagent name that is not an agent of the team
+- [x] T3 Render rejects a subagent name that is not an agent of the team
   - **Objective:** After rendering an agent, check `toolsSettings.subagent.availableAgents` and `trustedAgents`: every entry without `*`, `?` or `[` must be a team agent, because `kiro-cli agent validate` accepts any name.
   - **Design:** "Render checks owner keys and subagent names against the team, and offers two template functions"
   - **Files:** `internal/render/render.go`, `internal/render/render_test.go`
@@ -77,7 +92,7 @@ After this slice `manifest.yaml` accepts `owner`, `owners` and `feedback.github`
     - An agent without `toolsSettings.subagent` renders as before.
     - verify: `go test ./internal/render`
 
-- [ ] T4 The two existing teams name an owner, and `go test ./...` checks every team's goldens
+- [x] T4 The two existing teams name an owner, and `go test ./...` checks every team's goldens
   - **Objective:** Add `owner: "@mavogel"` to `platform-team` and `data-team`, regenerate their goldens, and test `kirokit test` with no argument so any team's drift fails the suite.
   - **Design:** "plan:decision:d4"
   - **Files:** `teams/platform-team/manifest.yaml`, `teams/data-team/manifest.yaml`, `testdata/golden/platform-team/context.json`, `testdata/golden/data-team/context.json`, `cmd/kirokit/commands/root_test.go`
@@ -104,7 +119,7 @@ After this slice `kirokit install product-team` gives the product owner, enginee
 +testdata/golden/product-team/            + rendered via ./kirokit update
 ```
 
-- [ ] T5 `product-team` ships five role agents wired as subagents of each other
+- [x] T5 `product-team` ships five role agents wired as subagents of each other
   - **Objective:** Add the example team with five agents in the config shape the Plan fixes (inline persona prompts, `subagent` tool, `availableAgents` of the other four, `trustedAgents` without the engineer), render its goldens, and update the tests that list exactly two teams.
   - **Design:** "Product-team agent config shape", "plan:decision:d1", "plan:decision:d2"
   - **Files:** `teams/product-team/manifest.yaml`, `teams/product-team/agents/product-owner/agent.json.tmpl`, `teams/product-team/agents/engineer/agent.json.tmpl`, `teams/product-team/agents/customer/agent.json.tmpl`, `teams/product-team/agents/qa/agent.json.tmpl`, `teams/product-team/agents/ux-designer/agent.json.tmpl`, `testdata/golden/product-team/context.json`, `testdata/golden/product-team/rendered/agents/product-owner.json`, `testdata/golden/product-team/rendered/agents/engineer.json`, `testdata/golden/product-team/rendered/agents/customer.json`, `testdata/golden/product-team/rendered/agents/qa.json`, `testdata/golden/product-team/rendered/agents/ux-designer.json`, `desktop/catalog_test.go`, `cmd/kirokit/commands/root_test.go`
@@ -114,9 +129,9 @@ After this slice `kirokit install product-team` gives the product owner, enginee
     - The customer prompt says its persona is invented until the team fills it from interviews.
     - `product-team` has no MCP servers and no secrets file; install needs no SOPS key.
     - `go test ./internal/golden` validates the five agents with `kiro-cli agent validate`.
-    - verify: `go test ./desktop/... ./cmd/kirokit/... ./internal/golden`
+    - verify: `go -C desktop test ./... && go test ./cmd/kirokit/... ./internal/golden`
 
-- [ ] T6 The spec review gates steering reaches every role agent
+- [x] T6 The spec review gates steering reaches every role agent
   - **Objective:** Add `spec-review-gates.md.tmpl` (`inclusion: always`) telling the agent writing a spec to ask `product-owner` to review requirements and `engineer` to review the design through `subagent`, and list it in every role agent's `resources`.
   - **Design:** "plan:decision:d3"
   - **Files:** `teams/product-team/steerings/spec-review-gates.md.tmpl`, `teams/product-team/agents/product-owner/agent.json.tmpl`, `teams/product-team/agents/engineer/agent.json.tmpl`, `teams/product-team/agents/customer/agent.json.tmpl`, `teams/product-team/agents/qa/agent.json.tmpl`, `teams/product-team/agents/ux-designer/agent.json.tmpl`, `testdata/golden/product-team/rendered/steering/spec-review-gates.md`, `testdata/golden/product-team/rendered/agents/product-owner.json`, `testdata/golden/product-team/rendered/agents/engineer.json`, `testdata/golden/product-team/rendered/agents/customer.json`, `testdata/golden/product-team/rendered/agents/qa.json`, `testdata/golden/product-team/rendered/agents/ux-designer.json`
@@ -125,7 +140,7 @@ After this slice `kirokit install product-team` gives the product owner, enginee
     - The steering names what each reviewer checks (vision fit, completeness, acceptance criteria, prioritisation; deep modules, information hiding, red flags) and says to fold the answer in before the next phase.
     - verify: `go test ./cmd/kirokit/... ./internal/golden`
 
-- [ ] T7 Qualify the live consultation and the spec run in Kiro CLI v3
+- [x] T7 Qualify the live consultation and the spec run in Kiro CLI v3
   - **Objective:** Install `product-team` into a temporary Kiro home, run the product owner and record that it consults the customer agent; run a quick spec and record whether the review gates fire, raising it with the person before Review if specs do not run in the CLI.
   - **Design:** none
   - **Files:** none
@@ -184,7 +199,7 @@ After this slice the Agents and Skills pages show each owner and a Feedback butt
   - **Definition of done:**
     - A vendored skill gets the team owner with `ownerFromTeam: true`; a team without `owner` gives `""`; a team without feedback gives `feedback: ""`.
     - The real `product-team` reports `feedback: "mavogel/kirokit"`.
-    - verify: `go test ./desktop/...`
+    - verify: `go -C desktop test ./...`
 
 - [ ] T10 `feedbackURL` builds the issue address and `api.openURL` opens only GitHub issue forms
   - **Objective:** Add the pure `feedbackURL(repo, team, kind, name, owner)` helper and `api.openURL`, which passes a URL to `window.runtime.BrowserOpenURL` only when it matches `^https://github\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/issues/new\?`.
@@ -208,7 +223,7 @@ After this slice the Agents and Skills pages show each owner and a Feedback butt
     - The button is reachable by keyboard and has a visible focus ring in light and dark themes.
     - verify: `task desktop:test`
 
-**Validation:** automated: `task desktop:test` · `go test ./desktop/...` · manual: Scenario 5 in `task desktop:dev` on macOS; Linux build through `scripts/linux-docker.sh`
+**Validation:** automated: `task desktop:test` · manual: Scenario 5 in `task desktop:dev` on macOS; Linux build through `scripts/linux-docker.sh`
 
 ## Slice 5: `analyze-session` turns a Kiro chat into owner issues, and the README explains it all
 
@@ -281,7 +296,7 @@ The Plan's contracts hold the design. The calls left open are listed under *Deci
 | Step | Action | Expected |
 |---|---|---|
 | 1 | With Scenario 1's Kiro home, `cat $KIRO_HOME/steering/spec-review-gates.md` | the steering with `inclusion: always`, naming `product-owner` for requirements and `engineer` for design |
-| 2 | In a scratch workspace run `kiro-cli chat --agent product-owner --v3` and ask it to write a spec for "export a team's agents as CSV" | after `requirements.md` the agent calls `product-owner` as a subagent for review and folds its answer in; after `design.md` it calls `engineer` |
+| 2 | In a scratch workspace run `kiro-cli chat --agent engineer --v3` (the role that can write files) and ask it to write a spec for "export a team's agents as CSV" | after `requirements.md` the agent calls `product-owner` as a subagent for review and folds its answer in; after `design.md` it calls `engineer` |
 | 3 | If CLI v3 offers no spec workflow, ask "write requirements for …" instead | the steering still triggers the product owner review; the finding is recorded for the person before Review |
 
 ### Scenario 3: Owners are validated and inherited
@@ -358,4 +373,22 @@ The Plan's contracts hold the design. The calls left open are listed under *Deci
 ## Commands the build runs
 
 <!-- ql:commands -->
+- `go test ./...` · slice 1, slice 2, slice 3, slice 5, project checks
+- `go vet ./...` · slice 1, project checks
+- `task lint` · slice 1, project checks
+- `task build` · slice 2, T7, scenario 1, project checks
+- `task desktop:test` · slice 4, T10, T11, scenario 5, project checks
+- `task ci` · slice 5
+- `go test ./internal/manifest` · T1
+- `go test ./internal/render` · T2, T3
+- `go test ./cmd/kirokit/... ./internal/golden` · T4, T6, T12
+- `go -C desktop test ./... && go test ./cmd/kirokit/... ./internal/golden` · T5
+- `go test ./cmd/kirokit/...` · T8
+- `go -C desktop test ./...` · T9
+- `node scripts/sync-agent-assets.mjs --check` · T13, project checks
+- `export KIRO_HOME=$(mktemp -d) && ./kirokit install product-team` · scenario 1
+- `ls $KIRO_HOME/agents` · scenario 1
+- `go test ./internal/manifest ./internal/render` · scenario 3
+- `./kirokit test` · scenario 3
+- `grep -n "Role agents and feedback" README.md` · scenario 7
 <!-- /ql:commands -->
