@@ -1,0 +1,45 @@
+# Scenario 2 steps 1-3 (macOS), tree daa8ce8 + review tests
+$ go build -o kirokit ./cmd/kirokit && ./kirokit test platform-team
+platform-team: ok
+exit=0
+$ ./kirokit test   (all teams, for context)
+data-team: golden mismatch:
+  context.json differs from testdata/golden/data-team/context.json
+platform-team: ok
+kirokit test: one or more teams have golden fixture mismatches
+exit=1
+$ git diff main --stat -- testdata/golden
+ testdata/golden/platform-team/installed-with-kb/agents/devops.json | 2 +-
+ testdata/golden/platform-team/rendered/agents/devops.json          | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+-        "npx -y mcp-remote@0.15.1 https://mcp.atlassian.com/v2/mcp --header 'Authorization: ${ATLASSIAN_AUTH}'"
++        "npx -y mcp-remote@0.15.1 https://mcp.atlassian.com/v2/mcp --header 'Authorization:${ATLASSIAN_AUTH}'"
+-      "args": ["exec-env","/kiro-home/kirokit-secrets/platform-team/devops/secrets.enc.yaml","npx -y mcp-remote@0.15.1 https://mcp.atlassian.com/v2/mcp --header 'Authorization: ${ATLASSIAN_AUTH}'"],
++      "args": ["exec-env","/kiro-home/kirokit-secrets/platform-team/devops/secrets.enc.yaml","npx -y mcp-remote@0.15.1 https://mcp.atlassian.com/v2/mcp --header 'Authorization:${ATLASSIAN_AUTH}'"],
+$ git diff main -- desktop/build/darwin scripts/desktop-build.sh | grep -c '^[-+][^-+]'
+80
+$ git diff main --stat -- desktop/build/darwin
+(empty = unchanged)
+$ removed lines in scripts/desktop-build.sh:
+-# Build desktop/build/bin/kirokit.app: a universal Wails app with a universal
+-# kirokit CLI at Contents/Resources/bin/kirokit.
+-for arch in amd64 arm64; do
+-  CGO_ENABLED=0 GOOS=darwin GOARCH="$arch" \
+-    go build -trimpath -ldflags "$ldflags" -o "$work/kirokit-$arch" ./cmd/kirokit
+-done
+-lipo -create -output "$work/kirokit" "$work/kirokit-amd64" "$work/kirokit-arm64"
+-# macOS 13 is the app's minimum; without these the linker warns about mixed targets.
+-export CGO_CFLAGS="-mmacosx-version-min=13.0"
+-export CGO_LDFLAGS="-mmacosx-version-min=13.0"
+-# -clean empties build/bin, so the CLI is copied in afterwards.
+-(cd desktop && go tool wails build -platform darwin/universal -clean)
+-app="desktop/build/bin/kirokit.app"
+-mkdir -p "$app/Contents/Resources/bin"
+-install -m 0755 "$work/kirokit" "$app/Contents/Resources/bin/kirokit"
+-# Wails sealed the bundle before the CLI joined it; seal it again (ad-hoc) so the signature stays valid.
+-codesign --force --deep --sign - "$app"
+-echo "built $app (version $version)"
+$ git diff -w main -- scripts/desktop-build.sh | grep '^-[^-]'   (whitespace ignored: lines really removed)
+-# Build desktop/build/bin/kirokit.app: a universal Wails app with a universal
+-# kirokit CLI at Contents/Resources/bin/kirokit.
+(end)

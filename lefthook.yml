@@ -5,8 +5,8 @@
 # no Python environment needs to be set up.
 #
 # Excluded from the fixers on purpose:
-#   - **/*.png, **/*.gif, **/*.mp4
-#                         binary images and video; the fixers would corrupt them
+#   - **/*.png, **/*.gif, **/*.mp4, **/*.ico, **/*.icns
+#                         binary images, icons and video; the fixers would corrupt them
 #   - testdata/golden/**  golden files are compared byte-for-byte by `kirokit test`
 #   - **/*.enc.yaml       SOPS files carry a MAC over their exact content
 #   - teams/*/external/** vendored external skills are pinned by a content hash
@@ -22,6 +22,8 @@ pre-commit:
         - "**/*.png"
         - "**/*.gif"
         - "**/*.mp4"
+        - "**/*.ico"
+        - "**/*.icns"
         - "testdata/golden/**"
         - "**/*.enc.yaml"
         - "teams/*/external/**"
@@ -34,6 +36,8 @@ pre-commit:
         - "**/*.png"
         - "**/*.gif"
         - "**/*.mp4"
+        - "**/*.ico"
+        - "**/*.icns"
         - "testdata/golden/**"
         - "**/*.enc.yaml"
         - "teams/*/external/**"

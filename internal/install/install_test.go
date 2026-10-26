@@ -2,11 +2,17 @@ package install
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/mavogel/kirokit/internal/dirlink"
+	"github.com/mavogel/kirokit/internal/sopswrap"
+	"github.com/mavogel/kirokit/internal/testutil"
 )
 
 func mustWrite(t *testing.T, path, content string) {
@@ -66,8 +72,39 @@ func TestInstall_WritesSecretsFileAtExpectedPathAndBakesItIntoAgentArgs(t *testi
 	if err != nil {
 		t.Fatalf("expected installed agents/agent1.json: %v", err)
 	}
-	if !strings.Contains(string(agentJSON), wantSecretsDst) {
-		t.Errorf("installed agent1.json = %s, want it to reference the installed secrets path %s", agentJSON, wantSecretsDst)
+	// Rendered paths use forward slashes on every OS, which sops, Kiro and
+	// file:// resources accept on Windows too.
+	if !strings.Contains(string(agentJSON), `"`+filepath.ToSlash(wantSecretsDst)+`"`) {
+		t.Errorf("installed agent1.json = %s, want it to reference the installed secrets path %s", agentJSON, filepath.ToSlash(wantSecretsDst))
+	}
+	if strings.Contains(string(agentJSON), `\\`) {
+		t.Errorf("installed agent1.json = %s, want no backslash in its paths", agentJSON)
+	}
+}
+
+func TestLaunchShellFor_CmdOnlyOnWindows(t *testing.T) {
+	for goos, want := range map[string]sopswrap.Shell{"windows": sopswrap.Cmd, "linux": sopswrap.POSIX, "darwin": sopswrap.POSIX} {
+		if got := launchShellFor(goos); got != want {
+			t.Errorf("launchShellFor(%q) = %v, want %v", goos, got, want)
+		}
+	}
+}
+
+func TestInstall_WindowsRefusesAnArgumentCmdExeCannotPassAndWritesNothing(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("cmd.exe launches are written only on Windows")
+	}
+	roots, team, _ := setupFixture(t)
+	mustWrite(t, filepath.Join(roots.TeamsRoot, team, "agents", "agent1", "agent.json.tmpl"),
+		`{"mcpServers": {"test-mcp": {"command": {{ sopsCommand }}, "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/fixture-team/agent1/secrets.enc.yaml" .KiroHome) "test-mcp-server" "--header" "Authorization: x" }}}}}`)
+	kiroHome := filepath.Join(t.TempDir(), "kiro")
+
+	err := Install(roots, team, kiroHome, nil)
+	if !errors.Is(err, sopswrap.ErrUnsafeForCmd) || !strings.Contains(err.Error(), "fixture-team/agent1") {
+		t.Fatalf("Install error = %v, want a cmd.exe refusal naming fixture-team/agent1", err)
+	}
+	if _, statErr := os.Stat(kiroHome); !os.IsNotExist(statErr) {
+		t.Errorf("KIRO_HOME was written after a refused install: %v", statErr)
 	}
 }
 
@@ -128,7 +165,7 @@ func TestInstall_GlobalSteeringIsInstalledPerTeamAndReferencedByTheAgent(t *test
 	if err != nil {
 		t.Fatalf("read installed agent1.json: %v", err)
 	}
-	if !strings.Contains(string(agentJSON), "file://"+steering(team)) {
+	if !strings.Contains(string(agentJSON), "file://"+filepath.ToSlash(steering(team))) {
 		t.Errorf("installed agent1.json = %s, want a resources entry for %s", agentJSON, steering(team))
 	}
 
@@ -184,7 +221,7 @@ func TestInstall_WithKnowledgeBaseKeepsExistingResourcesAndWritesTheExactEntry(t
 	}
 	want := map[string]any{
 		"type":       "knowledgeBase",
-		"source":     "file://" + kbMount,
+		"source":     "file://" + filepath.ToSlash(kbMount),
 		"name":       "agent1-kb",
 		"indexType":  "best",
 		"include":    []any{"**/*.md"},
@@ -252,9 +289,7 @@ func TestAttachKnowledgeBase_ReplacesAStaleSymlinkAtTheMountPoint(t *testing.T) 
 	mustWrite(t, filepath.Join(oldSource, "a.md"), "old\n")
 	mustWrite(t, filepath.Join(newSource, "b.md"), "new\n")
 	mount := filepath.Join(dir, "mount")
-	if err := os.Symlink(oldSource, mount); err != nil {
-		t.Fatalf("seed stale symlink: %v", err)
-	}
+	testutil.Symlink(t, oldSource, mount)
 
 	if err := AttachKnowledgeBase(agentJSON, mount, newSource); err != nil {
 		t.Fatalf("AttachKnowledgeBase returned error: %v", err)
@@ -278,20 +313,17 @@ func TestInstall_WithKnowledgeBaseCreatesSymlinkAndResourceEntry(t *testing.T) {
 		t.Fatalf("Install with KnowledgeBase returned error: %v", err)
 	}
 
-	linkInfo, err := os.Lstat(kbMount)
-	if err != nil {
-		t.Fatalf("expected symlink at mount point %s: %v", kbMount, err)
+	// A symlink, or on Windows without the symlink privilege a junction.
+	if !dirlink.Is(kbMount) {
+		t.Fatalf("%s is not a link", kbMount)
 	}
-	if linkInfo.Mode()&os.ModeSymlink == 0 {
-		t.Fatalf("%s is not a symlink", kbMount)
-	}
-	target, err := os.Readlink(kbMount)
+	target, err := dirlink.Target(kbMount)
 	if err != nil {
 		t.Fatalf("readlink %s: %v", kbMount, err)
 	}
 	absSource, _ := filepath.Abs(kbSource)
-	if target != absSource {
-		t.Errorf("symlink target = %q, want %q", target, absSource)
+	if filepath.Clean(target) != absSource {
+		t.Errorf("link target = %q, want %q", target, absSource)
 	}
 
 	agentJSON, err := os.ReadFile(filepath.Join(kiroHome, "agents", "agent1.json"))
@@ -301,8 +333,32 @@ func TestInstall_WithKnowledgeBaseCreatesSymlinkAndResourceEntry(t *testing.T) {
 	if !strings.Contains(string(agentJSON), `"type":"knowledgeBase"`) && !strings.Contains(string(agentJSON), `"type": "knowledgeBase"`) {
 		t.Errorf("installed agent1.json = %s, want a knowledgeBase resource entry", agentJSON)
 	}
-	if !strings.Contains(string(agentJSON), kbMount) {
-		t.Errorf("installed agent1.json = %s, want it to reference the mount point %s", agentJSON, kbMount)
+	if !strings.Contains(string(agentJSON), `"file://`+filepath.ToSlash(kbMount)+`"`) {
+		t.Errorf("installed agent1.json = %s, want it to reference the mount point file://%s", agentJSON, filepath.ToSlash(kbMount))
+	}
+
+	// A reinstall replaces kirokit's own link rather than refusing it.
+	if err := Install(roots, team, kiroHome, kb); err != nil {
+		t.Fatalf("reinstall with KnowledgeBase: %v", err)
+	}
+	if !dirlink.Is(kbMount) {
+		t.Errorf("%s is not a link after a reinstall", kbMount)
+	}
+}
+
+func TestInstall_KnowledgeBaseRefusesARealFolderAtTheMountPoint(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	kbSource := t.TempDir()
+	kbMount := filepath.Join(kiroHome, "kirokit-kb", team, "agent1")
+	mustWrite(t, filepath.Join(kbMount, "mine.md"), "mine\n")
+
+	err := Install(roots, team, kiroHome, &KnowledgeBase{Agent: "agent1", Source: kbSource, Mount: kbMount})
+	if err == nil || !strings.Contains(err.Error(), "refusing to overwrite") {
+		t.Fatalf("Install = %v, want a refusal to overwrite the real folder", err)
+	}
+	if _, err := os.Stat(filepath.Join(kbMount, "mine.md")); err != nil {
+		t.Errorf("the real folder's file is gone: %v", err)
 	}
 }
 
@@ -342,6 +398,7 @@ func installTree(renderedDir, kiroHome string) ([]string, error) {
 }
 
 func TestCopyRenderedTree_PreservesOwnerExecuteBit(t *testing.T) {
+	testutil.SkipWithoutExecBits(t)
 	rendered := t.TempDir()
 	kiroHome := t.TempDir()
 	script := filepath.Join(rendered, "skills", "pdf", "scripts", "run.sh")
@@ -373,6 +430,7 @@ func TestCopyRenderedTree_PreservesOwnerExecuteBit(t *testing.T) {
 }
 
 func TestCopyRenderedTree_ReinstallMakesAPreviouslyPlainFileExecutable(t *testing.T) {
+	testutil.SkipWithoutExecBits(t)
 	rendered := t.TempDir()
 	kiroHome := t.TempDir()
 	script := filepath.Join(rendered, "skills", "pdf", "run.sh")
@@ -591,6 +649,36 @@ func TestInstall_AChangedAgentWithAKnowledgeBaseIsBackedUpWithItsPreviousKnowled
 	now, _ := os.ReadFile(filepath.Join(kiroHome, "agents", "agent1.json"))
 	if !strings.Contains(string(now), "agent1-v2") || !strings.Contains(string(now), "knowledgeBase") {
 		t.Errorf("installed agent = %s, want the new agent with the knowledge base attached", now)
+	}
+}
+
+// A Kiro home whose agents folder is a symbolic link (a dotfiles manager
+// linking ~/.kiro/agents) installs as it did before this change: the backup is
+// the link, the folder stays a link, and the new agent lands in the folder it
+// points at.
+func TestInstall_AnAgentsFolderThatIsASymlinkStillInstalls(t *testing.T) {
+	roots, team, _ := setupFixture(t)
+	kiroHome := t.TempDir()
+	dotfiles := filepath.Join(t.TempDir(), "kiro-agents")
+	mustWrite(t, filepath.Join(dotfiles, "agent1.json"), `{"name": "my-own-agent"}`)
+	testutil.Symlink(t, dotfiles, filepath.Join(kiroHome, "agents"))
+
+	if err := Install(roots, team, kiroHome, nil); err != nil {
+		t.Fatalf("Install into a Kiro home with a symlinked agents folder: %v", err)
+	}
+
+	matches, _ := filepath.Glob(filepath.Join(kiroHome, "*-agents.backup"))
+	if len(matches) != 1 {
+		t.Fatalf("agents backups = %v, want one", matches)
+	}
+	if got, err := os.Readlink(matches[0]); err != nil || got != dotfiles {
+		t.Errorf("agents backup = %q (%v), want a link to %q", got, err, dotfiles)
+	}
+	if !dirlink.Is(filepath.Join(kiroHome, "agents")) {
+		t.Error("the agents folder is no longer a link")
+	}
+	if got, _ := os.ReadFile(filepath.Join(dotfiles, "agent1.json")); strings.Contains(string(got), "my-own-agent") || !strings.Contains(string(got), "test-mcp") {
+		t.Errorf("agent1.json in the linked folder = %s, want the installed agent", got)
 	}
 }
 

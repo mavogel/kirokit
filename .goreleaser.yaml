@@ -1,5 +1,11 @@
 version: 2
 
+# The release runs as one split job per OS (macOS, Linux, Windows), because the
+# desktop app builds natively on each; `goreleaser continue --merge` then
+# publishes everything together (see .github/workflows/release.yaml).
+partial:
+  by: goos
+
 project_name: kirokit
 
 before:
@@ -15,6 +21,7 @@ builds:
     goos:
       - darwin
       - linux
+      - windows
     goarch:
       - amd64
       - arm64
@@ -37,6 +44,31 @@ builds:
       - arm64
     prebuilt:
       path: desktop/build/bin/prebuilt/kirokit_{{ .Os }}_{{ .Arch }}/kirokit
+
+  # The Linux app, built natively per architecture (scripts/desktop-build.sh on
+  # ubuntu-latest and ubuntu-24.04-arm) and staged by scripts/desktop-prebuilt.sh.
+  # A pull-request snapshot builds only amd64, so it sets
+  # KIROKIT_SKIP_LINUX_ARM64_APP to leave arm64 out.
+  - id: kirokit-desktop-linux-amd64
+    builder: prebuilt
+    binary: kirokit-desktop
+    goos:
+      - linux
+    goarch:
+      - amd64
+    prebuilt:
+      path: desktop/build/bin/prebuilt/kirokit-desktop_linux_amd64/kirokit-desktop
+
+  - id: kirokit-desktop-linux-arm64
+    builder: prebuilt
+    binary: kirokit-desktop
+    skip: '{{ isEnvSet "KIROKIT_SKIP_LINUX_ARM64_APP" }}'
+    goos:
+      - linux
+    goarch:
+      - arm64
+    prebuilt:
+      path: desktop/build/bin/prebuilt/kirokit-desktop_linux_arm64/kirokit-desktop
 
 # Wraps the universal binary in kirokit.app. The Wails Info.plist, icon and the
 # bundled CLI come from the built app, so the bundle matches `task desktop:build`.
@@ -69,6 +101,80 @@ archives:
     formats:
       - tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+# Linux packages: the CLI at /usr/bin/kirokit, and the app at
+# /usr/bin/kirokit-desktop with its own CLI copy in /usr/lib/kirokit-desktop
+# (where the app looks for it), a menu entry and an icon.
+nfpms:
+  - id: kirokit
+    ids:
+      - kirokit
+    package_name: kirokit
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - deb
+      - rpm
+    vendor: mavogel
+    homepage: https://github.com/mavogel/kirokit
+    maintainer: Manuel Vogel <8409778+mavogel@users.noreply.github.com>
+    description: Render, test, and install multi-team Kiro CLI v3 configs
+    license: Apache-2.0
+    bindir: /usr/bin
+
+  - id: kirokit-desktop
+    ids:
+      - kirokit-desktop-linux-amd64
+      - kirokit-desktop-linux-arm64
+    package_name: kirokit-desktop
+    file_name_template: "kirokit-desktop_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - deb
+      - rpm
+    vendor: mavogel
+    homepage: https://github.com/mavogel/kirokit
+    maintainer: Manuel Vogel <8409778+mavogel@users.noreply.github.com>
+    description: Desktop app to install and sync Kiro CLI team configs
+    license: Apache-2.0
+    bindir: /usr/bin
+    contents:
+      - src: "desktop/build/bin/prebuilt/kirokit-desktop_linux_{{ .Arch }}/kirokit"
+        dst: /usr/lib/kirokit-desktop/kirokit
+        file_info:
+          mode: 0755
+      - src: desktop/build/linux/kirokit-desktop.desktop
+        dst: /usr/share/applications/kirokit-desktop.desktop
+      - src: desktop/build/linux/kirokit-desktop.png
+        dst: /usr/share/icons/hicolor/512x512/apps/kirokit-desktop.png
+    # WebKitGTK 4.1: Ubuntu 22.04+, Debian 12+, Fedora 40+.
+    overrides:
+      deb:
+        dependencies:
+          - libgtk-3-0
+          - libwebkit2gtk-4.1-0
+      rpm:
+        dependencies:
+          - gtk3
+          - webkit2gtk4.1
+
+# `scoop install kirokit` from mavogel/scoop-bucket: the CLI's Windows zips.
+# Without the token (a fork, or the secret removed) the upload is skipped
+# rather than failing a release that is already tagged.
+scoops:
+  - name: kirokit
+    ids:
+      - default
+    repository:
+      owner: mavogel
+      name: scoop-bucket
+      token: "{{ .Env.SCOOP_BUCKET_GITHUB_TOKEN }}"
+    skip_upload: '{{ if isEnvSet "SCOOP_BUCKET_GITHUB_TOKEN" }}false{{ else }}true{{ end }}'
+    homepage: https://github.com/mavogel/kirokit
+    description: Render, test, and install multi-team Kiro CLI v3 configs
+    license: Apache-2.0
 
 checksum:
   name_template: "checksums.txt"
@@ -133,3 +239,7 @@ release:
     owner: mavogel
     name: kirokit
   mode: append
+  # The Windows app's setup programs, built by scripts/desktop-build.sh on the
+  # Windows runner and handed to the merge job.
+  extra_files:
+    - glob: ./desktop/build/bin/installers/*-setup.exe

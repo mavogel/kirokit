@@ -1,0 +1,29 @@
+# Oracle on macOS (darwin/arm64), tree daa8ce8 + review tests (unstaged)
+$ sops --version
+sops 3.13.3 (latest)
+$ KIROKIT_REQUIRE_SOPS=1 go test ./cmd/kirokit/commands/ -run TestInstall_SopsLaunch -v -count=1
+=== RUN   TestInstall_SopsLaunchReachesTheServerUnchanged
+--- PASS: TestInstall_SopsLaunchReachesTheServerUnchanged (0.17s)
+PASS
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	0.418s
+exit=0
+
+$ PATH=<only go>:/usr/bin:/bin (no sops) go test ./cmd/kirokit/commands/ -run TestInstall_SopsLaunch -v -count=1
+    install_sops_test.go:118: sops is not on PATH; set KIROKIT_REQUIRE_SOPS=1 to require it
+--- SKIP: TestInstall_SopsLaunchReachesTheServerUnchanged (0.00s)
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	0.125s
+$ same with KIROKIT_REQUIRE_SOPS=1
+    install_sops_test.go:116: KIROKIT_REQUIRE_SOPS=1 but sops is not on PATH: exec: "sops": executable file not found in $PATH
+--- FAIL: TestInstall_SopsLaunchReachesTheServerUnchanged (0.00s)
+FAIL
+FAIL	github.com/mavogel/kirokit/cmd/kirokit/commands	0.117s
+FAIL
+
+# Mutation (scratch copy only): BuildWrapperFor ignores the shell and always joins unquoted
+$ KIROKIT_REQUIRE_SOPS=1 go test ./cmd/kirokit/commands/ -run TestInstall_SopsLaunch -count=1
+--- FAIL: TestInstall_SopsLaunchReachesTheServerUnchanged (0.31s)
+    install_sops_test.go:161: server argv = ["https://example.com/mcp?team=x" "--header" "Authorization:Bearer" "s3cret" "value" "user@example.com" "a=b" "--port" "8080"]
+        want         ["https://example.com/mcp?team=x" "--header" "Authorization:${TEST_AUTH}" "user@example.com" "a=b" "--port" "8080"]
+FAIL
+FAIL	github.com/mavogel/kirokit/cmd/kirokit/commands	0.579s
+FAIL

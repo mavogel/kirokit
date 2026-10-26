@@ -1,5 +1,5 @@
 // The terminal dock: two xterm.js terminals, "kirokit" for button commands and
-// "zsh" for the person's own shell, in one resizable panel. State lives in
+// one for the person's own shell (zsh, bash, PowerShell), in one resizable panel. State lives in
 // tabs.js; this file draws it and talks to Go through api.js.
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -57,7 +57,16 @@ export function initDock(dock) {
   // The kirokit tab takes input only while a command runs (git sign-in).
   const setRunning = (on) => { running = on; terms.kirokit.term.options.disableStdin = !on; };
   setRunning(false);
-  terms.kirokit.term.writeln('\x1b[2mButtons run their kirokit command here. Type your own commands in the zsh tab.\x1b[0m');
+
+  // The shell tab is named after its shell once the app's state says which;
+  // the kirokit tab's first line names it then too.
+  let greeted = false;
+  function setShell(name) {
+    tabButtons.shell.textContent = name;
+    if (greeted) return;
+    greeted = true;
+    terms.kirokit.term.writeln(`\x1b[2mButtons run their kirokit command here. Type your own commands in the ${name} tab.\x1b[0m`);
+  }
 
   terms.kirokit.term.onData((data) => { if (running) api.runWrite(runId, data); });
   terms.shell.term.onData((data) => api.shellWrite(data));
@@ -149,4 +158,6 @@ export function initDock(dock) {
     setRunning(false);
     if (code !== 0) terms.kirokit.term.write(`\r\n\x1b[2mexited with code ${code}\x1b[0m\r\n`);
   });
+
+  return { setShell };
 }

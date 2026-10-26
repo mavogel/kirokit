@@ -14,12 +14,24 @@ The unoffical `kirokit` Go CLI plus repository layout that lets multiple teams o
 
 ### using the cli
 
-Homebrew installs only the `kirokit` binary. The team configs (`teams/`, `global/`, `env/`) live in this repository, so `kirokit setup` downloads it first, onto its newest release. `kirokit` reads the configs from the folder `KIROKIT_REPO` names (else the current directory). The example `platform-team` also launches SOPS-secured MCP servers, so install `sops` (`brew install sops`) and have a key that can decrypt its secrets file before starting the agent.
+Install the `kirokit` binary for your system. Every release carries it for macOS, Linux and Windows, on amd64 and arm64:
+
+| System | Install | Or download from the [release](https://github.com/mavogel/kirokit/releases) |
+|---|---|---|
+| macOS | `brew install --cask mavogel/tap/kirokit` | `kirokit_<version>_darwin_<arch>.tar.gz` |
+| Linux | `brew install --cask mavogel/tap/kirokit`, or `sudo apt install ./kirokit_<version>_linux_<arch>.deb`, or `sudo dnf install ./kirokit_<version>_linux_<arch>.rpm` | `kirokit_<version>_linux_<arch>.tar.gz` |
+| Windows (PowerShell) | `scoop bucket add mavogel https://github.com/mavogel/scoop-bucket` then `scoop install kirokit` | `kirokit_<version>_windows_<arch>.zip` (put `kirokit.exe` on your `PATH`) |
+
+`kirokit --version` prints the installed version. Kiro CLI itself runs on macOS, Linux (glibc 2.34+ or musl) and Windows 11 ([installation](https://kiro.dev/docs/cli/installation/)).
+
+The package installs only the `kirokit` binary. The team configs (`teams/`, `global/`, `env/`) live in this repository, so `kirokit setup` downloads it first, onto its newest release. `kirokit` reads the configs from the folder `KIROKIT_REPO` names (else the current directory). The example `platform-team` also launches SOPS-secured MCP servers, so install `sops` (`brew install sops` on macOS, your package manager or the [sops releases](https://github.com/getsops/sops/releases) on Linux, `scoop install sops` on Windows) and have a key that can decrypt its secrets file before starting the agent (see [Secrets via SOPS](#secrets-via-sops) for where the key goes on each system).
+
+The commands below are for a macOS or Linux shell; in Windows PowerShell set variables with `$env:KIROKIT_REPO = "$HOME\.kirokit-config"` instead of `export`.
 
 ```bash
-# install the binary via homebrew
+# install the binary (see the table above for Linux and Windows)
 brew install --cask mavogel/tap/kirokit
-kirokit version
+kirokit --version
 
 # download the team configs (newest v* tag) and point kirokit at them;
 # use your team's repository address instead of the example one
@@ -61,11 +73,17 @@ For less technial folks, who likes UIs. It does the same job and uses the `cli` 
 
 <p align="center"><img src="assets/kirokit-desktop.png" width="720" alt="The kirokit desktop app showing two teams with an Install button each, and the terminal dock below"></p>
 
-The macOS app bundles `kirokit`, so there is nothing else to install and no terminal needed.
+The app bundles its own `kirokit`, so there is nothing else to install and no terminal needed:
 
-```bash
-brew install --cask mavogel/tap/kirokit-desktop
-```
+| System | Install |
+|---|---|
+| macOS 13+ | `brew install --cask mavogel/tap/kirokit-desktop`, or open `kirokit-desktop_<version>_darwin_<arch>.dmg` |
+| Linux (Ubuntu 22.04+, Debian 12+, Fedora 40+) | `sudo apt install ./kirokit-desktop_<version>_linux_<arch>.deb` or `sudo dnf install ./kirokit-desktop_<version>_linux_<arch>.rpm`; it pulls in GTK 3 and WebKitGTK 4.1 and adds **kirokit** to the app menu (`kirokit-desktop` from a terminal) |
+| Windows 10/11 | run `kirokit-desktop_<version>_windows_<arch>-setup.exe`; it adds **kirokit** to the Start menu and the desktop |
+
+The apps are not signed:
+- **Windows:** SmartScreen says "Windows protected your PC" when you start the setup program. Choose **More info**, then **Run anyway**.
+- **macOS:** the cask clears the quarantine attribute for you; if you open the DMG by hand, run `xattr -dr com.apple.quarantine kirokit.app` once, or macOS reports the app as damaged.
 
 1. Open **kirokit**. On first launch, enter your team's repository address (for the example configs, `https://github.com/mavogel/kirokit.git`) and press **Clone**. You can also choose the folder it is cloned into.
 2. On **Teams**, press **Install** on your team. The app first shows what it needs (SOPS, the decryption key, Kiro CLI), then runs `kirokit install <team>`.
@@ -142,6 +160,7 @@ kirokit update <team>            # refresh goldens, review and commit the diff
 
 - `skills fetch` resolves `ref` to a commit with the local `git`, copies the directory byte for byte to `teams/<team>/external/skills/<name>/`, and records source, ref, commit and content hash in `teams/<team>/external/skills.lock.yaml`. Commit both. It is the only networked step; `render`, `test`, `install`, `sync` are offline and need no credentials. If any entry fails, nothing changes.
 - Render/install places files at `$KIRO_HOME/skills/<name>/` and adds `skill://$KIRO_HOME/skills/<name>/SKILL.md` to every agent's `resources`. Executable bits are kept. Vendored files bypass the template engine (`*.tmpl` and `{{ }}` arrive intact).
+- **Execute bits on Windows:** the lock lists each skill's executable files under `executables` (from git's own file modes), and the content hash covers them. Windows keeps no execute bit, so there `render` and `install` check the hash with that list; a lock written before `executables` existed must be fetched again (`kirokit skills fetch <team>`, on any system) before a skill with scripts verifies on Windows.
 - **`paths`:** required; one entry per repo and `ref` covers every listed path, and each skill is named after its path's last element. Two paths ending in the same name are a duplicate-name error. `name` needs a single path.
 - **`all: true`:** each path in `paths` is a directory of skills; each immediate subdirectory with a `SKILL.md` is vendored, others ignored; `exclude` skips directories (single path only); `name` cannot be combined with `all`. Each skill has its own lock entry (`from` names the collection) and `skill://` resource. New upstream skills appear only on re-fetch at a newer `ref`; a longer `exclude` removes skills on re-fetch. An `exclude` naming a nonexistent directory is an error.
 - **Update:** change `ref` (or re-run `fetch` to advance a branch ref), run `skills fetch`, review the vendored diff. Dropped files are removed.
@@ -180,12 +199,16 @@ Secrets never appear in plaintext in templates, rendered files or goldens.
 3. `sops exec-env <file> "<command>"` decrypts and launches the command with the keys as env vars at MCP launch time, not render time, and not via Kiro's `${VAR}` substitution (unreliable).
 4. `kirokit install` copies each secrets file to `$KIRO_HOME/kirokit-secrets/<team>/<agent>/secrets.enc.yaml`.
 
-**Remote (HTTP) MCP servers** (e.g. Atlassian `https://mcp.atlassian.com/v2/mcp`) run through the pinned `mcp-remote` proxy under the same wrapper. The secret holds the full header value (`Bearer <key>` for a service-account key, `Basic <base64(email:token)>` for a personal token); the template passes `--header 'Authorization:${ATLASSIAN_AUTH}'`. The single quotes keep the placeholder literal in the rendered file; `mcp-remote` expands it from the env sops sets. See `teams/platform-team/agents/devops/agent.json.tmpl`.
+**Windows:** sops runs the command with `cmd.exe /C` there instead of `/bin/sh -c`, and `cmd.exe` cannot take quoted arguments. So on Windows `kirokit install` writes the arguments space-separated and unquoted, and refuses any argument with a space, a tab, `"` or one of `& | < > ^ % ! ( )`, naming the team, agent and argument (`render: <team>/<agent>: argument "…" cannot pass through sops exec-env on Windows (cmd.exe): …`). Write such values without spaces, as mcp-remote documents for headers: `Authorization:${VAR}`, with the space inside the secret. Goldens and `render` always use the macOS/Linux form.
+
+**Remote (HTTP) MCP servers** (e.g. Atlassian `https://mcp.atlassian.com/v2/mcp`) run through the pinned `mcp-remote` proxy under the same wrapper. The secret holds the full header value (`Bearer <key>` for a service-account key, `Basic <base64(email:token)>` for a personal token); the template passes `--header Authorization:${ATLASSIAN_AUTH}` (no space, so it also passes `cmd.exe` on Windows). On macOS and Linux the rendered command single-quotes it, which keeps the placeholder literal; `mcp-remote` expands it from the env sops sets. See `teams/platform-team/agents/devops/agent.json.tmpl`.
 
 Atlassian prerequisites:
 - An org admin must enable **Allow API token authentication** in [Atlassian Administration](https://admin.atlassian.com/) (Rovo → Rovo MCP server → Authentication); otherwise every call fails with "You don't have permission to connect via API token".
 - Create the token on the [MCP token page](https://id.atlassian.com/manage-profile/security/api-tokens?autofillToken&expiryDays=max&appId=mcp-v2&selectedScopes=all); it needs the "… via Agent Interface" scopes (e.g. `search:jira:agent-interface`), which the generic token page does not offer. Details: [Configure authentication via API token](https://support.atlassian.com/atlassian-rovo-mcp-server/docs/configuring-authentication-via-api-token/).
 - Jira Cloud rejects unbounded JQL; restrict searches (e.g. `project = KEY`).
+
+Without `SOPS_AGE_KEY_FILE`, sops reads the age key from `keys.txt` in its config folder: `~/Library/Application Support/sops/age/keys.txt` on macOS, `~/.config/sops/age/keys.txt` on Linux (or `$XDG_CONFIG_HOME/sops/age/keys.txt` on either), `%AppData%\sops\age\keys.txt` on Windows. The desktop app's setup check looks in the same place.
 
 Keys: decrypting needs a SOPS key (age, PGP, KMS) listed as a recipient in `.sops.yaml`. Each team has its own `creation_rules` entry with its age public key(s); a team key cannot decrypt another team's secrets. Never commit private keys (e.g. keep them in `~/.config/sops/age/<team>.txt`).
 
@@ -222,10 +245,10 @@ kirokit install <team> --kb-agent <agent> --kb-source <folder> --kb-mount <path>
 kirokit uninstall <team>
 ```
 
-- `install` renders with the real `$KIRO_HOME` baked in (`KIRO_HOME` env var, else Kiro's default `~/.kiro`) and copies the rendered tree plus each agent's encrypted secrets file there.
+- `install` renders with the real `$KIRO_HOME` baked in (`KIRO_HOME` env var, else Kiro's default `~/.kiro`, which is `%USERPROFILE%\.kiro` on Windows) and copies the rendered tree plus each agent's encrypted secrets file there. Paths in the installed configs use forward slashes on every system (`C:/Users/…/.kiro/…` on Windows).
 - A Kiro home holds one team. `install <team>` first uninstalls every other installed team and prints `uninstalled <other> from <home>` for each, then `installed <team> into <home>`. Reinstalling the installed team removes nothing. If an uninstall fails, nothing is installed.
 - `uninstall` removes exactly what the matching `install` wrote, tracked in `$KIRO_HOME/.kirokit-installed/<team>.json`; other teams' files and Kiro-managed files are untouched.
-- `--kb-*` flags (all or none) attach a local `knowledgeBase` resource to one installed agent: `--kb-source` local folder, `--kb-mount` symlink location (never copied), `--kb-agent` agent whose `resources` gets the entry. Entry: name `<agent>-kb`, `indexType: "best"`, `include: ["**/*.md"]`, `autoUpdate: true`. `include` works in `kiro-cli` but is not yet in Kiro's agent-config docs, and Kiro issues report agent-config knowledge bases are not always indexed automatically; check `/knowledge show`. `uninstall` removes the symlink, never the source folder.
+- `--kb-*` flags (all or none) attach a local `knowledgeBase` resource to one installed agent: `--kb-source` local folder, `--kb-mount` symlink location (never copied), `--kb-agent` agent whose `resources` gets the entry. Entry: name `<agent>-kb`, `indexType: "best"`, `include: ["**/*.md"]`, `autoUpdate: true`. `include` works in `kiro-cli` but is not yet in Kiro's agent-config docs, and Kiro issues report agent-config knowledge bases are not always indexed automatically; check `/knowledge show`. `uninstall` removes the symlink, never the source folder. On Windows, where a symlink needs Developer Mode or an administrator, the mount is a directory junction instead, which reinstall and uninstall treat the same way.
 
 ### Existing files are backed up
 
@@ -241,14 +264,14 @@ Before `render --out <dir>`, `install` or `sync` changes something on disk, the 
 ## Setup (initial download)
 
 ```bash
-brew install --cask mavogel/tap/kirokit
+brew install --cask mavogel/tap/kirokit   # or see Quickstart for Linux and Windows
 kirokit setup --source https://github.com/mavogel/kirokit.git --target ~/.kirokit-config
 export KIROKIT_REPO=~/.kirokit-config
 ```
 
 - `setup` is the command-line twin of the desktop app's first launch: `git clone -- <source> <target>`, then a checkout of the newest `v*` tag (detached HEAD). `--source` and `--target` are required.
 - `--branch <name>` checks out that branch or tag instead (`git clone --branch`), skipping the newest-tag rule: `kirokit setup --source <address> --target <folder> --branch main`. It cannot be empty, start with `-` or contain whitespace, and an unknown name fails the clone. It is the same thing `manifest.yaml` calls `ref` for external skills, minus commit hashes.
-- `--source` is an `https`, `ssh` or `file` address, `git@host:path`, or an absolute path; an address starting with `-` is refused. `--target` must not exist or must be an empty folder, so an existing clone is never overwritten (use `sync` to update it).
+- `--source` is an `https`, `ssh` or `file` address, `git@host:path`, or an absolute path (on Windows also a drive path, `C:\…` or `C:/…`); an address starting with `-` is refused. `--target` must not exist or must be an empty folder, so an existing clone is never overwritten (use `sync` to update it).
 - Without `--branch`, a repository with no `v*` tag is kept on its default branch and `setup` prints that it has no release yet (exit 0).
 - It prints the `KIROKIT_REPO` line to use next; then run `install` or `sync`.
 
@@ -268,7 +291,7 @@ kirokit sync --repo ~/.kirokit-config --latest-tag      # no team: update the ch
 
 **Migration:** one machine now holds one team. A second scheduled sync of a different team (a second run of `scripts/kirokit-sync-setup.sh --team <other>`) replaces the first team on every run instead of installing beside it, so keep one scheduled sync per machine.
 
-`scripts/kirokit-sync-setup.sh` clones the config repo, runs a first sync and registers a launchd agent (macOS) or systemd user timer (Linux):
+`scripts/kirokit-sync-setup.sh` clones the config repo, runs a first sync and registers a launchd agent (macOS) or systemd user timer (Linux); it does not support Windows, where you run `kirokit sync` yourself:
 
 ```bash
 scripts/kirokit-sync-setup.sh --team platform-team --repo-url git@github.com:org/kiro-config.git --latest-tag
@@ -280,12 +303,20 @@ Options: `--dir` (checkout, default `~/.kirokit-config`), `--interval` (hours, d
 
 ## Desktop app
 
-`desktop/` holds a macOS app (Wails) for people who would rather press buttons than type commands. It bundles `kirokit` and runs the same commands, so what it writes is byte for byte what the command line writes. Install it with `brew install --cask mavogel/tap/kirokit-desktop` (GoReleaser attaches `kirokit-desktop_<version>_darwin_arm64.dmg` and `..._darwin_amd64.dmg` to each release and publishes the cask next to the CLI's, in one macOS job; macOS 13 or later, Apple silicon and Intel; both DMGs hold the same universal app). The app is not signed or notarized, so the cask clears the quarantine attribute after install; if you open the DMG by hand, run `xattr -dr com.apple.quarantine kirokit.app` once, or macOS reports the app as damaged. Build it yourself with `task desktop:build`, or run it from source with `task desktop:dev` (`task desktop:test` runs its checks).
+`desktop/` holds a desktop app (Wails) for macOS, Linux and Windows, for people who would rather press buttons than type commands. It bundles `kirokit` and runs the same commands, so what it writes is byte for byte what the command line writes. Each release carries:
 
-- **First launch** asks for your team's repository address (https, ssh, `file://`, `git@host:path` or an absolute path; an address starting with `-` is refused), runs `git clone -- <address> <repository folder>`, then `kirokit sync --latest-tag`, so the clone sits on the newest `v*` tag. A repository with no `v*` tag is kept and the app says it has no release yet. Saving a different address in Settings clones it the same way (progress in the kirokit tab, catalog refreshed on success) and renames the old clone to `repo.old-<unix time>`; a failed clone puts it back, keeps the old address stored and shows the failure beside the address field, so Save can retry the same address. The new address is stored only after its clone succeeds. The repository folder defaults to `~/Library/Application Support/kirokit-desktop/repo`; the first-launch page and Settings both let you choose another absolute folder (new or empty, or an existing git checkout; the home folder itself is refused). Saving a different folder in Settings shows the setup page so you can clone there; the old folder is left as it is.
-- **Teams** has an Install button per team. It first shows the checks it needs (SOPS, the decryption key, Kiro CLI, read from your login shell), then runs `kirokit install <team>`. A Kiro home holds one team, so installing another team asks before it replaces the installed one.
+- **macOS 13 or later** (Apple silicon and Intel): `kirokit-desktop_<version>_darwin_arm64.dmg` and `..._darwin_amd64.dmg`, both holding the same universal app, plus the `kirokit-desktop` cask (`brew install --cask mavogel/tap/kirokit-desktop`). The app is not signed or notarized, so the cask clears the quarantine attribute after install; if you open the DMG by hand, run `xattr -dr com.apple.quarantine kirokit.app` once, or macOS reports the app as damaged.
+- **Linux** (amd64 and arm64): `kirokit-desktop_<version>_linux_<arch>.deb` and `.rpm`. They install `/usr/bin/kirokit-desktop`, its own CLI at `/usr/lib/kirokit-desktop/kirokit`, a menu entry and an icon, and depend on GTK 3 and WebKitGTK 4.1 (Ubuntu 22.04+, Debian 12+, Fedora 40+). The package is named `kirokit-desktop`, so it installs beside the `kirokit` CLI package.
+- **Windows 10/11** (amd64 and arm64): `kirokit-desktop_<version>_windows_<arch>-setup.exe`, which installs `kirokit-desktop.exe` with `bin\kirokit.exe` beside it, a Start menu and desktop shortcut, and an uninstaller. It is not signed: SmartScreen shows "Windows protected your PC"; choose **More info**, then **Run anyway**. The app uses the WebView2 runtime Windows 11 ships with (the setup installs it if missing).
+
+The release builds each system on its own GitHub runner and publishes them together. Build it yourself with `task desktop:build` (on Linux it needs `libgtk-3-dev` and `libwebkit2gtk-4.1-dev`; on Windows `makensis` from NSIS and Git Bash), or run it from source with `task desktop:dev` (`task desktop:test` runs its checks).
+
+The app keeps its settings and default clone in `kirokit-desktop` in the user's config folder: `~/Library/Application Support/kirokit-desktop` on macOS, `~/.config/kirokit-desktop` on Linux, `%AppData%\kirokit-desktop` on Windows.
+
+- **First launch** asks for your team's repository address (https, ssh, `file://`, `git@host:path` or an absolute path, on Windows also `C:\…`; an address starting with `-` is refused), runs `git clone -- <address> <repository folder>`, then `kirokit sync --latest-tag`, so the clone sits on the newest `v*` tag. A repository with no `v*` tag is kept and the app says it has no release yet. Saving a different address in Settings clones it the same way (progress in the kirokit tab, catalog refreshed on success) and renames the old clone to `repo.old-<unix time>`; a failed clone puts it back, keeps the old address stored and shows the failure beside the address field, so Save can retry the same address. The new address is stored only after its clone succeeds. The repository folder defaults to `repo` in the app's folder above (`~/Library/Application Support/kirokit-desktop/repo` on macOS); the first-launch page and Settings both let you choose another absolute folder (new or empty, or an existing git checkout; the home folder itself is refused). Saving a different folder in Settings shows the setup page so you can clone there; the old folder is left as it is.
+- **Teams** has an Install button per team. It first shows the checks it needs (SOPS, the decryption key, Kiro CLI, read from your login shell; on Windows from the app's own environment, finding `.exe` and `.cmd` tools and Scoop's shims), then runs `kirokit install <team>`. A Kiro home holds one team, so installing another team asks before it replaces the installed one.
 - **Install and sync** has Sync (`kirokit sync <team> --latest-tag`) and Uninstall (`kirokit uninstall <team>`) per installed team; **Settings** has Update (`kirokit sync --latest-tag` for the installed team, or without a team when none is installed).
-- Every button command runs in the dock's **kirokit** tab, where a git sign-in prompt can be answered; the **zsh** tab is your own login shell with the bundled `kirokit` first on `PATH`. The app sets `KIROKIT_REPO` to its clone and `KIRO_HOME` to the Kiro home folder saved in Settings.
+- Every button command runs in the dock's **kirokit** tab, where a git sign-in prompt can be answered; the second tab is your own shell, named after it, with the bundled `kirokit` first on `PATH`: your login shell on macOS and Linux (**zsh**, **bash**, …; startup files of shells other than zsh may reorder `PATH`, which Settings notes), and **PowerShell** on Windows (PowerShell 7 when installed, else Windows PowerShell; PowerShell 7 puts its own folder first, and `kirokit` there still runs the bundled one). The app sets `KIROKIT_REPO` to its clone and `KIRO_HOME` to the Kiro home folder saved in Settings.
 - `KIROKIT_REPO` also works on the command line: with it set, `kirokit sync --latest-tag` (no team) updates a checkout from any folder.
 
 **Migration:** one machine now holds one team, in the app and on the command line alike. A second scheduled sync from `scripts/kirokit-sync-setup.sh` for another team replaces the first team on every run.

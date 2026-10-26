@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -67,15 +68,15 @@ func shellApp(t *testing.T, shell string) (*App, *recorder, string, string) {
 	t.Helper()
 	home := t.TempDir()
 	bundled := filepath.Join(t.TempDir(), "bundle")
-	cli := writeScript(t, bundled, "kirokit", `echo bundled-kirokit`)
+	cli := writeTool(t, bundled, "kirokit", `echo bundled-kirokit`, `echo bundled-kirokit`)
 	t.Setenv("KIROKIT_DESKTOP_CLI", cli)
 
 	a := NewAppAt(filepath.Join(t.TempDir(), "data"))
 	a.captureFn = func() EnvCapture {
-		return EnvCapture{Vars: map[string]string{
+		return EnvCapture{Vars: loginVars(map[string]string{
 			"HOME": home, "USER": "tester", "SHELL": shell,
 			"PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "KIRO_HOME": "/captured/wrong",
-		}}
+		})}
 	}
 	rec := &recorder{}
 	a.emitter = rec.emit
@@ -146,7 +147,13 @@ func TestShell_ResizeOutsideTheLimitsStartsNothing(t *testing.T) {
 	}
 }
 
+// A shell other than zsh gets the settings and the bundled CLI's folder only in
+// its start environment; its startup files (Debian's /etc/profile resets
+// PATH) may reorder PATH, which is what the note says.
 func TestShell_OtherShellGetsTheVariablesAndANote(t *testing.T) {
+	if onWindows {
+		t.Skip("needs /bin/sh; see TestShell_WindowsOpensPowerShellWithTheSettings")
+	}
 	a, rec, home, cli := shellApp(t, "/bin/sh")
 	if err := a.SaveSettings(Settings{KiroHome: filepath.Join(home, "kh")}); err != nil {
 		t.Fatal(err)
@@ -157,14 +164,35 @@ func TestShell_OtherShellGetsTheVariablesAndANote(t *testing.T) {
 		t.Errorf("Env.Note = %q, want it to say the bundled CLI may not come first", note)
 	}
 
-	a.ShellResize(80, 24)
-	a.ShellWrite("echo \"[$KIROKIT_REPO] [$KIRO_HOME]\"; command -v kirokit\r")
+	a.ShellResize(200, 24)
+	a.ShellWrite("echo \"[$KIROKIT_REPO] [$KIRO_HOME] [$KIROKIT_BIN]\"\r")
 
-	out := rec.waitFor(t, filepath.Dir(cli)+"/kirokit\r\n")
-	want := "[" + filepath.Join(a.dataDir, "repo") + "] [" + filepath.Join(home, "kh") + "]"
-	if !strings.Contains(out, want) {
-		t.Errorf("variables: want %s in:\n%q", want, out)
+	want := "[" + filepath.Join(a.dataDir, "repo") + "] [" + filepath.Join(home, "kh") + "] [" + filepath.Dir(cli) + "]"
+	rec.waitFor(t, want)
+}
+
+// On Windows the shell tab is PowerShell, started with the app's settings in
+// its environment, and `kirokit` there runs the bundled CLI.
+func TestShell_WindowsOpensPowerShellWithTheSettings(t *testing.T) {
+	if !onWindows {
+		t.Skip("PowerShell is the shell tab on Windows only")
 	}
+	a, rec, home, cli := shellApp(t, "")
+	if err := a.SaveSettings(Settings{KiroHome: filepath.Join(home, "kh")}); err != nil {
+		t.Fatal(err)
+	}
+	a.refreshEnv()
+	if note := a.State().Env.Note; note != "" {
+		t.Errorf("Env.Note = %q, want none on Windows", note)
+	}
+
+	a.ShellResize(400, 30)
+	// PowerShell 7 puts its own folder first on PATH, so the check is which
+	// kirokit the shell runs: the bundled one.
+	a.ShellWrite(`Write-Output ("[{0}] [{1}] [{2}]" -f $env:KIROKIT_REPO, $env:KIRO_HOME, (Get-Command kirokit).Source)` + "\r")
+
+	want := "[" + filepath.Join(a.dataDir, "repo") + "] [" + filepath.Join(home, "kh") + "] [" + cli + "]"
+	rec.waitFor(t, want)
 }
 
 func TestBundledCLI_FixedOrder(t *testing.T) {
@@ -185,14 +213,103 @@ func TestBundledCLI_FixedOrder(t *testing.T) {
 		// bundled CLI included; the dev-bin build is the one under test.
 		{"wails dev prefers dev-bin over a stale bundled CLI", "", devApp, work, dev},
 	} {
-		got, err := resolveCLI(tc.override, tc.exe, tc.wd)
+		got, err := resolveCLIFor("darwin", tc.override, tc.exe, tc.wd)
 		if err != nil || got != tc.want {
 			t.Errorf("%s: resolveCLI = %q, %v; want %q", tc.name, got, err, tc.want)
 		}
 	}
 
-	_, err := resolveCLI("", filepath.Join(root, "elsewhere", "kirokit"), filepath.Join(root, "empty"))
-	if err == nil || !strings.Contains(err.Error(), "KIROKIT_DESKTOP_CLI") {
-		t.Errorf("a missing CLI must name KIROKIT_DESKTOP_CLI, got %v", err)
+	_, err := resolveCLIFor("darwin", "", filepath.Join(root, "elsewhere", "kirokit"), filepath.Join(root, "empty"))
+	if err == nil || !strings.Contains(err.Error(), "KIROKIT_DESKTOP_CLI") || !strings.HasSuffix(err.Error(), "or start the app from kirokit.app") {
+		t.Errorf("a missing CLI must name KIROKIT_DESKTOP_CLI and kirokit.app, got %v", err)
+	}
+}
+
+// The .deb/.rpm put the CLI in /usr/lib/kirokit-desktop beside
+// /usr/bin/kirokit-desktop; the Windows setup puts bin\kirokit.exe beside
+// kirokit-desktop.exe.
+func TestBundledCLI_LinuxAndWindowsLayouts(t *testing.T) {
+	root := t.TempDir()
+	linuxExe := filepath.Join(root, "usr", "bin", "kirokit-desktop")
+	linuxCLI := writeScript(t, filepath.Join(root, "usr", "lib", "kirokit-desktop"), "kirokit", "")
+	winExe := filepath.Join(root, "Programs", "kirokit", "kirokit-desktop.exe")
+	winCLI := writeScript(t, filepath.Join(root, "Programs", "kirokit", "bin"), "kirokit.exe", "")
+	work := filepath.Join(root, "work")
+	winDev := writeScript(t, filepath.Join(work, "build", "dev-bin"), "kirokit.exe", "")
+	winDevApp := filepath.Join(work, "build", "bin", "kirokit-desktop.exe")
+	writeScript(t, filepath.Join(work, "build", "bin", "bin"), "kirokit.exe", "")
+
+	for _, tc := range []struct{ name, goos, exe, wd, want string }{
+		{"linux package", "linux", linuxExe, root, linuxCLI},
+		{"windows setup", "windows", winExe, root, winCLI},
+		{"windows wails dev prefers dev-bin", "windows", winDevApp, work, winDev},
+		{"windows dev-bin by working directory", "windows", filepath.Join(root, "elsewhere", "kirokit-desktop.exe"), work, winDev},
+	} {
+		got, err := resolveCLIFor(tc.goos, "", tc.exe, tc.wd)
+		if err != nil || got != tc.want {
+			t.Errorf("%s: resolveCLI = %q, %v; want %q", tc.name, got, err, tc.want)
+		}
+	}
+
+	for goos, hint := range map[string]string{
+		"linux":   "or reinstall the kirokit-desktop package",
+		"windows": "or reinstall kirokit with its setup program",
+	} {
+		_, err := resolveCLIFor(goos, "", filepath.Join(root, "elsewhere", "x"), filepath.Join(root, "empty"))
+		if err == nil || !strings.HasSuffix(err.Error(), hint) {
+			t.Errorf("%s: missing CLI error = %v, want it to end with %q", goos, err, hint)
+		}
+	}
+}
+
+func TestShellCommandFor_PerOS(t *testing.T) {
+	pwsh := func(name string) (string, error) {
+		if name == "pwsh.exe" {
+			return `C:\Program Files\PowerShell\7\pwsh.exe`, nil
+		}
+		return "", exec.ErrNotFound
+	}
+	noPwsh := func(string) (string, error) { return "", exec.ErrNotFound }
+	for _, tc := range []struct {
+		name, goos, shell string
+		look              func(string) (string, error)
+		wantPath          string
+		wantArgs          []string
+		wantName          string
+	}{
+		{"macOS zsh", "darwin", "/bin/zsh", noPwsh, "/bin/zsh", []string{"-il"}, "zsh"},
+		{"linux bash", "linux", "/usr/bin/bash", noPwsh, "/usr/bin/bash", []string{"-il"}, "bash"},
+		{"windows pwsh", "windows", "", pwsh, `C:\Program Files\PowerShell\7\pwsh.exe`, []string{"-NoLogo"}, "PowerShell"},
+		{"windows powershell", "windows", "/usr/bin/bash", noPwsh, "powershell.exe", []string{"-NoLogo"}, "PowerShell"},
+	} {
+		path, args := shellCommandFor(tc.goos, tc.shell, tc.look)
+		if path != tc.wantPath || strings.Join(args, " ") != strings.Join(tc.wantArgs, " ") {
+			t.Errorf("%s: shellCommandFor = %q %q, want %q %q", tc.name, path, args, tc.wantPath, tc.wantArgs)
+		}
+		if got := shellNameFor(tc.goos, tc.shell); got != tc.wantName {
+			t.Errorf("%s: shellNameFor = %q, want %q", tc.name, got, tc.wantName)
+		}
+	}
+	if note := shellNoteFor("windows", "/usr/bin/bash"); note != "" {
+		t.Errorf("windows shell note = %q, want none (PowerShell gets the settings in its environment)", note)
+	}
+	if note := shellNoteFor("linux", "/usr/bin/bash"); !strings.Contains(note, "bash") {
+		t.Errorf("linux bash note = %q, want it to name bash", note)
+	}
+}
+
+func TestState_NamesTheShell(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		a := appWithEnv(t, map[string]string{})
+		a.refreshEnv()
+		if got := a.State().Env.Shell; got != "PowerShell" {
+			t.Errorf("Env.Shell = %q, want PowerShell", got)
+		}
+		return
+	}
+	a := appWithEnv(t, map[string]string{"SHELL": "/bin/zsh"})
+	a.refreshEnv()
+	if got := a.State().Env.Shell; got != "zsh" {
+		t.Errorf("Env.Shell = %q, want zsh", got)
 	}
 }

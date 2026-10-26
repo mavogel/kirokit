@@ -1,0 +1,48 @@
+## Scenario 2 steps 1-5 on macOS 27.0.1 arm64; tree: judged commit 5be50f4 + this review's unstaged test files
+$ go build -o kirokit ./cmd/kirokit && ./kirokit test platform-team
+platform-team: ok
+exit 0
+
+$ git diff main --stat -- testdata/golden
+ testdata/golden/platform-team/installed-with-kb/agents/devops.json | 2 +-
+ testdata/golden/platform-team/rendered/agents/devops.json          | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+exit 0
+
+$ git diff main --stat -- desktop/build/darwin; echo "darwin assets changed lines: $(git diff main -- desktop/build/darwin | grep -c "^[-+][^-+]")"; echo "build script removed lines: $(git diff main -- scripts/desktop-build.sh | grep -c "^-[^-]")"
+darwin assets changed lines: 0
+build script removed lines: 18
+exit 0
+
+$ task desktop:build >/dev/null && ls desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit && lipo -archs desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit && desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit --version
+task: [desktop:build] bash scripts/desktop-build.sh
+2026/10/25 21:01:44 [0;33mKnownStructs: install.Record	main.Agent	main.AppState	main.Catalog	main.Check	main.EnvStatus	main.Settings	main.Skill	main.Team
+Not found: time.Time
+[0m
+desktop/build/bin/kirokit.app: replacing existing signature
+desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit
+x86_64 arm64
+kirokit 12.2.0
+exit 0
+
+$ mkdir -p <scratch>/app-home && KIRO_HOME=<scratch>/app-home && mkdir -p "$KIRO_HOME/real" && echo "{}" > "$KIRO_HOME/real/devops.json" && rm -f "$KIRO_HOME/agents" && ln -s "$KIRO_HOME/real" "$KIRO_HOME/agents" && KIRO_HOME=$KIRO_HOME desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit install platform-team; echo "bundled CLI install with a symlinked agents folder exit $?"
+installed platform-team into <scratch>/app-home
+bundled CLI install with a symlinked agents folder exit 0
+exit 0
+
+$ KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit; echo "smoke exit $?"
+smoke exit 0
+exit 0
+
+## step 3 detail: the 18 removed build-script lines are re-indentation of the darwin branch
+$ echo "removed lines ignoring whitespace: $(git diff -w main -- scripts/desktop-build.sh | grep -c "^-[^-]" || true)"; echo "removed .goreleaser.yaml lines: $(git diff main -- .goreleaser.yaml | grep -c "^-[^-]" || true)"
+removed lines ignoring whitespace: 2
+removed .goreleaser.yaml lines: 0
+exit 0
+
+$ echo "step 7 blocker: sops at $(command -v sops); the app always adds /opt/homebrew/bin:"; grep -n "opt/homebrew/bin" desktop/platform.go; grep -n "brew install sops" desktop/platform.go
+step 7 blocker: sops at /opt/homebrew/bin/sops; the app always adds /opt/homebrew/bin:
+70:		return []string{"/opt/homebrew/bin", "/opt/homebrew/sbin", "/usr/local/bin", filepath.Join(home, ".local", "bin")}
+238:		return "Install it with: brew install sops"
+exit 0
+

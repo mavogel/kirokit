@@ -21,7 +21,7 @@
   "mcpServers": {
     "atlassian": {
       "command": {{ sopsCommand }},
-      "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/platform-team/devops/secrets.enc.yaml" .KiroHome) "npx" "-y" (printf "mcp-remote@%s" (mcpVersion "mcp-remote")) "https://mcp.atlassian.com/v2/mcp" "--header" "Authorization: ${ATLASSIAN_AUTH}" }},
+      "args": {{ sopsArgsJSON (printf "%s/kirokit-secrets/platform-team/devops/secrets.enc.yaml" .KiroHome) "npx" "-y" (printf "mcp-remote@%s" (mcpVersion "mcp-remote")) "https://mcp.atlassian.com/v2/mcp" "--header" "Authorization:${ATLASSIAN_AUTH}" }},
       "timeout": 60000
     },
     "context7": {

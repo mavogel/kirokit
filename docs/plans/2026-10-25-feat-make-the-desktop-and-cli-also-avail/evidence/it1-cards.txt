@@ -1,0 +1,115 @@
+# Card checks (macOS), tree daa8ce8 + review tests
+$ git check-attr -a testdata/golden/platform-team/rendered/agents/devops.json teams/platform-team/agents/devops/env/secrets.enc.yaml
+testdata/golden/platform-team/rendered/agents/devops.json: text: unset
+testdata/golden/platform-team/rendered/agents/devops.json: eol: lf
+teams/platform-team/agents/devops/env/secrets.enc.yaml: text: unset
+teams/platform-team/agents/devops/env/secrets.enc.yaml: eol: lf
+$ git ls-files --eol | grep -c "i/crlf"   (index entries stored with CRLF)
+0
+$ git diff -M --stat eaa4b31 daa8ce8 -- desktop/terminal/terminal.go desktop/terminal/terminal_unix.go
+similarity index 99%
+rename from desktop/terminal/terminal.go
+rename to desktop/terminal/terminal_unix.go
++//go:build !windows
+$ git diff eaa4b31 daa8ce8 -- .goreleaser.yaml | grep -c "^-[^-]"   (removed lines: darwin parts unchanged)
+0
+$ grep -n "git push" .github/workflows/release.yaml
+259:          git push origin "${{ needs.version.outputs.tag }}"
+
+$ go test -count=1 -v -run "RenderTeamWith|LaunchShellFor|Install_Windows|Install_KnowledgeBase|Setup_Source|VersionFlag|VendoredHash|CheckVendored|Fetch_Preserves|Fetch_Collection|EveryTeamRenders|BuildWrapperFor|Make_|Is_|CopyAside" ./internal/... ./cmd/...
+--- PASS: TestCopyAside_CopiesTheWholeFolderAndLeavesTheSourceUntouched (0.01s)
+--- PASS: TestCopyAside_SameSecondCollisionGetsACounter (0.00s)
+--- PASS: TestCopyAside_CopiesASingleFile (0.00s)
+--- PASS: TestCopyAside_RemovesAHalfWrittenBackupWhenTheCopyFails (0.00s)
+ok  	github.com/mavogel/kirokit/internal/backup	0.301s
+--- PASS: TestMake_LinksAFolderThatIsThenRecognisedAndRemovable (0.00s)
+--- PASS: TestIs_FalseForAnythingButALink (0.00s)
+--- PASS: TestMake_RefusesAnExistingMountPoint (0.00s)
+ok  	github.com/mavogel/kirokit/internal/dirlink	0.299s
+--- PASS: TestFetch_PreservesExecutableBitOfNestedScript (0.26s)
+--- PASS: TestFetch_CollectionLockVerifiesOnWindowsWithoutExecuteBits (0.18s)
+--- PASS: TestFetch_CollectionVendorsEverySkillAndIgnoresDirectoriesWithoutSkillMD (0.17s)
+--- PASS: TestFetch_CollectionExcludeSkipsSkillsAndRefetchRemovesNewlyExcludedOnes (0.27s)
+--- PASS: TestFetch_CollectionFailuresNameTheProblemAndLeaveEverythingUntouched (1.09s)
+--- PASS: TestVendoredHash_WindowsTakesExecuteBitsFromTheLock (0.00s)
+--- PASS: TestCheckVendored_WindowsSaysToFetchALockWithoutExecutables (0.00s)
+ok  	github.com/mavogel/kirokit/internal/externalskills	2.296s
+--- PASS: TestEveryTeamRendersForTheWindowsLaunchShell (0.01s)
+ok  	github.com/mavogel/kirokit/internal/golden	0.464s
+--- PASS: TestLaunchShellFor_CmdOnlyOnWindows (0.00s)
+--- SKIP: TestInstall_WindowsRefusesAnArgumentCmdExeCannotPassAndWritesNothing (0.00s)
+--- PASS: TestInstall_KnowledgeBaseRefusesARealFolderAtTheMountPoint (0.01s)
+ok  	github.com/mavogel/kirokit/internal/install	0.491s
+ok  	github.com/mavogel/kirokit/internal/kiroconfig	0.309s [no tests to run]
+ok  	github.com/mavogel/kirokit/internal/manifest	0.443s [no tests to run]
+ok  	github.com/mavogel/kirokit/internal/mcpversions	0.300s [no tests to run]
+--- PASS: TestRenderTeamWith_CmdLaunchShellJoinsPlainArguments (0.01s)
+--- PASS: TestRenderTeamWith_POSIXMatchesRenderTeam (0.01s)
+--- PASS: TestRenderTeamWith_CmdRefusesAnArgumentAndNamesTheAgent (0.00s)
+ok  	github.com/mavogel/kirokit/internal/render	0.491s
+ok  	github.com/mavogel/kirokit/internal/scaffold	0.463s [no tests to run]
+--- PASS: TestBuildWrapperFor_POSIXIsBuildWrapper (0.00s)
+--- PASS: TestBuildWrapperFor_CmdJoinsPlainTokens (0.00s)
+--- PASS: TestBuildWrapperFor_CmdRefusesWhatCmdExeCannotPass (0.00s)
+--- PASS: TestBuildWrapperFor_CmdKeepsASecretsPathWithSpacesAsItsOwnArgument (0.00s)
+ok  	github.com/mavogel/kirokit/internal/sopswrap	0.295s
+--- PASS: TestSetup_SourcePatternAcceptsWindowsDrivePaths (0.00s)
+--- PASS: TestVersionFlagPrintsTheVersion (0.00s)
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	0.471s
+$ go test -C desktop -count=1 -v -run "Platform|Prereq|DataDir|Capture|Lookup|ToolFolders|DefaultShell|TerminalEnv|BundledCLI|ResolveCLI|Shell|State|Settings|Smoke" ./...
+--- PASS: TestState_Defaults (0.00s)
+--- PASS: TestCapture_ReadsOnlyAfterMarker (0.18s)
+--- PASS: TestCapture_SlowShellFallsBack (0.20s)
+--- PASS: TestCapture_AppendsToolFolders (0.19s)
+--- PASS: TestInstalls_FollowsSettingsChange (0.01s)
+--- PASS: TestPlatform_DataDirIsKirokitDesktopInTheUserConfigDir (0.00s)
+--- PASS: TestPlatform_NewAppDataFolderOnThisOS (0.00s)
+--- PASS: TestPlatform_AgeKeyCandidate (0.00s)
+--- PASS: TestPlatform_ToolFolders (0.00s)
+--- PASS: TestPlatform_DefaultShell (0.00s)
+--- PASS: TestPlatform_WindowsEnvironmentWithoutAShell (0.00s)
+--- PASS: TestPlatform_WindowsLookupTriesPathext (0.00s)
+--- PASS: TestPlatform_SopsHint (0.00s)
+--- PASS: TestPrerequisites_ResolveOnCapturedPath (0.00s)
+--- PASS: TestPrerequisites_KeyLocationOrder (0.00s)
+--- PASS: TestPrerequisites_CapturesAfresh (0.00s)
+--- PASS: TestKiroHome_CapturedThenSaved (0.00s)
+--- PASS: TestSaveSettings_SurvivesNewApp (0.00s)
+--- PASS: TestSaveSettings_RefusesKiroHome (0.00s)
+--- PASS: TestSaveSettings_RepoURL (0.00s)
+--- PASS: TestSettings_WindowsDrivePaths (0.00s)
+--- PASS: TestSaveSettings_ReportsBothFields (0.00s)
+--- PASS: TestSaveSettings_WritesPrivateFile (0.00s)
+--- PASS: TestRepoDir_DefaultsThenFollowsSettings (0.00s)
+--- PASS: TestShell_BundledKirokitComesFirstAndSettingsWin (0.03s)
+--- PASS: TestShell_ResizeReachesTheShell (0.03s)
+--- PASS: TestShell_ResizeOutsideTheLimitsStartsNothing (0.00s)
+--- PASS: TestShell_OtherShellGetsTheVariablesAndANote (0.02s)
+--- SKIP: TestShell_WindowsOpensPowerShellWithTheSettings (0.00s)
+--- PASS: TestBundledCLI_FixedOrder (0.00s)
+--- PASS: TestBundledCLI_LinuxAndWindowsLayouts (0.00s)
+--- PASS: TestShellCommandFor_PerOS (0.00s)
+--- PASS: TestState_NamesTheShell (0.00s)
+--- PASS: TestSmoke_PageLoadedQuitsWithSuccess (1.20s)
+--- PASS: TestSmoke_NoPageWithinTheLimitFails (0.05s)
+ok  	github.com/mavogel/kirokit/desktop	2.094s
+ok  	github.com/mavogel/kirokit/desktop/terminal	0.194s [no tests to run]
+$ ./kirokit --version; ./kirokit version | head -1
+kirokit v0.4.2-0.20261025193601-daa8ce814ef6+dirty
+kirokit v0.4.2-0.20261025193601-daa8ce814ef6+dirty
+$ which gitleaks
+/opt/homebrew/bin/gitleaks
+
+# T5 gitleaks (no staging: git writes are not this review's to make)
+$ gitleaks dir --no-banner --config .gitleaks.toml testdata/sops
+[90m8:50PM[0m [32mINF[0m [1mscanned ~1119 bytes (1.12 KB) in 3.44ms[0m
+[90m8:50PM[0m [32mINF[0m [1mno leaks found[0m
+exit=0
+$ gitleaks dir --no-banner testdata/sops   (default rules, no allowlist)
+[90m8:50PM[0m [32mINF[0m [1mscanned ~1483 bytes (1.48 KB) in 2.95ms[0m
+[90m8:50PM[0m [33mWRN[0m [1mleaks found: 2[0m
+exit=0
+$ gitleaks git --no-banner --config .gitleaks.toml --log-opts=eaa4b31..daa8ce8
+[90m8:50PM[0m [32mINF[0m [1mscanned ~371174 bytes (371.17 KB) in 111ms[0m
+[90m8:50PM[0m [32mINF[0m [1mno leaks found[0m
+exit=0

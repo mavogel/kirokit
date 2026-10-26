@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -19,9 +21,21 @@ type Settings struct {
 }
 
 // repoURLPattern accepts https://, ssh:// and file:// addresses, scp-style
-// git@host:path and absolute paths. Every alternative starts with a letter or
-// "/", so an address can never be read by git as an option.
-var repoURLPattern = regexp.MustCompile(`^(?:(?:https|ssh|file)://\S+|git@\S+:\S+|/\S+)$`)
+// git@host:path and absolute paths, including Windows drive paths (C:\... or
+// C:/...). Every alternative starts with a letter or "/", so an address can
+// never be read by git as an option.
+var repoURLPattern = regexp.MustCompile(`^(?:(?:https|ssh|file)://\S+|git@\S+:\S+|/\S+|[A-Za-z]:[\\/]\S+)$`)
+
+// windowsRoot is a drive root (C:\, C:/) or the current drive's root (\).
+var windowsRoot = regexp.MustCompile(`^(?:[A-Za-z]:)?[\\/]+$`)
+
+// isRootFolderFor reports whether p is the root of a file system on goos.
+func isRootFolderFor(goos, p string) bool {
+	if goos == "windows" {
+		return windowsRoot.MatchString(p)
+	}
+	return path.Clean(p) == "/" // a Unix path, judged the same on any machine
+}
 
 func (a *App) settingsPath() string { return filepath.Join(a.dataDir, "settings.json") }
 
@@ -141,7 +155,7 @@ func checkKiroHome(p string) string {
 		return "Enter an absolute folder, such as " + filepath.Join(homeDir(), ".kiro")
 	}
 	clean := filepath.Clean(p)
-	if clean == "/" || clean == filepath.Clean(homeDir()) {
+	if isRootFolderFor(runtime.GOOS, clean) || clean == filepath.Clean(homeDir()) {
 		return "Choose a folder inside your home folder, not the home folder itself"
 	}
 	return ""
@@ -155,7 +169,7 @@ func checkRepoDir(p string) string {
 		return "Enter an absolute folder, such as " + filepath.Join(homeDir(), "kirokit", "repo")
 	}
 	clean := filepath.Clean(p)
-	if clean == "/" || clean == filepath.Clean(homeDir()) {
+	if isRootFolderFor(runtime.GOOS, clean) || clean == filepath.Clean(homeDir()) {
 		return "Choose a folder inside your home folder, not the home folder itself"
 	}
 	entries, err := os.ReadDir(clean)

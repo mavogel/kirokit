@@ -10,11 +10,14 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
 	"github.com/mavogel/kirokit/internal/backup"
+	"github.com/mavogel/kirokit/internal/dirlink"
 	"github.com/mavogel/kirokit/internal/render"
+	"github.com/mavogel/kirokit/internal/sopswrap"
 )
 
 // Roots are the shared repository-relative paths Install needs to render a
@@ -63,7 +66,22 @@ func Check(roots Roots, team, kiroHome string) error {
 		return fmt.Errorf("install: %w", err)
 	}
 	defer func() { _ = os.RemoveAll(scratch) }()
-	return render.RenderTeam(roots.TeamsRoot, team, roots.GlobalRoot, roots.EnvVersionsPath, filepath.Join(scratch, "rendered"), kiroHome)
+	return render.RenderTeamWith(roots.TeamsRoot, team, roots.GlobalRoot, roots.EnvVersionsPath, filepath.Join(scratch, "rendered"), renderOptions(kiroHome))
+}
+
+// renderOptions bakes kiroHome in with forward slashes, which Windows, sops
+// and file:// resources accept (macOS and Linux paths do not change), and
+// builds MCP launches for the shell sops uses on this OS.
+func renderOptions(kiroHome string) render.Options {
+	return render.Options{KiroHome: filepath.ToSlash(kiroHome), LaunchShell: launchShellFor(runtime.GOOS)}
+}
+
+// launchShellFor is the shell sops exec-env runs commands with on goos.
+func launchShellFor(goos string) sopswrap.Shell {
+	if goos == "windows" {
+		return sopswrap.Cmd
+	}
+	return sopswrap.POSIX
 }
 
 // Install renders team with KiroHome=kiroHome and copies the rendered
@@ -79,7 +97,7 @@ func Install(roots Roots, team, kiroHome string, kb *KnowledgeBase) error {
 	defer func() { _ = os.RemoveAll(scratch) }()
 
 	renderedDir := filepath.Join(scratch, "rendered")
-	if err := render.RenderTeam(roots.TeamsRoot, team, roots.GlobalRoot, roots.EnvVersionsPath, renderedDir, kiroHome); err != nil {
+	if err := render.RenderTeamWith(roots.TeamsRoot, team, roots.GlobalRoot, roots.EnvVersionsPath, renderedDir, renderOptions(kiroHome)); err != nil {
 		return err
 	}
 
@@ -156,8 +174,8 @@ func ensureKnowledgeBaseSymlink(mountPoint, sourcePath string) error {
 		return fmt.Errorf("install: knowledge base source %s is not a directory", sourcePath)
 	}
 
-	if lst, err := os.Lstat(mountPoint); err == nil {
-		if lst.Mode()&os.ModeSymlink == 0 {
+	if _, err := os.Lstat(mountPoint); err == nil {
+		if !dirlink.Is(mountPoint) {
 			return fmt.Errorf("install: knowledge base mount point %s already exists and is not a symlink kirokit manages; refusing to overwrite", mountPoint)
 		}
 		if err := os.Remove(mountPoint); err != nil {
@@ -170,7 +188,7 @@ func ensureKnowledgeBaseSymlink(mountPoint, sourcePath string) error {
 	if err := os.MkdirAll(filepath.Dir(mountPoint), 0o755); err != nil {
 		return fmt.Errorf("install: %w", err)
 	}
-	if err := os.Symlink(absSource, mountPoint); err != nil {
+	if err := dirlink.Make(absSource, mountPoint); err != nil {
 		return fmt.Errorf("install: create knowledge base symlink %s -> %s: %w", mountPoint, absSource, err)
 	}
 	return nil
@@ -214,7 +232,7 @@ func withKnowledgeBaseResource(data []byte, agentName, mountPoint string) ([]byt
 	// accepted by kiro-cli's own parser but absent from the agent-config docs.
 	newResource, err := json.Marshal(map[string]any{
 		"type":       "knowledgeBase",
-		"source":     "file://" + mountPoint,
+		"source":     "file://" + filepath.ToSlash(mountPoint),
 		"name":       agentName + "-kb",
 		"indexType":  "best",
 		"include":    []string{"**/*.md"},

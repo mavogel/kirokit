@@ -15,9 +15,10 @@ import (
 
 // sourcePattern is the address set the desktop app accepts for its first
 // clone: https://, ssh:// and file:// URLs, scp-style git@host:path and
-// absolute paths. Every alternative starts with a letter or "/", so git can
-// never read an address as an option.
-var sourcePattern = regexp.MustCompile(`^(?:(?:https|ssh|file)://\S+|git@\S+:\S+|/\S+)$`)
+// absolute paths, including Windows drive paths (C:\... or C:/...). Every
+// alternative starts with a letter or "/", so git can never read an address
+// as an option.
+var sourcePattern = regexp.MustCompile(`^(?:(?:https|ssh|file)://\S+|git@\S+:\S+|/\S+|[A-Za-z]:[\\/]\S+)$`)
 
 const noReleaseNotice = "This repository has no release yet (no v* tag). Ask your team lead to tag one."
 

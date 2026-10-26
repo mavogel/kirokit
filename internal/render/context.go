@@ -7,6 +7,7 @@ import (
 
 	"github.com/mavogel/kirokit/internal/manifest"
 	"github.com/mavogel/kirokit/internal/mcpversions"
+	"github.com/mavogel/kirokit/internal/sopswrap"
 )
 
 // DefaultKiroHomeSentinel is the fixed, portable placeholder used for
@@ -20,6 +21,9 @@ type Context struct {
 	Env      mcpversions.Versions
 	Global   map[string]string // opted-in global steering slug -> file content
 	KiroHome string
+	// LaunchShell is the shell sopsArgsJSON quotes the MCP command for. It is
+	// a per-machine option, so it stays out of the golden context.json.
+	LaunchShell sopswrap.Shell `json:"-"`
 }
 
 // BuildContext loads a team's manifest, the central MCP version pins, and

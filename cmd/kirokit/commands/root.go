@@ -63,6 +63,9 @@ func newRootCmd() *cobra.Command {
 	root.AddCommand(newSyncCmd())
 	root.AddCommand(newSkillsCmd())
 	root.AddCommand(newVersionCmd())
+	// --version prints the same first line as `kirokit version`.
+	root.Version, _, _ = buildInfo()
+	root.SetVersionTemplate("kirokit {{.Version}}\n")
 	return root
 }
 

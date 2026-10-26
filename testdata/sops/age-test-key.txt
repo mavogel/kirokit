@@ -1,0 +1,6 @@
+# kirokit TEST-ONLY age key. It decrypts testdata/sops/secrets.enc.yaml for
+# cmd/kirokit/commands/install_sops_test.go and nothing else; never encrypt a
+# real secret to it.
+# created: 2026-10-25T19:18:32+01:00
+# public key: age1czvhz0ezppnyhya3xflymtc7mdm58372sujtf608jfku4khdvehs0gy9ts
+AGE-SECRET-KEY-1Z8K9VK6870LPFPVV8N36CN5QKYH9X7X4YPYLWXYFLECHN9LECR4Q4V7HV2

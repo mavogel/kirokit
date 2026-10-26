@@ -1,0 +1,31 @@
+## tree: judged commit 5be50f4 + this review's unstaged test files; Ubuntu-like Linux container (scripts/linux-docker.sh) on arm64 Docker
+$ scripts/linux-docker.sh env KIROKIT_REQUIRE_SOPS=1 go test -count=1 ./...
+?   	github.com/mavogel/kirokit/cmd/kirokit	[no test files]
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	0.437s
+ok  	github.com/mavogel/kirokit/internal/backup	0.007s
+ok  	github.com/mavogel/kirokit/internal/dirlink	0.002s
+ok  	github.com/mavogel/kirokit/internal/externalskills	0.690s
+ok  	github.com/mavogel/kirokit/internal/golden	0.012s
+ok  	github.com/mavogel/kirokit/internal/install	0.042s
+ok  	github.com/mavogel/kirokit/internal/kiroconfig	0.002s
+ok  	github.com/mavogel/kirokit/internal/manifest	0.009s
+ok  	github.com/mavogel/kirokit/internal/mcpversions	0.001s
+ok  	github.com/mavogel/kirokit/internal/render	0.044s
+ok  	github.com/mavogel/kirokit/internal/scaffold	0.002s
+ok  	github.com/mavogel/kirokit/internal/sopswrap	0.001s
+?   	github.com/mavogel/kirokit/internal/testutil	[no test files]
+exit 0
+
+$ scripts/linux-docker.sh env KIROKIT_REQUIRE_SOPS=1 go test -count=1 -v ./cmd/kirokit/commands/ ./internal/backup/ ./internal/install/ -run "TestInstall_SopsLaunch|Symlink" | grep -E "^(---|ok|FAIL)"
+--- PASS: TestInstall_SopsLaunchReachesTheServerUnchanged (0.03s)
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	0.034s
+--- PASS: TestCopyAside_AFolderThatIsASymlinkIsBackedUpAsTheLink (0.00s)
+--- PASS: TestCopyAside_AFileThatIsASymlinkIsBackedUpAsTheLink (0.00s)
+ok  	github.com/mavogel/kirokit/internal/backup	0.003s
+--- PASS: TestAttachKnowledgeBase_ReplacesAStaleSymlinkAtTheMountPoint (0.00s)
+--- PASS: TestInstall_WithKnowledgeBaseCreatesSymlinkAndResourceEntry (0.00s)
+--- PASS: TestUninstall_WithKnowledgeBaseRemovesSymlinkButNotRealSource (0.00s)
+--- PASS: TestInstall_AnAgentsFolderThatIsASymlinkStillInstalls (0.00s)
+ok  	github.com/mavogel/kirokit/internal/install	0.008s
+exit 0
+

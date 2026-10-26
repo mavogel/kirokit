@@ -6,6 +6,7 @@ require (
 	github.com/creack/pty v1.1.24
 	github.com/mavogel/kirokit v0.0.0-00010101000000-000000000000
 	github.com/wailsapp/wails/v2 v2.17.0
+	golang.org/x/sys v0.46.0
 )
 
 require (
@@ -99,7 +100,6 @@ require (
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/text v0.39.0 // indirect
 	golang.org/x/tools v0.47.0 // indirect

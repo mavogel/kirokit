@@ -54,7 +54,7 @@ func realKirokit(t *testing.T) string {
 			builtErr = err
 			return
 		}
-		builtCLI = filepath.Join(dir, "kirokit")
+		builtCLI = filepath.Join(dir, exeName("kirokit"))
 		// kirokit is the root module; the desktop module cannot build it.
 		cmd := exec.Command("go", "build", "-o", builtCLI, "./cmd/kirokit")
 		cmd.Dir = ".."
@@ -77,11 +77,15 @@ func (e *buildError) Error() string { return "go build kirokit: " + e.err.Error(
 
 func cloneApp(t *testing.T) (*App, *eventLog) {
 	t.Helper()
-	a, log, _ := runnerApp(t, "")
+	a, log, _ := runnerApp(t, "", "")
 	t.Setenv("KIROKIT_DESKTOP_CLI", realKirokit(t))
 	// The login environment needs git on its PATH and no inherited GIT_*.
 	a.captureFn = func() EnvCapture {
-		return EnvCapture{Vars: map[string]string{"HOME": t.TempDir(), "PATH": os.Getenv("PATH"), "SHELL": "/bin/sh"}}
+		vars := map[string]string{"HOME": t.TempDir(), "PATH": os.Getenv("PATH"), "SHELL": "/bin/sh"}
+		if onWindows { // git and cmd.exe need these there
+			vars["SystemRoot"], vars["PATHEXT"] = os.Getenv("SystemRoot"), os.Getenv("PATHEXT")
+		}
+		return EnvCapture{Vars: vars}
 	}
 	a.refreshEnv()
 	return a, log
@@ -148,7 +152,7 @@ func TestClone_RefusesAnAddressBeforeAnyProcessStarts(t *testing.T) {
 func TestClone_RefusesWhileACommandRuns(t *testing.T) {
 	a, log := cloneApp(t)
 	origin := newOrigin(t, "v1.0.0")
-	cli := writeScript(t, t.TempDir(), "kirokit", `echo ready; read line`)
+	cli := writeTool(t, t.TempDir(), "kirokit", `echo ready; read line`, "echo ready\nset /p line=")
 	t.Setenv("KIROKIT_DESKTOP_CLI", cli)
 	id, err := a.Run([]string{"sync"})
 	if err != nil {

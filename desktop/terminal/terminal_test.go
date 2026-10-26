@@ -3,10 +3,20 @@ package terminal
 import (
 	"io"
 	"os/exec"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
 )
+
+// skipOnWindows skips a test that drives /bin/sh on a Unix pty; the Windows
+// counterparts are in terminal_windows_test.go.
+func skipOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("needs /bin/sh on a Unix pseudo-terminal")
+	}
+}
 
 func readAll(t *testing.T, s *Session) string {
 	t.Helper()
@@ -41,6 +51,7 @@ func waitCode(t *testing.T, s *Session) int {
 }
 
 func TestOutputReachesTheReaderAndEndsOnEOF(t *testing.T) {
+	skipOnWindows(t)
 	s, err := Start(exec.Command("/bin/sh", "-c", "echo hi"), 80, 24)
 	if err != nil {
 		t.Fatal(err)
@@ -55,6 +66,7 @@ func TestOutputReachesTheReaderAndEndsOnEOF(t *testing.T) {
 }
 
 func TestExitCodeIsReturned(t *testing.T) {
+	skipOnWindows(t)
 	s, err := Start(exec.Command("/bin/sh", "-c", "exit 3"), 80, 24)
 	if err != nil {
 		t.Fatal(err)
@@ -71,6 +83,7 @@ func TestExitCodeIsReturned(t *testing.T) {
 }
 
 func TestResizeChangesTheSizeTheProcessSees(t *testing.T) {
+	skipOnWindows(t)
 	s, err := Start(exec.Command("/bin/sh", "-c", "read x; stty size"), 80, 24)
 	if err != nil {
 		t.Fatal(err)
@@ -88,6 +101,7 @@ func TestResizeChangesTheSizeTheProcessSees(t *testing.T) {
 }
 
 func TestCloseWhileRunningEndsTheProcess(t *testing.T) {
+	skipOnWindows(t)
 	s, err := Start(exec.Command("/bin/sh", "-c", "sleep 60"), 80, 24)
 	if err != nil {
 		t.Fatal(err)

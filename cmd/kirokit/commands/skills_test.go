@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/mavogel/kirokit/internal/install"
+	"github.com/mavogel/kirokit/internal/testutil"
 )
 
 func runRoot(t *testing.T, args ...string) (string, error) {
@@ -115,14 +116,14 @@ func TestSkillsFetch_VendorsThenInstallsAndUninstallsWithoutTheSource(t *testing
 	if _, err := os.Stat(skillMD); err != nil {
 		t.Errorf("expected installed %s: %v", skillMD, err)
 	}
-	if info, err := os.Stat(script); err != nil || info.Mode().Perm()&0o100 == 0 {
+	if info, err := os.Stat(script); err != nil || (testutil.ExecBitsKept && info.Mode().Perm()&0o100 == 0) {
 		t.Errorf("installed script = %v (%v), want owner-executable", info, err)
 	}
 	agent, err := os.ReadFile(filepath.Join(kiroHome, "agents", "a1.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "skill://" + skillMD; !strings.Contains(string(agent), want) {
+	if want := "skill://" + filepath.ToSlash(skillMD); !strings.Contains(string(agent), want) {
 		t.Errorf("installed agent = %s, want it to reference %s", agent, want)
 	}
 
@@ -255,11 +256,11 @@ func TestSkillsFetch_AllSkillsOfARepositoryWithExcludeEndToEnd(t *testing.T) {
 		if _, err := os.Stat(skillMD); err != nil {
 			t.Errorf("expected installed %s: %v", skillMD, err)
 		}
-		if !strings.Contains(string(agent), "skill://"+skillMD) {
+		if !strings.Contains(string(agent), "skill://"+filepath.ToSlash(skillMD)) {
 			t.Errorf("installed agent = %s, want it to reference %s", agent, skillMD)
 		}
 	}
-	if info, err := os.Stat(filepath.Join(kiroHome, "skills", "pdf", "scripts", "run.sh")); err != nil || info.Mode().Perm()&0o100 == 0 {
+	if info, err := os.Stat(filepath.Join(kiroHome, "skills", "pdf", "scripts", "run.sh")); err != nil || (testutil.ExecBitsKept && info.Mode().Perm()&0o100 == 0) {
 		t.Errorf("installed script = %v (%v), want owner-executable", info, err)
 	}
 	for _, name := range []string{"docx", "docs"} {

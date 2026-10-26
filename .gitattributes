@@ -1,0 +1,19 @@
+# Every text file checks out with LF on every OS, so a Windows checkout renders
+# and hashes the same bytes as macOS and Linux.
+* text=auto eol=lf
+
+# Compared or hashed byte for byte: Git must never convert them.
+#   goldens       `kirokit test` compares them byte for byte
+#   external/**   vendored skills, pinned by a content hash in skills.lock.yaml
+#   *.enc.yaml    SOPS files carry a MAC over their exact content
+testdata/golden/** -text
+teams/*/external/** -text
+*.enc.yaml -text
+testdata/sops/** -text
+
+# Binary media and icons.
+*.png binary
+*.gif binary
+*.mp4 binary
+*.ico binary
+*.icns binary

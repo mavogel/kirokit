@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -29,23 +30,29 @@ type termExit struct {
 }
 
 // BundledCLI returns the kirokit binary the app's terminals use.
-// 1. $KIROKIT_DESKTOP_CLI if set. 2. <executable>/../../Resources/bin/kirokit.
-// 3. desktop/build/dev-bin/kirokit, which `task desktop:dev` builds; under
-// `wails dev` (the executable is in <cwd>/build/bin) it comes before 2.
+// 1. $KIROKIT_DESKTOP_CLI if set. 2. The copy installed with the app:
+// <exe>/../Resources/bin/kirokit in kirokit.app, <exe>/../lib/kirokit-desktop/kirokit
+// from the Linux package, <exe dir>\bin\kirokit.exe from the Windows setup.
+// 3. desktop/build/dev-bin/kirokit(.exe), which `task desktop:dev` builds;
+// under `wails dev` (the executable is in <cwd>/build/bin) it comes before 2.
 func BundledCLI() (string, error) {
 	exe, _ := os.Executable() //nolint:errcheck // an empty path just skips the bundle lookup
 	wd, _ := os.Getwd()       //nolint:errcheck // an empty path just skips the dev lookup
-	return resolveCLI(os.Getenv("KIROKIT_DESKTOP_CLI"), exe, wd)
+	return resolveCLIFor(runtime.GOOS, os.Getenv("KIROKIT_DESKTOP_CLI"), exe, wd)
 }
 
-func resolveCLI(override, exe, wd string) (string, error) {
+func resolveCLIFor(goos, override, exe, wd string) (string, error) {
 	if override != "" {
 		return override, nil
+	}
+	name := "kirokit"
+	if goos == "windows" {
+		name += ".exe"
 	}
 	var candidates []string
 	var dev string
 	if wd != "" {
-		dev = filepath.Join(wd, "build", "dev-bin", "kirokit")
+		dev = filepath.Join(wd, "build", "dev-bin", name)
 	}
 	// `wails dev` runs the app in desktop/build/bin, which an earlier
 	// desktop:build may have left with its own bundled CLI; the dev-bin build
@@ -54,8 +61,7 @@ func resolveCLI(override, exe, wd string) (string, error) {
 		candidates = append(candidates, dev)
 	}
 	if exe != "" {
-		macOS := filepath.Dir(exe)
-		candidates = append(candidates, filepath.Join(macOS, "..", "Resources", "bin", "kirokit"))
+		candidates = append(candidates, installedCLIFor(goos, filepath.Dir(exe))...)
 	}
 	if dev != "" {
 		candidates = append(candidates, dev)
@@ -65,11 +71,11 @@ func resolveCLI(override, exe, wd string) (string, error) {
 			return filepath.Clean(c), nil
 		}
 	}
-	return "", errors.New("kirokit's command-line tool was not found. Set KIROKIT_DESKTOP_CLI to the path of a kirokit binary, or start the app from kirokit.app")
+	return "", errors.New("kirokit's command-line tool was not found. Set KIROKIT_DESKTOP_CLI to the path of a kirokit binary, " + cliMissingHintFor(goos))
 }
 
 // shellPath is the person's login shell: the captured SHELL, else the app's
-// own, else zsh.
+// own, else zsh on macOS and bash (else sh) on Linux.
 func (a *App) shellPath() string {
 	a.mu.Lock()
 	env, ready := a.env, a.envReady
@@ -79,21 +85,13 @@ func (a *App) shellPath() string {
 			return s
 		}
 	}
-	if s := os.Getenv("SHELL"); s != "" {
-		return s
-	}
-	return "/bin/zsh"
+	return defaultShellFor(runtime.GOOS, os.Getenv("SHELL"), fileExists)
 }
 
 func isZsh(shell string) bool { return filepath.Base(shell) == "zsh" }
 
 // shellNote tells Settings when the bundled CLI cannot be guaranteed first.
-func shellNote(shell string) string {
-	if isZsh(shell) {
-		return ""
-	}
-	return "Your shell is " + filepath.Base(shell) + ", so the bundled kirokit may not come first on its PATH if your startup files change it."
-}
+func shellNote(shell string) string { return shellNoteFor(runtime.GOOS, shell) }
 
 // loginEnv is the captured login environment, read now when no one has yet.
 func (a *App) loginEnv() EnvCapture {
@@ -119,7 +117,7 @@ func (a *App) terminalEnv(cli string, extra map[string]string) []string {
 	vars["KIROKIT_REPO"] = a.repoDir()
 	vars["KIRO_HOME"] = a.kiroHome()
 	if cli != "" {
-		vars["PATH"] = filepath.Dir(cli) + ":" + vars["PATH"]
+		vars["PATH"] = filepath.Dir(cli) + string(os.PathListSeparator) + vars["PATH"]
 	}
 	for k, v := range extra {
 		vars[k] = v
@@ -184,9 +182,9 @@ type shellHost struct {
 	ended      bool // the shell exited; only typing starts a new one
 }
 
-// shellCommand builds `$SHELL -il` for the zsh tab. For zsh it starts through
-// the ZDOTDIR wrapper; for any other shell the settings are only in the
-// start environment.
+// shellCommand builds the shell tab's command: `$SHELL -il`, or PowerShell on
+// Windows. zsh starts through the ZDOTDIR wrapper; any other shell gets the
+// settings only in its start environment.
 func (a *App) shellCommand() (*exec.Cmd, error) {
 	shell := a.shellPath()
 	cli, cliErr := BundledCLI()
@@ -194,7 +192,7 @@ func (a *App) shellCommand() (*exec.Cmd, error) {
 	if cliErr == nil {
 		extra["KIROKIT_BIN"] = filepath.Dir(cli)
 	}
-	if isZsh(shell) {
+	if runtime.GOOS != "windows" && isZsh(shell) {
 		wrapper, err := writeWrapper(filepath.Join(a.dataDir, "zdotdir"))
 		if err != nil {
 			return nil, err
@@ -206,7 +204,8 @@ func (a *App) shellCommand() (*exec.Cmd, error) {
 			extra["KIROKIT_USER_ZDOTDIR"] = z
 		}
 	}
-	cmd := exec.Command(shell, "-il")
+	path, args := shellCommandFor(runtime.GOOS, shell, exec.LookPath)
+	cmd := exec.Command(path, args...)
 	cmd.Env = a.terminalEnv(cli, extra)
 	cmd.Dir = a.repoDir()
 	if _, err := os.Stat(cmd.Dir); err != nil {

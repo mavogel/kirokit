@@ -1,0 +1,98 @@
+# Spike: desktop module with a ConPTY terminal backend (github.com/UserExistsError/conpty v0.1.4), scratch copy, 2026-10-25T17:48:32Z
+$ GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go vet ./...
+exit 0
+$ GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go vet ./...
+exit 0
+$ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go vet ./...
+exit 0
+$ GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go vet ./...
+exit 0
+$ GOOS=windows GOARCH=amd64 go build .
+exit 0
+$ GOOS=windows GOARCH=arm64 go build .
+exit 0
+
+$ cat terminal/terminal_windows.go
+//go:build windows
+
+package terminal
+
+import (
+	"context"
+	"os/exec"
+	"strings"
+	"sync"
+	"syscall"
+
+	"github.com/UserExistsError/conpty"
+)
+
+// Session is one process on a Windows pseudo console (ConPTY).
+type Session struct {
+	cpty *conpty.ConPty
+
+	waitOnce  sync.Once
+	code      int
+	waitErr   error
+	closeOnce sync.Once
+	closeErr  error
+}
+
+// Start runs cmd on a new pseudo console of the given size.
+func Start(cmd *exec.Cmd, cols, rows uint16) (*Session, error) {
+	args := make([]string, len(cmd.Args))
+	for i, a := range cmd.Args {
+		args[i] = syscall.EscapeArg(a)
+	}
+	if len(args) > 0 {
+		args[0] = syscall.EscapeArg(cmd.Path)
+	}
+	opts := []conpty.ConPtyOption{conpty.ConPtyDimensions(int(cols), int(rows))}
+	if cmd.Dir != "" {
+		opts = append(opts, conpty.ConPtyWorkDir(cmd.Dir))
+	}
+	if cmd.Env != nil {
+		opts = append(opts, conpty.ConPtyEnv(cmd.Env))
+	}
+	c, err := conpty.Start(strings.Join(args, " "), opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &Session{cpty: c}, nil
+}
+
+func (s *Session) Read(p []byte) (int, error)  { return s.cpty.Read(p) }
+func (s *Session) Write(p []byte) (int, error) { return s.cpty.Write(p) }
+func (s *Session) Resize(cols, rows uint16) error {
+	return s.cpty.Resize(int(cols), int(rows))
+}
+
+func (s *Session) Wait() (int, error) {
+	s.waitOnce.Do(func() {
+		code, err := s.cpty.Wait(context.Background())
+		s.code, s.waitErr = int(code), err
+	})
+	return s.code, s.waitErr
+}
+
+func (s *Session) Close() error {
+	s.closeOnce.Do(func() {
+		// taskkill ends the whole tree the shell started.
+		_ = exec.Command("taskkill", "/T", "/F", "/PID", itoa(s.cpty.Pid())).Run()
+		s.closeErr = s.cpty.Close()
+	})
+	return s.closeErr
+}
+
+func itoa(n int) string { return strings.TrimSpace(strings.Repeat(" ", 0) + fmtInt(n)) }
+func fmtInt(n int) string {
+	if n == 0 {
+		return "0"
+	}
+	var b []byte
+	for n > 0 {
+		b = append([]byte{byte('0' + n%10)}, b...)
+		n /= 10
+	}
+	return string(b)
+}

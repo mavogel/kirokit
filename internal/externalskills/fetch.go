@@ -163,12 +163,57 @@ func checkoutSkill(work, dest string, le LockEntry) (LockEntry, error) {
 	if _, err := os.Stat(filepath.Join(dest, "SKILL.md")); err != nil {
 		return le, fmt.Errorf("%q has no SKILL.md at its root", le.Path)
 	}
-	sum, err := HashDir(dest)
+	modes, err := indexModes(work)
+	if err != nil {
+		return le, err
+	}
+	return lockedHash(dest, le, modes, "")
+}
+
+// lockedHash completes le with the executables git records under prefix (""
+// for the whole index, else "<skill>/") and the hash of dest computed with
+// them. A symbolic link git records there is an error, even where a Windows
+// checkout wrote it as a plain file.
+func lockedHash(dest string, le LockEntry, modes map[string]string, prefix string) (LockEntry, error) {
+	le.Executables = nil
+	for p, mode := range modes {
+		rel, ok := strings.CutPrefix(p, prefix)
+		if !ok {
+			continue
+		}
+		switch mode {
+		case "120000":
+			return le, fmt.Errorf("%s is a symbolic link; symbolic links are not vendored", rel)
+		case "100755":
+			le.Executables = append(le.Executables, rel)
+		}
+	}
+	sort.Strings(le.Executables)
+	sum, err := hashDirWithExecutables(dest, le.Executables)
 	if err != nil {
 		return le, err
 	}
 	le.SHA256 = sum
 	return le, nil
+}
+
+// indexModes reads the scratch repository's index: path (slash-separated,
+// relative to the read tree) -> git file mode.
+func indexModes(work string) (map[string]string, error) {
+	out, err := runGit(work, "ls-files", "--stage", "-z")
+	if err != nil {
+		return nil, err
+	}
+	modes := map[string]string{}
+	for rec := range strings.SplitSeq(out, "\x00") {
+		meta, p, ok := strings.Cut(rec, "\t")
+		if !ok {
+			continue
+		}
+		mode, _, _ := strings.Cut(meta, " ")
+		modes[p] = mode
+	}
+	return modes, nil
 }
 
 // stageCollection checks out the whole collection directory, then keeps each
@@ -187,9 +232,13 @@ func stageCollection(work, stagingRoot string, e manifest.ExternalSkill, commit 
 	if err != nil {
 		return nil, err
 	}
+	modes, err := indexModes(work)
+	if err != nil {
+		return nil, err
+	}
 	isDir := make(map[string]bool, len(children))
 	for _, c := range children {
-		if c.Type()&fs.ModeSymlink != 0 {
+		if c.Type()&fs.ModeSymlink != 0 || modes[c.Name()] == "120000" {
 			return nil, fmt.Errorf("%q is a symbolic link; symbolic links are not vendored", c.Name())
 		}
 		isDir[c.Name()] = c.IsDir()
@@ -217,14 +266,14 @@ func stageCollection(work, stagingRoot string, e manifest.ExternalSkill, commit 
 		if err := os.Rename(filepath.Join(tree, name), dest); err != nil {
 			return nil, err
 		}
-		sum, err := HashDir(dest)
+		le, err := lockedHash(dest, LockEntry{
+			Name: name, Source: e.Source, Ref: e.Ref, Path: e.Path + "/" + name,
+			Commit: commit, From: e.Path,
+		}, modes, name+"/")
 		if err != nil {
 			return nil, fmt.Errorf("skill %q: %w", name, err)
 		}
-		les = append(les, LockEntry{
-			Name: name, Source: e.Source, Ref: e.Ref, Path: e.Path + "/" + name,
-			Commit: commit, SHA256: sum, From: e.Path,
-		})
+		les = append(les, le)
 	}
 	if len(les) == 0 {
 		return nil, fmt.Errorf("no skills found under %q (a skill is a subdirectory with a SKILL.md, and none is left after exclude)", e.Path)

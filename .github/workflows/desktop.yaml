@@ -19,8 +19,19 @@ permissions:
   contents: read
 
 jobs:
+  # Tests, builds and starts the app on each OS it ships for. On pull requests
+  # with the GoReleaser Pro key, it also runs this OS's part of the release as a
+  # snapshot (publishes nothing), and on Linux installs the built packages.
   desktop:
-    runs-on: macos-latest
+    name: desktop (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     env:
       # GoReleaser Pro license key; empty on fork pull requests, which skips the snapshot.
       GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
@@ -43,27 +54,72 @@ jobs:
       - name: Install Task
         run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
 
+      # WebKitGTK 4.1 to build the app, xvfb for its smoke start.
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgtk-3-dev libwebkit2gtk-4.1-dev xvfb
+
+      # makensis builds the Windows setup .exe.
+      - name: Install NSIS
+        if: runner.os == 'Windows'
+        run: |
+          choco install nsis --no-progress -y
+          echo "C:\\Program Files (x86)\\NSIS" >> "$GITHUB_PATH"
+
       - name: Test
         run: task desktop:test
 
       - name: Build
         run: task desktop:build
 
-      # Early feedback on the release config, on pull requests only: the same
-      # GoReleaser run as the Release workflow, as a snapshot that builds the CLI
-      # archives, the app's DMGs and the casks but publishes nothing. A push to
-      # main is the Release workflow's own run, which does it for real.
+      # The built app quits with 0 once its page has loaded, 1 after a minute without.
+      - name: Smoke start
+        timeout-minutes: 5
+        env:
+          KIROKIT_DESKTOP_SMOKE: "1"
+        run: |
+          case "$RUNNER_OS" in
+            macOS) desktop/build/bin/kirokit.app/Contents/MacOS/kirokit ;;
+            Linux) xvfb-run -a desktop/build/bin/kirokit-desktop ;;
+            Windows) "desktop/build/bin/kirokit-desktop-$(go env GOARCH).exe" ;;
+          esac
+
+      # Early feedback on the release config, on pull requests only: this OS's
+      # part of the Release workflow's split build, as a snapshot that publishes
+      # nothing. A push to main is the Release workflow's own run.
       - name: Stage the app for GoReleaser
         if: github.event_name == 'pull_request' && env.GORELEASER_KEY != ''
         run: scripts/desktop-prebuilt.sh
 
-      - name: Release snapshot
+      - name: Release snapshot (this OS)
         if: github.event_name == 'pull_request' && env.GORELEASER_KEY != ''
         uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
         with:
           distribution: goreleaser-pro
           version: "~> v2"
-          args: release --snapshot --clean
+          args: release --snapshot --clean --split
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: unused-in-a-snapshot
+          SCOOP_BUCKET_GITHUB_TOKEN: unused-in-a-snapshot
+          # Only the amd64 Linux app is built here; the release builds arm64 on its own runner.
+          KIROKIT_SKIP_LINUX_ARM64_APP: "1"
+
+      - name: List the snapshot
+        if: github.event_name == 'pull_request' && env.GORELEASER_KEY != ''
+        run: find dist -maxdepth 2 -type f \( -name '*.tar.gz' -o -name '*.zip' -o -name '*.deb' -o -name '*.rpm' -o -name '*.dmg' -o -name '*.exe' -o -name '*.json' -o -name '*.rb' \) | sort
+
+      # The packages install on a stock Ubuntu with only the dependencies they
+      # declare, and the installed app starts.
+      - name: Install the Linux packages and start the app
+        if: runner.os == 'Linux' && github.event_name == 'pull_request' && env.GORELEASER_KEY != ''
+        env:
+          KIROKIT_DESKTOP_SMOKE: "1"
+        run: |
+          sudo apt-get install -y "$(find "$PWD/dist" -name 'kirokit_*_linux_amd64.deb' | head -1)" \
+            "$(find "$PWD/dist" -name 'kirokit-desktop_*_linux_amd64.deb' | head -1)"
+          kirokit --version
+          test -x /usr/lib/kirokit-desktop/kirokit
+          xvfb-run -a /usr/bin/kirokit-desktop

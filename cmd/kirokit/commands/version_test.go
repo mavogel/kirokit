@@ -24,6 +24,24 @@ func TestVersionCmdPrintsInjectedValues(t *testing.T) {
 	}
 }
 
+// `kirokit --version` is how the install docs check an installed release.
+func TestVersionFlagPrintsTheVersion(t *testing.T) {
+	oldV := version
+	t.Cleanup(func() { version = oldV })
+	version = "1.2.3"
+
+	root := newRootCmd()
+	var out bytes.Buffer
+	root.SetOut(&out)
+	root.SetArgs([]string{"--version"})
+	if err := root.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if got := out.String(); got != "kirokit 1.2.3\n" {
+		t.Fatalf("got %q, want %q", got, "kirokit 1.2.3\n")
+	}
+}
+
 func TestVersionCmdRejectsArgs(t *testing.T) {
 	root := newRootCmd()
 	root.SetOut(&bytes.Buffer{})

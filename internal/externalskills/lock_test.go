@@ -1,12 +1,15 @@
 package externalskills
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/mavogel/kirokit/internal/manifest"
+	"github.com/mavogel/kirokit/internal/testutil"
 )
 
 func writeFile(t *testing.T, path, content string, mode os.FileMode) {
@@ -47,7 +50,9 @@ func TestHashDir_IsStableAndSensitiveToEveryChange(t *testing.T) {
 		"a file is renamed": func(d string) {
 			_ = os.Rename(filepath.Join(d, "scripts", "run.sh"), filepath.Join(d, "scripts", "go.sh"))
 		},
-		"exec bit flips": func(d string) { _ = os.Chmod(filepath.Join(d, "scripts", "run.sh"), 0o755) },
+	}
+	if testutil.ExecBitsKept {
+		mutations["exec bit flips"] = func(d string) { _ = os.Chmod(filepath.Join(d, "scripts", "run.sh"), 0o755) }
 	}
 	for name, mutate := range mutations {
 		t.Run(name, func(t *testing.T) {
@@ -62,12 +67,57 @@ func TestHashDir_IsStableAndSensitiveToEveryChange(t *testing.T) {
 	}
 }
 
+func TestVendoredHash_WindowsTakesExecuteBitsFromTheLock(t *testing.T) {
+	testutil.SkipWithoutExecBits(t) // the locked hash comes from a checkout that keeps execute bits
+	unix := t.TempDir()
+	writeFile(t, filepath.Join(unix, "SKILL.md"), "skill\n", 0o644)
+	writeFile(t, filepath.Join(unix, "scripts", "run.sh"), "echo\n", 0o755)
+	le := LockEntry{SHA256: mustHash(t, unix), Executables: []string{"scripts/run.sh"}}
+
+	// The same files as a Windows checkout has them: no execute bit on disk.
+	win := t.TempDir()
+	writeFile(t, filepath.Join(win, "SKILL.md"), "skill\n", 0o644)
+	writeFile(t, filepath.Join(win, "scripts", "run.sh"), "echo\n", 0o644)
+
+	if got, err := vendoredHash("windows", win, le); err != nil || got != le.SHA256 {
+		t.Errorf("windows hash = %s (%v), want the locked %s", got, err, le.SHA256)
+	}
+	if got, _ := vendoredHash("linux", win, le); got == le.SHA256 {
+		t.Error("linux must read the execute bit from the file, not from the lock")
+	}
+	writeFile(t, filepath.Join(win, "SKILL.md"), "tampered\n", 0o644)
+	if got, _ := vendoredHash("windows", win, le); got == le.SHA256 {
+		t.Error("a content change must still change the windows hash")
+	}
+}
+
+func TestCheckVendored_WindowsSaysToFetchALockWithoutExecutables(t *testing.T) {
+	testutil.SkipWithoutExecBits(t)
+	teamDir, _ := consistent(t) // its script is executable, and the lock lists no executables
+	lock, err := ReadLock(LockPath(teamDir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var msgs []string
+	checkVendoredOn("windows", teamDir, lock.Skills[0], func(_, format string, args ...any) {
+		msgs = append(msgs, fmt.Sprintf(format, args...))
+	})
+	if len(msgs) != 1 || !strings.Contains(msgs[0], "execute bits") {
+		t.Errorf("messages = %q, want one saying the lock lacks execute bits", msgs)
+	}
+	msgs = nil
+	checkVendoredOn("darwin", teamDir, lock.Skills[0], func(_, format string, args ...any) {
+		msgs = append(msgs, fmt.Sprintf(format, args...))
+	})
+	if len(msgs) != 0 {
+		t.Errorf("darwin messages = %q, want none for a consistent skill", msgs)
+	}
+}
+
 func TestHashDir_RejectsSymlinks(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "SKILL.md"), "skill\n", 0o644)
-	if err := os.Symlink("/etc/passwd", filepath.Join(dir, "link")); err != nil {
-		t.Fatal(err)
-	}
+	testutil.Symlink(t, "/etc/passwd", filepath.Join(dir, "link"))
 	if _, err := HashDir(dir); err == nil || !strings.Contains(err.Error(), "symbolic link") {
 		t.Fatalf("err = %v, want a symbolic link error", err)
 	}
@@ -82,7 +132,7 @@ func TestLock_RoundTripSortedAndMissingFileIsEmpty(t *testing.T) {
 	}
 
 	in := Lock{Skills: []LockEntry{
-		{Name: "zeta", Source: "s", Ref: "r", Path: "p/zeta", Commit: "c2", SHA256: "h2"},
+		{Name: "zeta", Source: "s", Ref: "r", Path: "p/zeta", Commit: "c2", SHA256: "h2", Executables: []string{"scripts/run.sh"}},
 		{Name: "alpha", Source: "s", Ref: "r", Path: "p/alpha", Commit: "c1", SHA256: "h1"},
 	}}
 	if err := WriteLock(path, in); err != nil {
@@ -92,7 +142,7 @@ func TestLock_RoundTripSortedAndMissingFileIsEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadLock: %v", err)
 	}
-	if len(out.Skills) != 2 || out.Skills[0].Name != "alpha" || out.Skills[1] != in.Skills[0] {
+	if len(out.Skills) != 2 || out.Skills[0].Name != "alpha" || !reflect.DeepEqual(out.Skills[1], in.Skills[0]) {
 		t.Errorf("round trip = %+v, want sorted by name with fields intact", out.Skills)
 	}
 }

@@ -3,8 +3,9 @@ name: Release
 on:
   push:
     branches: [main]
-  # Manual dry run: builds the CLI and the desktop app as a GoReleaser snapshot
-  # and prints the casks, without tagging, uploading or pushing anything.
+  # Manual dry run: builds every OS's part of the release as a GoReleaser
+  # snapshot, merges them and prints the casks and the Scoop manifest, without
+  # tagging, uploading or pushing anything.
   workflow_dispatch:
     inputs:
       dry_run:
@@ -20,11 +21,60 @@ concurrency:
   group: release
   cancel-in-progress: false
 
+# The desktop app builds natively on each OS, so the release is split
+# (GoReleaser Pro): `version` decides the tag, `app-linux-arm64` builds the
+# arm64 Linux app on an arm64 runner, one `split` job per OS builds its part,
+# and `merge` pushes the tag and publishes everything at once. The tag is
+# pushed only after every build has succeeded, so a failed build leaves none.
 jobs:
-  # One macOS job: the desktop app needs a macOS runner, and GoReleaser then
-  # releases the CLI archives and the app's DMGs together, with a cask for each.
-  release:
-    runs-on: macos-latest
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.version.outputs.release }}
+      tag: ${{ steps.version.outputs.tag }}
+      build: ${{ steps.version.outputs.build }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        if: github.event_name == 'push'
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: stable
+
+      - name: Install svu
+        if: github.event_name == 'push'
+        run: go install github.com/caarlos0/svu/v3@v3.4.1
+
+      # svu reads the Conventional Commits since the latest tag. --v0 keeps a
+      # breaking change from jumping 0.x to 1.0.0 by accident; it has no effect
+      # once the project is at v1. A dry run builds without a tag.
+      - name: Compute next version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" != push ]; then
+            printf 'release=false\nbuild=true\n' >> "$GITHUB_OUTPUT"
+            echo "Dry run: a snapshot of every OS, nothing published."
+            exit 0
+          fi
+          current="$(svu current)"
+          next="$(svu next --v0)"
+          echo "current=$current next=$next"
+          if [ "$current" = "$next" ]; then
+            printf 'release=false\nbuild=false\n' >> "$GITHUB_OUTPUT"
+            echo "No releasable commits since $current."
+          else
+            printf 'release=true\nbuild=true\ntag=%s\n' "$next" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Wails does not cross-compile cgo, so the arm64 Linux app builds here.
+  app-linux-arm64:
+    needs: version
+    if: needs.version.outputs.build == 'true'
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -44,71 +94,206 @@ jobs:
       - name: Install Task
         run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
 
-      - name: Install svu
-        if: github.event_name == 'push'
-        run: go install github.com/caarlos0/svu/v3@v3.4.1
-
-      # svu reads the Conventional Commits since the latest tag. --v0 keeps a
-      # breaking change from jumping 0.x to 1.0.0 by accident; it has no effect
-      # once the project is at v1.
-      - name: Compute next version
-        id: version
-        if: github.event_name == 'push'
+      - name: Install Linux build dependencies
         run: |
-          current="$(svu current)"
-          next="$(svu next --v0)"
-          echo "current=$current next=$next"
-          if [ "$current" = "$next" ]; then
-            echo "release=false" >> "$GITHUB_OUTPUT"
-            echo "No releasable commits since $current."
-          else
-            echo "release=true" >> "$GITHUB_OUTPUT"
-            echo "tag=$next" >> "$GITHUB_OUTPUT"
-          fi
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgtk-3-dev libwebkit2gtk-4.1-dev
 
-      - name: Tag
-        if: steps.version.outputs.release == 'true'
-        run: |
-          git tag "${{ steps.version.outputs.tag }}"
-          git push origin "${{ steps.version.outputs.tag }}"
-
-      # GoReleaser imports the app built here (see scripts/desktop-prebuilt.sh).
-      - name: Build the desktop app
-        if: steps.version.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
+      - name: Build and stage the app
         env:
-          VERSION: ${{ steps.version.outputs.tag || '0.0.0-dryrun' }}
+          VERSION: ${{ needs.version.outputs.tag || '0.0.0-dryrun' }}
         run: |
           task desktop:build
           scripts/desktop-prebuilt.sh
 
-      - name: Release
-        if: steps.version.outputs.release == 'true'
+      - name: Upload the app
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: app-linux-arm64-${{ github.run_id }}
+          path: desktop/build/bin/prebuilt/kirokit-desktop_linux_arm64/
+          if-no-files-found: error
+          retention-days: 3
+
+  split:
+    needs: [version, app-linux-arm64]
+    if: needs.version.outputs.build == 'true'
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: macos-latest
+            goos: darwin
+          - os: ubuntu-latest
+            goos: linux
+          - os: windows-latest
+            goos: windows
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      VERSION: ${{ needs.version.outputs.tag || '0.0.0-dryrun' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: stable
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: lts/*
+
+      - name: Install Task
+        run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
+
+      - name: Install Linux build dependencies
+        if: matrix.goos == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Install NSIS
+        if: matrix.goos == 'windows'
+        run: |
+          choco install nsis --no-progress -y
+          echo "C:\\Program Files (x86)\\NSIS" >> "$GITHUB_PATH"
+
+      # GoReleaser imports the app built here (see scripts/desktop-prebuilt.sh);
+      # on Windows the setup programs become release extra files.
+      - name: Build and stage the desktop app
+        run: |
+          task desktop:build
+          scripts/desktop-prebuilt.sh
+
+      - name: Download the arm64 Linux app
+        if: matrix.goos == 'linux'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: app-linux-arm64-${{ github.run_id }}
+          path: desktop/build/bin/prebuilt/kirokit-desktop_linux_arm64
+
+      # Artifacts do not keep file modes.
+      - name: Mark the arm64 Linux app executable
+        if: matrix.goos == 'linux'
+        run: chmod 0755 desktop/build/bin/prebuilt/kirokit-desktop_linux_arm64/*
+
+      # Local only: GoReleaser reads the version from it. The merge job pushes it.
+      - name: Tag
+        if: needs.version.outputs.release == 'true'
+        run: git tag "${{ needs.version.outputs.tag }}"
+
+      - name: Build this OS's part of the release
         uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
         with:
           distribution: goreleaser-pro
           version: "~> v2"
-          args: release --clean
+          args: release --clean --split ${{ needs.version.outputs.release != 'true' && '--snapshot' || '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+          HOMEBREW_TAP_GITHUB_TOKEN: unused-in-a-split
+          SCOOP_BUCKET_GITHUB_TOKEN: unused-in-a-split
+
+      - name: Upload this OS's part
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist-${{ matrix.goos }}-${{ github.run_id }}
+          path: dist/${{ matrix.goos }}/
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload the Windows setup programs
+        if: matrix.goos == 'windows'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installers-${{ github.run_id }}
+          path: desktop/build/bin/installers/
+          if-no-files-found: error
+          retention-days: 3
+
+  merge:
+    needs: [version, split]
+    if: needs.version.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Download the macOS part
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist-darwin-${{ github.run_id }}
+          path: dist/darwin
+
+      - name: Download the Linux part
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist-linux-${{ github.run_id }}
+          path: dist/linux
+
+      - name: Download the Windows part
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist-windows-${{ github.run_id }}
+          path: dist/windows
+
+      - name: Download the Windows setup programs
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: installers-${{ github.run_id }}
+          path: desktop/build/bin/installers
+
+      # Every build has succeeded; only now does the tag reach the repository.
+      - name: Push the tag
+        if: needs.version.outputs.release == 'true'
+        run: |
+          git tag "${{ needs.version.outputs.tag }}"
+          git push origin "${{ needs.version.outputs.tag }}"
+
+      - name: Publish
+        if: needs.version.outputs.release == 'true'
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
+        with:
+          distribution: goreleaser-pro
+          version: "~> v2"
+          args: continue --merge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GoReleaser Pro license key.
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           # Fine-grained PAT with contents:write on mavogel/homebrew-tap.
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          # Fine-grained PAT with contents:write on mavogel/scoop-bucket; empty skips Scoop.
+          SCOOP_BUCKET_GITHUB_TOKEN: ${{ secrets.SCOOP_BUCKET_GITHUB_TOKEN }}
 
-      - name: Snapshot (dry run)
-        if: github.event_name == 'workflow_dispatch'
+      # The snapshot parts record that publishing is skipped, so the merge only
+      # assembles; the tap and bucket get placeholder tokens all the same.
+      - name: Merge the snapshot (dry run)
+        if: needs.version.outputs.release != 'true'
         uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
         with:
           distribution: goreleaser-pro
           version: "~> v2"
-          args: release --snapshot --clean
+          args: continue --merge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           HOMEBREW_TAP_GITHUB_TOKEN: unused-in-a-snapshot
+          SCOOP_BUCKET_GITHUB_TOKEN: unused-in-a-snapshot
 
-      - name: Print the casks (dry run)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Print the release files, casks and Scoop manifest (dry run)
+        if: needs.version.outputs.release != 'true'
         run: |
-          ls dist
-          cat dist/homebrew/Casks/*.rb
+          find dist desktop/build/bin/installers -maxdepth 2 -type f \( -name '*.tar.gz' -o -name '*.zip' -o -name '*.deb' -o -name '*.rpm' -o -name '*.dmg' -o -name '*-setup.exe' -o -name 'checksums.txt' \) | sort
+          for f in dist/homebrew/Casks/*.rb dist/*/scoop/*.json dist/scoop/*.json; do
+            [ -f "$f" ] && { echo "== $f"; cat "$f"; }
+          done
+          true

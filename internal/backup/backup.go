@@ -11,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/mavogel/kirokit/internal/dirlink"
 )
 
 // now is replaced in tests.
@@ -62,14 +64,25 @@ func CopyAside(dir, stamp string) (string, error) {
 			return err
 		}
 		switch {
-		case d.IsDir():
-			return os.MkdirAll(target, info.Mode().Perm()|0o700)
-		case info.Mode()&fs.ModeSymlink != 0:
-			link, err := os.Readlink(p)
+		case dirlink.Is(p):
+			// A symbolic link, or a Windows junction (which reads as a folder),
+			// including dir itself: kept as a link, never followed into what it
+			// points at.
+			link, err := dirlink.Target(p)
 			if err != nil {
 				return err
 			}
-			return os.Symlink(link, target)
+			if info.Mode()&fs.ModeSymlink != 0 {
+				err = os.Symlink(link, target)
+			} else {
+				err = dirlink.Make(link, target)
+			}
+			if err == nil && d.IsDir() {
+				return fs.SkipDir
+			}
+			return err
+		case d.IsDir():
+			return os.MkdirAll(target, info.Mode().Perm()|0o700)
 		case info.Mode().IsRegular():
 			return copyFile(p, target, info.Mode().Perm())
 		default:

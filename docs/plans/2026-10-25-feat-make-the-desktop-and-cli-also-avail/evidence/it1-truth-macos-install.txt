@@ -1,0 +1,9 @@
+# Truth/T4 on macOS: kirokit install output, base (eaa4b31) vs change (daa8ce8), same KIRO_HOME path, same repository (this checkout)
+$ diff -r <base install of platform-team> <change install of platform-team>  (KIRO_HOME='<scratch>/kh same/kiro', a path with a space)
+diff exit=0
+$ diff -r <base install of data-team> <change install of data-team>  (KIRO_HOME='<scratch>/kh same/kiro', a path with a space)
+diff exit=0
+
+(base and change both run the team templates of this checkout; the only difference is the devops header line from the template edit, so the base binary is fed the old template:)
+$ diff -r <base install> <change install>, both from the base's templates
+diff exit=0

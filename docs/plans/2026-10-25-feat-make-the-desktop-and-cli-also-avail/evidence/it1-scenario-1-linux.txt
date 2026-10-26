@@ -1,0 +1,22 @@
+# Scenario 1 step 4: Linux container (scripts/linux-docker.sh, arm64 host), tree daa8ce8 + review tests (unstaged)
+$ scripts/linux-docker.sh env KIROKIT_REQUIRE_SOPS=1 go test ./... -count=1
+aarch64
+sops 3.13.3 (latest)
+?   	github.com/mavogel/kirokit/cmd/kirokit	[no test files]
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	0.532s
+ok  	github.com/mavogel/kirokit/internal/backup	0.008s
+ok  	github.com/mavogel/kirokit/internal/dirlink	0.004s
+ok  	github.com/mavogel/kirokit/internal/externalskills	0.790s
+ok  	github.com/mavogel/kirokit/internal/golden	0.021s
+ok  	github.com/mavogel/kirokit/internal/install	0.033s
+ok  	github.com/mavogel/kirokit/internal/kiroconfig	0.001s
+ok  	github.com/mavogel/kirokit/internal/manifest	0.007s
+ok  	github.com/mavogel/kirokit/internal/mcpversions	0.001s
+ok  	github.com/mavogel/kirokit/internal/render	0.051s
+ok  	github.com/mavogel/kirokit/internal/scaffold	0.003s
+ok  	github.com/mavogel/kirokit/internal/sopswrap	0.002s
+?   	github.com/mavogel/kirokit/internal/testutil	[no test files]
+exit=0
+--- PASS: TestInstall_SopsLaunchReachesTheServerUnchanged (0.02s)
+ok  	github.com/mavogel/kirokit/cmd/kirokit/commands	0.027s
+docker exit=0

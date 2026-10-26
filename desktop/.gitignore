@@ -1,5 +1,9 @@
 build/bin
 build/dev-bin
+# Written again by every `wails build -nsis` (the WebView2 bootstrapper and the
+# generated NSIS defines); project.nsi is ours and stays tracked.
+build/windows/installer/tmp
+build/windows/installer/wails_tools.nsh
 node_modules
 # main.go embeds frontend/dist; the placeholder keeps a clean checkout compiling
 frontend/dist/*

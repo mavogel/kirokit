@@ -6,6 +6,7 @@ package render
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -16,17 +17,33 @@ import (
 	"github.com/mavogel/kirokit/internal/backup"
 	"github.com/mavogel/kirokit/internal/externalskills"
 	"github.com/mavogel/kirokit/internal/kiroconfig"
+	"github.com/mavogel/kirokit/internal/sopswrap"
 )
+
+// Options are the per-machine inputs of a render.
+type Options struct {
+	// KiroHome overrides Context.KiroHome; empty uses DefaultKiroHomeSentinel.
+	KiroHome string
+	// LaunchShell is the shell sops exec-env runs MCP commands with; install
+	// picks sopswrap.Cmd on Windows. Goldens always use POSIX (the zero value).
+	LaunchShell sopswrap.Shell
+}
 
 // RenderTeam renders teamsRoot/team into outDir. globalRoot is the root of
 // global/steerings; envVersionsPath is the central env/mcp-versions.yaml.
 // kiroHome overrides Context.KiroHome; an empty string uses
-// DefaultKiroHomeSentinel.
+// DefaultKiroHomeSentinel. MCP launches are built for a POSIX shell.
 func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir, kiroHome string) error {
-	ctx, err := BuildContext(teamsRoot, team, globalRoot, envVersionsPath, kiroHome)
+	return RenderTeamWith(teamsRoot, team, globalRoot, envVersionsPath, outDir, Options{KiroHome: kiroHome, LaunchShell: sopswrap.POSIX})
+}
+
+// RenderTeamWith is RenderTeam with every per-machine input in opts.
+func RenderTeamWith(teamsRoot, team, globalRoot, envVersionsPath, outDir string, opts Options) error {
+	ctx, err := BuildContext(teamsRoot, team, globalRoot, envVersionsPath, opts.KiroHome)
 	if err != nil {
 		return err
 	}
+	ctx.LaunchShell = opts.LaunchShell
 	funcMap := FuncMap(ctx)
 
 	teamDir := filepath.Join(teamsRoot, team)
@@ -188,9 +205,22 @@ func renderTemplate(path, relPath string, funcMap template.FuncMap, ctx *Context
 	}
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, ctx); err != nil {
+		var unsafe *sopswrap.UnsafeArgError
+		if errors.As(err, &unsafe) {
+			return nil, fmt.Errorf("render: %s/%s: %w", ctx.Team.Team, agentOf(relPath), unsafe)
+		}
 		return nil, fmt.Errorf("render: execute %s: %w", relPath, err)
 	}
 	return buf.Bytes(), nil
+}
+
+// agentOf is the agent a team-relative source path belongs to
+// (agents/<agent>/...), else the path itself.
+func agentOf(relPath string) string {
+	if segments := strings.Split(relPath, "/"); len(segments) > 2 && segments[0] == "agents" {
+		return segments[1]
+	}
+	return relPath
 }
 
 func validateOutput(outRel string, content []byte) error {

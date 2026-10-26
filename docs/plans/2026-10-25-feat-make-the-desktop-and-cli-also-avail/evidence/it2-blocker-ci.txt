@@ -1,0 +1,15 @@
+## 2026-10-25T20:00:22Z blocker probe for CI, release and Windows runs
+$ git branch --show-current
+feat/feat-make-desktop-cli-also
+$ git ls-remote --heads origin
+eaa4b319dc596336caf91ffb7fc8221bfd5ad765	refs/heads/main
+9c607052845825832372c960eba1f68cad1ded18	refs/heads/renovate/mcp-servers
+$ gh run list --branch feat/feat-make-desktop-cli-also --limit 5
+(exit 0; empty = no run)
+$ gh pr list --head feat/feat-make-desktop-cli-also
+(exit 0; empty = no pull request)
+$ printenv GORELEASER_KEY | wc -c
+       0
+$ uname -sm
+Darwin arm64
+No Windows host or runner is reachable from this Mac; pushing the branch is the person's step (T10), never the reviewer's.

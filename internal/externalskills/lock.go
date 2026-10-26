@@ -38,6 +38,10 @@ type LockEntry struct {
 	// From is the collection path (an all: true entry) that produced this
 	// skill; it is empty for a single-skill entry.
 	From string `yaml:"from,omitempty"`
+	// Executables are the skill's files git records as executable (mode
+	// 100755), slash-separated and relative to the skill folder. Windows keeps
+	// no execute bit, so it verifies SHA256 with these instead of file modes.
+	Executables []string `yaml:"executables,omitempty"`
 }
 
 // Lock is the contents of skills.lock.yaml.
@@ -100,6 +104,21 @@ func WriteLock(path string, l Lock) error {
 // content changes and exec-bit flips therefore all change the digest.
 // Symbolic links and other non-regular files are an error.
 func HashDir(dir string) (string, error) {
+	return hashDirWith(dir, func(_ string, info fs.FileInfo) bool { return info.Mode().Perm()&0o100 != 0 })
+}
+
+// hashDirWithExecutables is HashDir with the execute bits taken from
+// executables (slash paths relative to dir) instead of the files' modes.
+func hashDirWithExecutables(dir string, executables []string) (string, error) {
+	set := make(map[string]bool, len(executables))
+	for _, rel := range executables {
+		set[rel] = true
+	}
+	return hashDirWith(dir, func(rel string, _ fs.FileInfo) bool { return set[rel] })
+}
+
+// hashDirWith is HashDir with execOf deciding each file's execute bit.
+func hashDirWith(dir string, execOf func(rel string, info fs.FileInfo) bool) (string, error) {
 	var lines []string
 	err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -129,7 +148,7 @@ func HashDir(dir string) (string, error) {
 		}
 		sum := sha256.Sum256(content)
 		exec := "-"
-		if info.Mode().Perm()&0o100 != 0 {
+		if execOf(rel, info) {
 			exec = "x"
 		}
 		lines = append(lines, rel+"\x00"+exec+"\x00"+hex.EncodeToString(sum[:])+"\n")
