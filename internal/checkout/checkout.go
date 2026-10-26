@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -45,63 +46,72 @@ type Refs struct {
 // network or meets a sign-in prompt. GIT_* variables are dropped so git reads
 // dir itself. A missing or broken checkout returns an error.
 func Read(gitPath, dir string) (Refs, error) {
-	env := make([]string, 0, len(os.Environ()))
+	r := reader{git: gitPath, dir: dir}
 	for _, kv := range os.Environ() {
 		if !strings.HasPrefix(kv, "GIT_") {
-			env = append(env, kv)
+			r.env = append(r.env, kv)
 		}
 	}
-	run := func(args ...string) (string, error) {
-		cmd := exec.Command(gitPath, append([]string{"-C", dir}, args...)...)
-		cmd.Env = env
-		hideWindow(cmd)
-		out, err := cmd.Output()
-		return strings.TrimSpace(string(out)), err
-	}
-	lines := func(s string) []string {
-		out := []string{}
-		for l := range strings.SplitSeq(s, "\n") {
-			if l = strings.TrimSpace(l); l != "" {
-				out = append(out, l)
-			}
-		}
-		return out
-	}
-
-	commit, err := run("rev-parse", "--short", "HEAD")
+	current, err := r.current()
 	if err != nil {
 		return Refs{}, fmt.Errorf("read the checkout in %s: %w", dir, err)
 	}
-	refs := Refs{Current: Ref{Commit: commit}, Branches: []string{}, Tags: []string{}}
-	// The branch is cut from its full ref: git's short form turns into
-	// "heads/<name>" when a tag has the same name.
-	if full, err := run("symbolic-ref", "-q", "HEAD"); err == nil {
-		refs.Current.Kind, refs.Current.Name = "branch", strings.TrimPrefix(full, "refs/heads/")
-	} else if at, err := run("tag", "--points-at", "HEAD", "--sort=-v:refname"); err == nil && at != "" {
-		refs.Current.Kind, refs.Current.Name = "tag", lines(at)[0]
-	}
-
-	branches, err := run("for-each-ref", "--format=%(refname:lstrip=3)", "refs/remotes/origin/")
+	branches, err := r.lines("for-each-ref", "--format=%(refname:lstrip=3)", "refs/remotes/origin/")
 	if err != nil {
 		return Refs{}, fmt.Errorf("list the branches in %s: %w", dir, err)
 	}
-	for _, b := range lines(branches) {
-		if b != "HEAD" {
-			refs.Branches = append(refs.Branches, b)
-		}
-	}
-	sort.Strings(refs.Branches)
-
-	tags, err := run("tag", "--list", "--sort=-v:refname")
+	branches = slices.DeleteFunc(branches, func(b string) bool { return b == "HEAD" })
+	sort.Strings(branches)
+	tags, err := r.lines("tag", "--list", "--sort=-v:refname")
 	if err != nil {
 		return Refs{}, fmt.Errorf("list the tags in %s: %w", dir, err)
 	}
-	refs.Tags = lines(tags)
-	for _, tag := range refs.Tags {
-		if strings.HasPrefix(tag, "v") {
-			refs.Newest = tag
-			break
-		}
+	refs := Refs{Current: current, Branches: branches, Tags: tags}
+	if i := slices.IndexFunc(tags, func(t string) bool { return strings.HasPrefix(t, "v") }); i >= 0 {
+		refs.Newest = tags[i]
 	}
 	return refs, nil
+}
+
+// reader runs git on one checkout.
+type reader struct {
+	git, dir string
+	env      []string
+}
+
+func (r reader) run(args ...string) (string, error) {
+	cmd := exec.Command(r.git, append([]string{"-C", r.dir}, args...)...)
+	cmd.Env = r.env
+	hideWindow(cmd)
+	out, err := cmd.Output()
+	return strings.TrimSpace(string(out)), err
+}
+
+// lines runs git and returns its non-empty output lines, never nil.
+func (r reader) lines(args ...string) ([]string, error) {
+	out, err := r.run(args...)
+	lines := []string{}
+	for l := range strings.SplitSeq(out, "\n") {
+		if l = strings.TrimSpace(l); l != "" {
+			lines = append(lines, l)
+		}
+	}
+	return lines, err
+}
+
+// current is what HEAD is on: a branch, else the newest tag at HEAD, else
+// only its commit. The branch is cut from its full ref, since git's short form
+// turns into "heads/<name>" when a tag has the same name.
+func (r reader) current() (Ref, error) {
+	commit, err := r.run("rev-parse", "--short", "HEAD")
+	if err != nil {
+		return Ref{}, err
+	}
+	if full, err := r.run("symbolic-ref", "-q", "HEAD"); err == nil {
+		return Ref{Kind: "branch", Name: strings.TrimPrefix(full, "refs/heads/"), Commit: commit}, nil
+	}
+	if at, err := r.lines("tag", "--points-at", "HEAD", "--sort=-v:refname"); err == nil && len(at) > 0 {
+		return Ref{Kind: "tag", Name: at[0], Commit: commit}, nil
+	}
+	return Ref{Commit: commit}, nil
 }
