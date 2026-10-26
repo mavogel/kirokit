@@ -7,7 +7,7 @@ depth: product
 level: engineering
 ui: true
 overrides: []
-stage: review
+stage: shipped
 iterations: 1
 verification_failures: 0
 gate: null
@@ -15,7 +15,7 @@ created: 1793012565552
 startup_owner: a1b59536b4676690
 layout: seven
 profile: full
-status: approved
+status: verified
 approved: true
 review_digest: f6a6ff58a30518e6aa1e36b50f8da5edd3eb82f1832141f9d99d9853cfc97a88
 review_basis: f04128d75568416222744db8abf20eb943051d413c233a213bf5bb1cb4a54276
@@ -23,6 +23,10 @@ branch: feat/add-functionality-how-whole-value
 base: 3dcf20fa1669f956c07530487954be10184cee27
 base_ref: main
 judge_runs: 0
+shipped: 2026-10-26
+commits: ["381b399","ea2bc5f","6bbd7dc","ec8394b","2532cbe","2d1b288","9886baa","edfbfaf","973f22c","d01c46e","428a524","c908686","5fd5bbf","5582ed1"]
+touched: ["README.md","cmd/kirokit/","desktop/catalog.go","desktop/catalog_test.go","desktop/frontend/","internal/manifest/","internal/render/","teams/data-team/","teams/platform-team/","teams/product-team/","testdata/golden/"]
+slices: 5
 ---
 
 # Cross-role agent harness with feedback loop

@@ -38,8 +38,8 @@ Delivered 26 Oct, 13:53
 - Independent review · done · 6 of 6 points · 1 yours to confirm · 2 screens stale
 - Independent review of the Done means points · 6 of 7 proved
 
-**Left** · 1
-- Done means 5: The feedback reaches the owner · yours to confirm in Review
+**Left** · 0
+- None
 <!-- /ql:delivered -->
 
 ## Decided while building

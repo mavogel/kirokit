@@ -67,7 +67,7 @@ The new example team is content only (no MCP servers, no secrets):
 ## Built, slice by slice
 
 <!-- ql:slices -->
-5 slices · 13 tasks · 13 commits · 42 files · +1618 −40
+5 slices · 13 tasks · 14 commits · 42 files · +1618 −40
 
 **Slice 1 · Every team can name owners and a feedback repository** · T1, T2, T3, T4 · 11 files · +519 −5
 
@@ -134,7 +134,7 @@ The new example team is content only (no MCP servers, no secrets):
 - **2. The spec workflow has review gates by role.** Scenario 2: A spec's requirements and design are reviewed by role, after slice 2 · passed · `evidence/it1-scenario-2.txt`
 - **3. Every agent and skill of a team names its owner.** Scenario 3: Owners are validated and inherited, after slice 1 · Scenario 5: The desktop app shows owners and opens a feedback issue, after slice 4 · passed · `evidence/it1-scenario-5.txt`
 - **4. A non-engineer can send feedback on a skill or agent from where they work.** Scenario 4: `/feedback` in Kiro drafts the owner's issue, after slice 3 · Scenario 5: The desktop app shows owners and opens a feedback issue, after slice 4 · passed · `evidence/it1-scenario-4.txt`
-- **5. The feedback reaches the owner.** Only you can confirm: the issue reads well to an owner · waits for your confirmation
+- **5. The feedback reaches the owner.** Only you can confirm: the issue reads well to an owner · confirmed by you: Confirmed in the App
 - **6. A session-analysis skill suggests harness improvements from a Kiro chat.** Scenario 6: Session analysis suggests improvements by owner, after slice 5 · passed · `evidence/it1-scenario-6.txt`
 - **7. The README explains the role setup and the feedback loop.** Scenario 7: The README explains the role setup and the feedback loop, after slice 5 · passed · `evidence/it1-scenario-7.txt`
 <!-- /ql:proof -->
@@ -225,11 +225,11 @@ None: the build passed its checks.
 ## Settled with you
 
 <!-- ql:review-items -->
-- Still awaiting your confirmation: The issue reads well to an owner.
+- The issue reads well to an owner: confirmed · 26 Oct, 14:39
 <!-- /ql:review-items -->
 
 ## Ship
 
 <!-- ql:ship -->
-Not shipped yet. Branch `feat/add-functionality-how-whole-value`.
+Approved · 26 Oct, 14:44. Branch `feat/add-functionality-how-whole-value`.
 <!-- /ql:ship -->
