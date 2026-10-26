@@ -11,11 +11,25 @@ Three slices and eleven tasks: first the CLI (`sync --branch`, the detached plai
 ## How the build runs
 
 <!-- ql:waves -->
+- Wave 1 · Slice 1 (the CLI switches to a branch or tag and keeps it) · first
+- Wave 2 · Slice 2 (the desktop app reads the clone's versions and switches them) · on its own
+- Wave 3 · Slice 3 (the desktop pages pick, keep and show the version) · on its own
+
+3 waves · longest path 11 of 11 tasks
+
+A fresh agent runs the scenarios after slice 1 (it runs `git checkout` in the person's config checkout; the refusals are its first tests.) before the build goes on.
 <!-- /ql:waves -->
 
 ## How each point is proved
 
 <!-- ql:proof-map -->
+- Done means 1 · The CLI switches an existing config checkout to a named branch or tag → "the CLI switches to a branch and follows it" · runs after slice 1
+- Done means 2 · Later CLI syncs keep the choice until the person goes back to releases → "the CLI switches to a branch and follows it" · runs after slice 1
+- Done means 3 · The desktop app lets the person pick a branch or tag from a list, on Settings and on the first-launch clone page → "the desktop app switches, remembers and shows the version" · runs after slice 3; "first launch asks for the version after the clone" · runs after slice 3
+- Done means 4 · Desktop Update and Sync keep following the choice → "the desktop app switches, remembers and shows the version" · runs after slice 3
+- Done means 5 · The desktop app shows whether it is on a branch, a tag or the newest release, and which one → "the desktop app switches, remembers and shows the version" · runs after slice 3
+- Done means 6 · An unknown name or a checkout with local changes fails clearly and changes nothing → "a bad switch changes nothing" · runs after slice 1
+- Done means 7 · The README describes the new flag and the desktop control → "the README describes the flag and the control" · runs after slice 3
 <!-- /ql:proof-map -->
 
 ## Oracle
@@ -25,7 +39,7 @@ Three slices and eleven tasks: first the CLI (`sync --branch`, the detached plai
 
 ## Decided while outlining
 
-- `checkout.Read` takes a third argument, a hook run on each git command, so the desktop can hide git's console window on Windows (`hideConsole`); the CLI side never calls `Read`.
+- `checkout.Read` keeps the Plan's two-argument signature; build-tagged `run_windows.go`/`run_unix.go` in `internal/checkout` keep git from opening a console window on Windows, the repository's usual per-OS pattern.
 - `updateCheckout(latestTag bool, ref string)` is the mode: `ref != ""` switches, `latestTag` picks the newest tag, neither follows; `setup` calls `updateCheckout(true, "")`.
 - A local branch is checked out with `git checkout --quiet <name> --`, because `checkout refs/heads/<name>` would detach HEAD; the trailing `--` keeps git from reading the name as a path.
 - The list leaves out a tag that has the same name as a branch in the frontend's option builder, so `checkout.Refs` stays a faithful copy of git's refs.
@@ -113,7 +127,7 @@ After this slice the desktop's Go side can list the clone's branches and tags wi
 - [ ] T5 `checkout.Read` lists the clone's branches, tags and current version offline
   - **Objective:** Read what the checkout is on and the `origin` branches and tags from local refs only.
   - **Design:** "`internal/checkout` holds the name rule and the read-only view of a checkout", "plan:decision:d5"
-  - **Files:** `internal/checkout/checkout.go`, `internal/checkout/checkout_test.go`
+  - **Files:** `internal/checkout/checkout.go`, `internal/checkout/checkout_test.go`, `internal/checkout/run_unix.go`, `internal/checkout/run_windows.go`
   - **Test first:** `TestRead` on a clone of an origin with `main`, `feature`, `v1.0.0`, `v1.10.0`, `nightly`: wants `Branches` `[feature main]` (no `HEAD`), `Tags` `[v1.10.0 v1.0.0 nightly]`-style `-v:refname` order, `Newest` `v1.10.0`, `Current` `{branch main <short>}`; after `checkout --detach v1.0.0` `{tag v1.0.0 …}`; on an untagged detached commit `{"" "" <short>}`. Fails today: `Read` does not exist.
   - **Definition of done:**
     - A missing folder or a folder that is not a checkout returns an error; a clone with no tags returns empty (non-nil) lists and `Newest` "".
@@ -212,9 +226,9 @@ After this slice Settings shows what is in use and a Version list, the first-lau
 
 ## Program design
 
-### `checkout.Read` takes a command hook
+### `checkout.Read` hides git's console window on Windows itself
 
-`func Read(gitPath, dir string, prepare func(*exec.Cmd)) (Refs, error)`: `prepare` (nil allowed) runs on each git command before it starts. The desktop passes `hideConsole` so git opens no console window on Windows; the contract's two-argument form is otherwise unchanged.
+`Read` keeps the Plan's signature. Each git command it starts goes through `hideWindow(cmd)`, defined in build-tagged `run_windows.go` (sets `HideWindow` and `CREATE_NO_WINDOW`, as `desktop/procgroup_windows.go` does) and `run_unix.go` (does nothing).
 
 ### `updateCheckout(latestTag bool, ref string)`
 
@@ -300,4 +314,26 @@ After this slice Settings shows what is in use and a Version list, the first-lau
 ## Commands the build runs
 
 <!-- ql:commands -->
+- `go test ./internal/checkout ./cmd/kirokit/commands` · slice 1
+- `go vet ./...` · slice 1, project checks
+- `task lint` · slice 1, slice 2, project checks
+- `go test ./internal/checkout` · slice 2, T5
+- `cd desktop && go test ./...` · slice 2
+- `cd desktop/frontend && node --test` · slice 3, T8, T10, scenario 3
+- `cd desktop/frontend && npm run build` · slice 3
+- `task desktop:test` · slice 3, project checks
+- `task ci` · slice 3, project checks
+- `go test ./internal/checkout ./cmd/kirokit/commands -run 'TestCheckRefName|TestSetup'` · T1
+- `go test ./cmd/kirokit/commands -run 'TestSync|TestUpdateCheckout|TestSetup'` · T2
+- `go test ./cmd/kirokit/commands` · T3
+- `grep -n -e '--branch <name>' -e 'cannot be used together' README.md` · T4
+- `cd desktop && go test -run 'TestSaveSettings|TestClone|TestRepoDir' .` · T6
+- `cd desktop && go test -run 'TestSwitchRef|TestCheckout|TestRunner|TestClone' .` · T7
+- `cd desktop/frontend && node --test && npm run build` · T9
+- `grep -n -e 'Version' -e 'chosen version' README.md` · T11
+- `go test ./cmd/kirokit/commands -run 'TestSync_BranchRefusals' -count=1` · scenario 2
+- `cd desktop/frontend && node --test --test-name-pattern 'First launch'` · scenario 4
+- `grep -c -e 'sync <team> --branch <name>' README.md` · scenario 5
+- `go test ./...` · project checks
+- `node scripts/sync-agent-assets.mjs --check` · project checks
 <!-- /ql:commands -->
