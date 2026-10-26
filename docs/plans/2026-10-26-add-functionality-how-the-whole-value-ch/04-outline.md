@@ -158,7 +158,7 @@ After this slice `kirokit install product-team` gives the product owner, enginee
 
 After this slice a person in any `product-team` chat types `/feedback <what went wrong>` and gets a title, a body that @-mentions the owner, and a percent-encoded `issues/new` link in `mavogel/kirokit`, with nothing sent.
 
-- [ ] T8 The `/feedback` prompt renders the owner table and the issue address
+- [x] T8 The `/feedback` prompt renders the owner table and the issue address
   - **Objective:** Add `prompts/feedback.md.tmpl` that renders the team's agents and skills with owners (`owners`) and the issue base address (`feedbackRepo`), and instructs the agent to pick the item, draft title and body (what happened, what was expected, a chat quote, body at most 1500 characters) and print the link with `feedback,team:<team>,<kind>:<name>` labels plus the text to copy.
   - **Design:** "plan:decision:d6", "Render checks owner keys and subagent names against the team, and offers two template functions"
   - **Files:** `teams/product-team/prompts/feedback.md.tmpl`, `testdata/golden/product-team/rendered/prompts/feedback.md`
