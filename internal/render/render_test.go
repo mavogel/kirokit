@@ -678,3 +678,24 @@ func TestRenderTeam_SubagentNamesMustBeAgentsOfTheTeam(t *testing.T) {
 		})
 	}
 }
+
+// A vendored skill is one of the team's skills, so owners.skills may name it,
+// and the owner table then shows that owner instead of the team owner.
+func TestRenderTeam_OwnerKeyForAVendoredSkillIsAccepted(t *testing.T) {
+	teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+	vendorPDF(t, teamsRoot)
+	writeTeamFile(t, teamsRoot, "manifest.yaml", manifestWithPDF+"owner: \"@jane\"\nowners:\n  skills:\n    pdf: \"@pdf-keeper\"\nfeedback:\n  github: acme/cfg\n")
+	writeTeamFile(t, teamsRoot, "prompts/fb.md.tmpl", ownersTableTemplate)
+	outDir := filepath.Join(t.TempDir(), "out")
+
+	if err := RenderTeam(teamsRoot, "fixture-team", globalRoot, envVersionsPath, outDir, "/kh"); err != nil {
+		t.Fatalf("RenderTeam with owners.skills.pdf (vendored): %v", err)
+	}
+	got, err := os.ReadFile(filepath.Join(outDir, "prompts", "fb.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(got), "skill pdf @pdf-keeper false\n") {
+		t.Errorf("prompts/fb.md =\n%s\nwant the vendored pdf skill owned by @pdf-keeper, not the team", got)
+	}
+}

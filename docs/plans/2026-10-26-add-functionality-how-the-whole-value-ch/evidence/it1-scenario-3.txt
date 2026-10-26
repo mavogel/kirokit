@@ -1,0 +1,33 @@
+$ go test ./internal/manifest ./internal/render
+ok  	github.com/mavogel/kirokit/internal/manifest	0.163s
+ok  	github.com/mavogel/kirokit/internal/render	0.403s
+exit=0
+
+# copy of teams/product-team in a temp root; manifest gains owners.agents.qa: "jane"
+7:owners:
+8-  agents:
+9-    product-owner: "@mavogel"
+10-    qa: "jane"
+$ KIROKIT_REPO=<tmp root> kirokit render product-team --out <tmp>/out
+kirokit render: product-team: manifest: <scratch>/s3.KWLc/teams/product-team/manifest.yaml: owners.agents.qa: "jane" is not a GitHub handle (write @jane)
+exit=1
+
+# probe: owners.agents.qa: "@jane" but owners.agents.ghost: "@x" (no agent ghost)
+kirokit render: product-team: render: manifest.yaml: owners.agents.ghost: product-team has no agent ghost
+exit=1
+
+# probe: feedback.github: "javascript:alert(1)"
+kirokit render: product-team: manifest: <scratch>/s3.KWLc/teams/product-team/manifest.yaml: feedback.github: "javascript:alert(1)" is not a GitHub repository (write owner/repo)
+exit=1
+
+# probe: agent override with qa: "@jane" and a valid repo renders
+rendered product-team -> <scratch>/s3.KWLc/out
+exit=0
+<scratch>/s3.KWLc/out/prompts/feedback.md:12:| agent | `qa` | @jane |
+<scratch>/s3.KWLc/out/skills/analyze-session/SKILL.md:17:| agent | `qa` | @jane |
+
+$ ./kirokit test
+data-team: ok
+platform-team: ok
+product-team: ok
+exit=0

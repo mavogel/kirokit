@@ -377,3 +377,24 @@ func TestLoad_RejectsMalformedOwnersAndFeedback(t *testing.T) {
 		}
 	}
 }
+
+// GitHub logins are at most 39 characters; a handle one longer is refused.
+// An override written as an empty string names nobody by mistake, so it fails
+// like any other malformed handle. A repository named "." would let the issue
+// address step out of owner/repo.
+func TestLoad_OwnerHandleBoundariesAndEmptyOverride(t *testing.T) {
+	login39 := "a" + strings.Repeat("b", 38)
+	if _, err := Load(writeFixture(t, "team: t\nowner: \"@"+login39+"\"\n")); err != nil {
+		t.Errorf("39-character login: %v, want ok", err)
+	}
+	for _, c := range []struct{ yaml, want string }{
+		{"owner: \"@" + login39 + "c\"", `owner: "@` + login39 + `c" is not a GitHub handle`},
+		{"owners:\n  agents:\n    qa: \"\"", `owners.agents.qa: "" is not a GitHub handle`},
+		{"feedback:\n  github: a/.", `feedback.github: "a/." is not a GitHub repository`},
+	} {
+		_, err := Load(writeFixture(t, "team: t\n"+c.yaml+"\n"))
+		if err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("Load(%q) err = %v, want it to contain %q", c.yaml, err, c.want)
+		}
+	}
+}

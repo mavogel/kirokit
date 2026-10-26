@@ -1,0 +1,100 @@
+# Scenario 5, run on the checkout at c908686 (source identical to 428a524; only docs/plans differ)
+# Step 1: task desktop:test — reused receipt (all · 428a524 · exit 0), see ## Checks
+# Step 2 setup: go build -o desktop/build/dev-bin/kirokit ./cmd/kirokit; cd desktop; HOME=<scratch>/s5/home PATH=<scratch>/s5/shim:$PATH go tool wails dev
+#   <scratch>/s5/shim/open records what Wails asks macOS to open (Wails v2.17 darwin BrowserOpenURL validates, then runs `open <url>` via pkg/browser), so no real browser tab opens
+#   repository address entered on first launch: <scratch>/s5/src = git clone --no-tags of this checkout (no v* tag, so the clone stays on the branch)
+# Driven by headless Chrome (playwright-core) at http://localhost:34115; script <scratch>/s5-scripts/drive.cjs
+
+# first launch: welcome page shown; cloning <scratch>/s5/src
+# Teams page lists: data-team, platform-team, product-team
+
+## Step 2: Agents rows [agent | team | ... | owner | feedback]
+godev | data-team | none | @mavogel team owner | Feedback
+javadev | data-team | needs key | @mavogel team owner | Feedback
+devops | platform-team | needs key | @mavogel team owner | Feedback
+platformdev | platform-team | needs key | @mavogel team owner | Feedback
+customer | product-team | none | @mavogel team owner | Feedback
+engineer | product-team | none | @mavogel team owner | Feedback
+product-owner | product-team | none | @mavogel | Feedback
+qa | product-team | none | @mavogel team owner | Feedback
+ux-designer | product-team | none | @mavogel team owner | Feedback
+note under table: ["data-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off.","platform-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off."]
+Owner header present: 1
+disabled agent Feedback buttons: ["Give feedback on godev (no feedback repository)","Give feedback on javadev (no feedback repository)","Give feedback on devops (no feedback repository)","Give feedback on platformdev (no feedback repository)"]
+
+## Step 3: pressed Feedback on product-owner; Wails ran: open https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-team%20agent%20product-owner&body=%2A%2ATeam%3A%2A%2A%20product-team%0A%2A%2AAgent%3A%2A%2A%20product-owner%0A%2A%2AOwner%3A%2A%2A%20%40mavogel%0A%0A%2A%2AWhat%20happened%2A%2A%0A%3Cdescribe%20what%20the%20agent%20did%3E%0A%0A%2A%2AWhat%20you%20expected%2A%2A%0A%3Cdescribe%20what%20should%20have%20happened%3E%0A%0A_Sent%20from%20the%20kirokit%20desktop%20app._&labels=feedback,team%3Aproduct-team,agent%3Aproduct-owner
+decoded: {
+ "path": "/mavogel/kirokit/issues/new",
+ "title": "Feedback: product-team agent product-owner",
+ "labels": "feedback,team:product-team,agent:product-owner",
+ "body": "**Team:** product-team\n**Agent:** product-owner\n**Owner:** @mavogel\n\n**What happened**\n<describe what the agent did>\n\n**What you expected**\n<describe what should have happened>\n\n_Sent from the kirokit desktop app._"
+}
+row error shown: []
+
+## Step 4: Skills rows [skill | team | source | owner | feedback]
+sql-helper | data-team | Written by the team | @mavogel team owner | Feedback
+confluence-lookup | platform-team | Written by the team | @mavogel team owner | Feedback
+jira-search | platform-team | Written by the team | @mavogel team owner | Feedback
+analyze-session | product-team | Written by the team | @mavogel team owner | Feedback
+skill Feedback buttons: [
+ "Give feedback on sql-helper (no feedback repository) disabled=true",
+ "Give feedback on confluence-lookup (no feedback repository) disabled=true",
+ "Give feedback on jira-search (no feedback repository) disabled=true",
+ "Give feedback on analyze-session disabled=false"
+]
+note under skills table: ["data-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off.","platform-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off.","no agent yet","no agent yet"]
+pressed Feedback on analyze-session; decoded: {"path":"/mavogel/kirokit/issues/new","title":"Feedback: product-team skill analyze-session","labels":"feedback,team:product-team,skill:analyze-session","body":"**Team:** product-team\n**Skill:** analyze-session\n**Owner:** @mavogel\n\n**What happened**\n<describe what the skill did>\n\n**What you expected**\n<describe what should have happened>\n\n_Sent from the kirokit desktop app._"}
+
+## Step 5 (dark theme): Tab reached product-team/engineer
+focused button style: {"outline":"rgb(196, 181, 253) solid 2px","outlineOffset":"2px","boxShadow":"none","bg":"rgb(23, 19, 31)"}
+Enter opened: {"path":"/mavogel/kirokit/issues/new","title":"Feedback: product-team agent engineer","labels":"feedback,team:product-team,agent:engineer","body":"**Team:** product-team\n**Agent:** engineer\n**Owner:** @mavogel\n\n**What happened**\n<describe what the agent did>\n\n**What you expected**\n<describe what should have happened>\n\n_Sent from the kirokit desktop app._"}
+
+## Probe: api.openURL in the running app
+https://evil.example/issues/new?x -> refusing to open https://evil.example/issues/new?x
+javascript:alert(1) -> refusing to open javascript:alert(1)
+https://github.com/a/../issues/new?x -> refusing to open https://github.com/a/../issues/new?x
+open calls after the probe: 0
+at 760px wide: horizontal overflow px = 147
+
+## browser console
+[log] Queueing: runtime:ready
+[log] %c wails dev %c %s  background: #aa0000; color: #fff; border-radius: 3px 0px 0px 3px; padding: 1px; font-size: 0.7rem background: #009900; color: #fff; border-radius: 0px 3px 3px 0px; padding: 1px; font-size: 0.7rem Connected to backend
+[log] sending queued message: runtime:ready
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[pageerror] Cannot read properties of null (reading 'nodes')
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+
+## Wails dev log: lines about opening URLs or errors
+42:ERR | process message error: runtime:ready -> Unknown message from front end: runtime:ready
+43:ERR | Unknown message from front end: runtime:ready
+44:2:08:12 PM [vite] (client) [Unhandled error] TypeError: Cannot read properties of null (reading 'nodes')
+50:ERR | process message error: runtime:ready -> Unknown message from front end: runtime:ready
+51:ERR | Unknown message from front end: runtime:ready
+52:2:09:03 PM [vite] (client) [Unhandled error] TypeError: Cannot read properties of null (reading 'nodes')
+(the runtime:ready and ipc.js nodes errors come from the Wails dev browser bridge, ../wails/ipc.js, before any page code runs)
+
+## <scratch>/s5/shim/opened.log (every open Wails ran)
+https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-team%20agent%20product-owner&body=%2A%2ATeam%3A%2A%2A%20product-team%0A%2A%2AAgent%3A%2A%2A%20product-owner%0A%2A%2AOwner%3A%2A%2A%20%40mavogel%0A%0A%2A%2AWhat%20happened%2A%2A%0A%3Cdescribe%20what%20the%20agent%20did%3E%0A%0A%2A%2AWhat%20you%20expected%2A%2A%0A%3Cdescribe%20what%20should%20have%20happened%3E%0A%0A_Sent%20from%20the%20kirokit%20desktop%20app._&labels=feedback,team%3Aproduct-team,agent%3Aproduct-owner
+https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-team%20skill%20analyze-session&body=%2A%2ATeam%3A%2A%2A%20product-team%0A%2A%2ASkill%3A%2A%2A%20analyze-session%0A%2A%2AOwner%3A%2A%2A%20%40mavogel%0A%0A%2A%2AWhat%20happened%2A%2A%0A%3Cdescribe%20what%20the%20skill%20did%3E%0A%0A%2A%2AWhat%20you%20expected%2A%2A%0A%3Cdescribe%20what%20should%20have%20happened%3E%0A%0A_Sent%20from%20the%20kirokit%20desktop%20app._&labels=feedback,team%3Aproduct-team,skill%3Aanalyze-session
+https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-team%20agent%20engineer&body=%2A%2ATeam%3A%2A%2A%20product-team%0A%2A%2AAgent%3A%2A%2A%20engineer%0A%2A%2AOwner%3A%2A%2A%20%40mavogel%0A%0A%2A%2AWhat%20happened%2A%2A%0A%3Cdescribe%20what%20the%20agent%20did%3E%0A%0A%2A%2AWhat%20you%20expected%2A%2A%0A%3Cdescribe%20what%20should%20have%20happened%3E%0A%0A_Sent%20from%20the%20kirokit%20desktop%20app._&labels=feedback,team%3Aproduct-team,agent%3Aengineer
+
+## Narrow-window probe (<scratch>/s5-scripts/narrow.cjs); app MinWidth is 720 (desktop/main.go)
+agents 720px {"docOverflow":187,"mainOverflow":294,"mainOverflowX":"auto","tableWidth":754,"firstFeedbackButtonRight":1001,"viewport":720,"mainOverflowWithoutNewColumns":88}
+agents 760px {"docOverflow":147,"mainOverflow":254,"mainOverflowX":"auto","tableWidth":754,"firstFeedbackButtonRight":1001,"viewport":760,"mainOverflowWithoutNewColumns":48}
+agents 1000px {"docOverflow":0,"mainOverflow":14,"mainOverflowX":"auto","tableWidth":754,"firstFeedbackButtonRight":1001,"viewport":1000,"mainOverflowWithoutNewColumns":0}
+skills 720px {"docOverflow":0,"mainOverflow":14,"mainOverflowX":"auto","tableWidth":474,"firstFeedbackButtonRight":721,"viewport":720,"mainOverflowWithoutNewColumns":0}
+skills 760px {"docOverflow":0,"mainOverflow":0,"mainOverflowX":"auto","tableWidth":474,"firstFeedbackButtonRight":721,"viewport":760,"mainOverflowWithoutNewColumns":0}
+skills 1000px {"docOverflow":0,"mainOverflow":0,"mainOverflowX":"auto","tableWidth":712,"firstFeedbackButtonRight":945,"viewport":1000,"mainOverflowWithoutNewColumns":0}
+
+## QualityLayer capture
+$ qualitylayer evidence shot "agents-skills-feedback#agents-page" --url http://localhost:34115 ... -> outcome: unavailable: Task source is uncommitted; use a clean recorded preview before capture (the reviewer's new tests are deliberately left unstaged)
+$ qualitylayer artifact shot agents-skills-feedback --section agents-page|skills-page|opened-issue -> evidence/it1-artifact-*.png (expected state, compared with the app screenshots)
+
+## QualityLayer capture, retried on a clean source tree (the reviewer's unstaged tests set aside, then restored byte-for-byte)
+$ qualitylayer evidence shot "agents-skills-feedback#agents-page" --url http://localhost:34115 --wait-for '#teams-grid .card' --click 'nav button[data-page=agents]'
+outcome: unavailable: Page capture timed out: selector #teams-grid .card unavailable
+$ qualitylayer evidence shot "agents-skills-feedback#agents-page" --url http://localhost:34115 --wait-for 'nav' --click 'nav button[data-page=agents]'
+outcome: captured -> evidence/screen-a68917ac65608d7a02364154.png, but it shows the Agents header with no rows: the capture browser never received the
+catalog from the Wails dev backend (teams count empty), so it cannot show owners. The judged screens are the Playwright captures above, taken from the
+same running app with the catalog loaded, compared with evidence/it1-artifact-agents-page.png, -skills-page.png and -opened-issue.png.

@@ -212,6 +212,32 @@ func TestCatalog_OwnersAndFeedbackRepository(t *testing.T) {
 	}
 }
 
+// Owners are keyed by the agent's folder (agents/<folder>/), which is what the
+// manifest and render check against, not by the "name" inside the file.
+func TestCatalog_OwnerIsKeyedByTheAgentFolder(t *testing.T) {
+	root := fixtureRepo(t)
+	write(t, filepath.Join(root, "teams", "t1", "agents", "folder-x", "agent.json.tmpl"), `{"name": "shown-as-y", "description": "d", "tools": []}`)
+	write(t, filepath.Join(root, "teams", "t1", "manifest.yaml"), "team: t1\nglobalSteerings: []\nowner: \"@jane\"\nowners:\n  agents:\n    folder-x: \"@nick\"\n")
+
+	cat, err := BuildCatalog(root)
+	if err != nil {
+		t.Fatalf("BuildCatalog: %v", err)
+	}
+	seen := false
+	for _, a := range findTeam(t, cat, "t1").Agents {
+		if a.Name == "a1" {
+			continue
+		}
+		seen = true
+		if a.Owner != "@nick" || a.OwnerFromTeam {
+			t.Errorf("agent %q (folder folder-x) owner = %q, fromTeam %v; want @nick from owners.agents.folder-x", a.Name, a.Owner, a.OwnerFromTeam)
+		}
+	}
+	if !seen {
+		t.Fatal("the agent of folder folder-x is missing from the catalog")
+	}
+}
+
 // The real example team routes feedback to the kirokit repository.
 func TestCatalog_ProductTeamFeedbackRepository(t *testing.T) {
 	cat, err := BuildCatalog("..")

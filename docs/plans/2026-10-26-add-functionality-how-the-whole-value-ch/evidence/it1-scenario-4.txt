@@ -1,0 +1,70 @@
+# Step 1: product-team installed into <scratch>/kh.3Cdr (Scenario 1), kiro-cli 2.34.0
+$ kiro-cli chat --no-interactive --agent product-owner --v3 "/feedback the customer agent ignored my persona notes"
+[ERROR] (node:64738) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+The complaint is about the `customer` agent, owned by @mavogel.
+
+**Title**
+Feedback: product-team agent customer: ignored persona notes
+
+**Body**
+
+```text
+**Team:** product-team
+**Agent:** customer
+**Owner:** @mavogel
+
+**What happened**
+The customer agent ignored my persona notes.
+
+**What I expected**
+The customer agent should have followed the persona notes I provided.
+
+**From the chat**
+> the customer agent ignored my persona notes
+
+_Sent with /feedback in Kiro._
+```
+
+**Link**
+https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-team%20agent%20customer%3A%20ignored%20persona%20notes&body=%2A%2ATeam%3A%2A%2A%20product-team%0A%2A%2AAgent%3A%2A%2A%20customer%0A%2A%2AOwner%3A%2A%2A%20%40mavogel%0A%0A%2A%2AWhat%20happened%2A%2A%0AThe%20customer%20agent%20ignored%20my%20persona%20notes.%0A%0A%2A%2AWhat%20I%20expected%2A%2A%0AThe%20customer%20agent%20should%20have%20followed%20the%20persona%20notes%20I%20provided.%0A%0A%2A%2AFrom%20the%20chat%2A%2A%0A%3E%20the%20customer%20agent%20ignored%20my%20persona%20notes%0A%0A_Sent%20with%20%2Ffeedback%20in%20Kiro._&labels=feedback,team:product-team,agent:customer
+
+The link opens GitHub's new-issue form prefilled with the title and body above. Nothing is sent until you submit it there. The labels (`feedback`, `team:product-team`, `agent:customer`) apply only for people who may triage issues in `mavogel/kirokit`; for everyone else the title and body still name the team and the agent so the issue is traceable.
+exit=0
+
+# Step 3 (decoded with node URL/URLSearchParams, as a browser parses it)
+origin: https://github.com path: /mavogel/kirokit/issues/new
+title: "Feedback: product-team agent customer: ignored persona notes"
+labels: "feedback,team:product-team,agent:customer"
+body length: 314
+body:
+**Team:** product-team
+**Agent:** customer
+**Owner:** @mavogel
+
+**What happened**
+The customer agent ignored my persona notes.
+
+**What I expected**
+The customer agent should have followed the persona notes I provided.
+
+**From the chat**
+> the customer agent ignored my persona notes
+
+_Sent with /feedback in Kiro._
+anonymous GET of the link: HTTP 302 -> https://github.com/login?return_to=https%3A%2F%2Fgithub.com%2Fmavogel%2Fkirokit%2Fissues%2Fnew%3Ftitle%3DFeedback%253A%25
+(GitHub keeps the full prefilled address as return_to; the signed-in form view needs the person's GitHub account; nothing was submitted)
+
+# Probe: /feedback with no argument, in a chat that used nothing
+$ kiro-cli chat --no-interactive --agent qa --v3 "/feedback"
+[ERROR] (node:65635) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+It looks like your feedback note came through empty — the `what went wrong` field was blank, and there's nothing else in this chat to infer a complaint from (no agent or skill was actually used here).
+
+To draft the report, I need two things:
+
+1. **Which agent or skill?** The options from your table: `customer`, `engineer`, `product-owner`, `qa`, `ux-designer` agents, or the `analyze-session` skill.
+2. **What went wrong and what you expected** — a sentence or two in your words.
+
+If this was actually about something outside that table (a steering file, a hook, or Kiro itself), let me know and I'll route it to the team owner.
+exit=0

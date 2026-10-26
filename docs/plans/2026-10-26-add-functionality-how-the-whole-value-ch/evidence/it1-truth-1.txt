@@ -1,0 +1,48 @@
+# Truth 1: base tree = git archive 3dcf20f (before the change; its manifests set no owner/owners/feedback)
+# kirokit-base built from 3dcf20f, kirokit-new built from the judged source (c908686 = 428a524 for source)
+rendered platform-team -> <scratch>/t1/out-base/platform-team
+rendered platform-team -> <scratch>/t1/out-new/platform-team
+$ diff -r out-base/platform-team out-new/platform-team
+identical (10 files)
+rendered data-team -> <scratch>/t1/out-base/data-team
+rendered data-team -> <scratch>/t1/out-new/data-team
+$ diff -r out-base/data-team out-new/data-team
+identical (7 files)
+
+# context.json of the same unchanged manifest, new binary vs the base golden
+$ KIROKIT_REPO=base kirokit-new test platform-team
+platform-team: ok
+exit=
+$ KIROKIT_REPO=base kirokit-new test data-team
+data-team: golden mismatch:
+  context.json differs from <scratch>/t1/base/testdata/golden/data-team/context.json
+kirokit test: one or more teams have golden fixture mismatches
+exit=
+
+# goldens this change touches (git diff --stat 3dcf20f 428a524 -- testdata/golden)
+ testdata/golden/data-team/context.json             |  5 +-
+ testdata/golden/platform-team/context.json         |  1 +
+ testdata/golden/product-team/context.json          | 26 +++++++
+ .../product-team/rendered/agents/customer.json     | 25 +++++++
+ .../product-team/rendered/agents/engineer.json     | 31 +++++++++
+ .../rendered/agents/product-owner.json             | 25 +++++++
+ .../golden/product-team/rendered/agents/qa.json    | 25 +++++++
+ .../product-team/rendered/agents/ux-designer.json  | 25 +++++++
+ .../product-team/rendered/prompts/feedback.md      | 47 +++++++++++++
+ .../rendered/skills/analyze-session/SKILL.md       | 79 ++++++++++++++++++++++
+ .../rendered/steering/spec-review-gates.md         | 34 ++++++++++
+ 11 files changed, 321 insertions(+), 2 deletions(-)
+
+# The data-team mismatch is older than this change: the base binary on the base tree fails the same way
+$ KIROKIT_REPO=base kirokit-base test data-team
+data-team: golden mismatch:
+  context.json differs from <scratch>/t1/base/testdata/golden/data-team/context.json
+kirokit test: one or more teams have golden fixture mismatches
+exit=1
+$ diff base golden vs the new binary's render of the unchanged base data-team (context.json)
+agents
+hooks
+prompts
+skills
+steering
+diff: <scratch>/t1/out-new/data-team/context.json: No such file or directory

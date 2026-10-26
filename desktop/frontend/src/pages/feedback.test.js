@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { feedbackURL } from './feedback.js';
+import { feedbackURL, onFeedbackClick } from './feedback.js';
 
 const parse = (url) => {
   const u = new URL(url);
@@ -49,4 +49,23 @@ test('Names with characters that mean something in an address arrive unchanged',
   assert.equal(got.title, `Feedback: te am&x agent ${name}`);
   assert.equal(got.labels, `feedback,team:te am&x,agent:${name}`);
   assert.match(got.body, /\*\*Agent:\*\* a&b #c "d" e\+f\?g=h%\n/);
+});
+
+// The button's data attributes become the item the issue is about: kind from
+// data-feedback, team and name from theirs. A click inside the button (on its
+// text) counts; a disabled button and a click elsewhere do nothing.
+test('A Feedback press reports the pressed item, and only for an enabled Feedback button', () => {
+  let handler;
+  const section = { addEventListener: (type, fn) => { assert.equal(type, 'click'); handler = fn; } };
+  const pressed = [];
+  onFeedbackClick(section, (item) => pressed.push(item));
+
+  const button = (disabled) => ({ disabled, dataset: { feedback: 'skill', team: 'alpha', name: 'jira-search' } });
+  const target = (found) => ({ closest: (sel) => (sel === 'button[data-feedback]' ? found : null) });
+
+  handler({ target: target(button(false)) });
+  handler({ target: target(button(true)) });
+  handler({ target: target(null) });
+
+  assert.deepEqual(pressed, [{ team: 'alpha', kind: 'skill', name: 'jira-search' }]);
 });

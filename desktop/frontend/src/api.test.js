@@ -70,3 +70,11 @@ test('openURL opens a GitHub new-issue form and refuses every other address', as
   }
   assert.equal(opened.length, 1, 'no refused address reached the browser');
 });
+
+// Outside the Wails window (no runtime) a valid address fails with a message
+// the page can show, instead of a TypeError.
+test('openURL outside the app window rejects with a readable message', async () => {
+  globalThis.window = {};
+  const api = await import('./api.js');
+  await assert.rejects(api.openURL('https://github.com/acme/cfg/issues/new?title=x'), /^Error: kirokit is not running inside its window$/);
+});

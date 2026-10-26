@@ -1,0 +1,32 @@
+$ grep -n "Role agents and feedback" README.md
+119:- Example teams: `platform-team` (`devops`, `platformdev`; SOPS MCP servers; opted into `security-baseline`), `data-team` (`javadev` with SOPS Snowflake MCP, `godev` with plain MCP; no global steerings) and `product-team` (five role agents that consult each other, spec review gates, `/feedback` and `analyze-session`; no MCP servers or secrets; see [Role agents and feedback](#role-agents-and-feedback)). Copy one or use `kirokit onboard`; duplication between teams is expected.
+159:- `owner`, `owners` and `feedback` are optional; a team without them renders as before. Handles must look like `@user` or `@org/team` and `feedback.github` like `owner/repo`, else loading fails naming the field (`owners.agents.qa: "jane" is not a GitHub handle (write @jane)`). An `owners` key naming an agent or skill the team does not have fails render. Vendored skills have the team owner unless `owners.skills` names them. See [Role agents and feedback](#role-agents-and-feedback).
+161:## Role agents and feedback
+343:- **Agents** and **Skills** show each agent's and skill's owner and a **Feedback** button that opens a prefilled GitHub issue in the team's `feedback.github` repository (see [Role agents and feedback](#role-agents-and-feedback)).
+
+$ grep -n "mcpVersion\|globalSteering\|jsonString\|sopsArgsJSON\|feedbackRepo\|{{ range owners" README.md  # template-function mentions
+172:- **Owners:** `owner`, `owners.agents.<name>` and `owners.skills.<name>` in `manifest.yaml` (see the [reference](#manifestyaml-reference)). Write a GitHub h
+208:- Templates read it with `{{ mcpVersion "jira-mcp" }}`. An undefined key fails the render naming the key and file.
+
+$ grep -n "Example teams" README.md
+119:- Example teams: `platform-team` (`devops`, `platformdev`; SOPS MCP servers; opted into `security-baseline`), `data-team` (`javadev` with SOPS Snowflake MCP, `godev` with plain MCP; no global stee
+
+# names the README uses, checked against the source
+"owners":            internal/render/funcs.go 
+"feedbackRepo":      internal/render/funcs.go 
+yaml:"owner"         internal/manifest/manifest.go 
+yaml:"owners"        internal/manifest/manifest.go 
+yaml:"feedback"      internal/manifest/manifest.go 
+yaml:"github"        internal/manifest/manifest.go 
+yaml:"agents"        internal/manifest/manifest.go 
+yaml:"skills"        internal/externalskills/lock.go internal/manifest/manifest.go 
+teams/product-team/prompts/feedback.md.tmpl
+teams/product-team/skills/analyze-session/SKILL.md.tmpl
+teams/product-team/steerings/spec-review-gates.md.tmpl
+customer
+engineer
+product-owner
+qa
+ux-designer
+
+# --mode spec exists: see evidence/it1-scenario-2.txt (kiro-cli 2.34.0 accepted it and wrote specs)
