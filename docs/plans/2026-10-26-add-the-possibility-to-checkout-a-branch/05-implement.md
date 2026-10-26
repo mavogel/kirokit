@@ -28,12 +28,13 @@ Delivered 26 Oct, 17:47
 - the desktop app reads the clone's versions and switches them · slice 2 · 3 tasks
 - the desktop pages pick, keep and show the version · slice 3 · 4 tasks
 
-**Verified** · 2
+**Verified** · 3
 - Project checks passed · 6 of 6 · recorded
 - Security review · done · nothing severe in the change
+- Independent review of the Done means points · 7 of 7 proved
 
 **Left** · 2
-- Independent review · Review · not done
+- Independent review · failed
 - Fix rounds · Fix · not done
 <!-- /ql:delivered -->
 
@@ -46,6 +47,7 @@ Delivered 26 Oct, 17:47
 - Slice 2 · `ref:done`'s message drops terminal escape sequences before it looks for the `kirokit sync:` line, since the kirokit tab runs in a pseudo-terminal; nothing you approved changes.
 - Slice 3 · Under Newest release, a clone switched by hand to an older tag shows "tag <name> … not the newest release" instead of the newest-release badge, so the line never claims a release the clone is not on; nothing you approved changes.
 - The Plan · Outline only: T1's Files list adds cmd/kirokit/commands/setup_test.go, which T1 extended to assert the unchanged setup --branch message. No Plan text, Done means, scope or user decision changes.
+- The Plan · Verification round 1 was recorded while 5 files changed, 5 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -73,6 +75,12 @@ Delivered 26 Oct, 17:47
 - all · 594cacb · `task ci` · exit 0 · 8.1s
 - all · 594cacb · `task desktop:test` · exit 0 · 8.9s
 - all · 594cacb · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
+- all · 7ae1b97 · `go test ./...` · exit 0 · 7.7s
+- all · 7ae1b97 · `task lint` · exit 0 · 0.8s
+- all · 7ae1b97 · `go vet ./...` · exit 0 · 0.1s
+- all · 7ae1b97 · `task ci` · exit 0 · 8.6s
+- all · 7ae1b97 · `task desktop:test` · exit 0 · 8.7s
+- all · 7ae1b97 · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
 
 ## Known limits
 
@@ -90,6 +98,7 @@ None recorded.
 - T9 (tactical): under Newest release, a clone switched by hand to an older tag shows "tag <name> … not the newest release" instead of the newest-release badge, so the line never claims a release the clone is not on; nothing you approved changes.
 - Slices 2 and 3 (tactical): `qualitylayer commit slice` refused, saying `desktop/clone.go` and `desktop/frontend/src/pages/welcome.js` held uncommitted edits of the showcase-video task; their diffs held only this task's hunks, so the slice files were committed with plain git and the slice recorded afterwards; nothing you approved changes.
 - Plan (amended): Outline only: T1's Files list adds cmd/kirokit/commands/setup_test.go, which T1 extended to assert the unchanged setup --branch message. No Plan text, Done means, scope or user decision changes.
+- Plan (tactical): verification round 1 was recorded while 5 files changed, 5 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes
 
 ## Plan amended
 

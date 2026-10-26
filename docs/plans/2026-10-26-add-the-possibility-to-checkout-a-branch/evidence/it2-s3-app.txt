@@ -1,0 +1,36 @@
+# s3 against http://localhost:34115
+## Setup for Scenario 3: back to Newest release (the first launch left feature)
+  button: Switch to Newest release and update
+## Scenario 3 step 3: Settings on Newest release
+  Settings: {"inUse":"In use: newest release v1.1.0 at 432c1e1","selected":"","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   In use: newest release v1.1.0 at <commit>
+  OK   Version lists Newest release, Branches, Tags
+  picture: evidence/it2-scenario-3-step-3.png
+## Scenario 3 step 4: pick feature and switch
+  picked: {"inUse":"In use: newest release v1.1.0 at 432c1e1","selected":"feature","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Switch to feature and update","error":"","invalid":null}
+  OK   button reads Switch to feature and update
+  picture: evidence/it2-scenario-3-step-4-picked.png
+  after switch: {"inUse":"In use: branch feature at 2f29afd not a release","selected":"feature","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   In use: branch feature at … not a release; button back to Update
+  picture: evidence/it2-scenario-3-step-4.png
+  teams: ["beta","demo"]
+  OK   Teams shows the feature branch team beta
+  picture: evidence/it2-scenario-3-step-4-teams.png
+## Scenario 3 step 5: Install and sync, Sync
+  source line: Templates from branch feature at 2f29afd not a release
+  OK   Templates from branch feature … not a release
+  headers: ["▸ kirokit sync demo --branch feature"] (before: 1)
+  FAIL Sync started a new run with --branch feature, not --latest-tag
+  picture: evidence/it2-scenario-3-step-5.png
+## Scenario 3 step 6: Newest release, Update
+  back to newest: {"inUse":"In use: newest release v1.1.0 at 432c1e1","selected":"","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   line shows newest release
+  picture: evidence/it2-scenario-3-step-6.png
+## Probe: a tracked edit in the clone, then switch to v1.0.0 (Done means 6 in the app)
+  refused switch: {"inUse":"In use: newest release v1.1.0 at 432c1e1","selected":"v1.0.0","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Switch to v1.0.0 and update","error":"kirokit sync: local changes in /private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/e26b76e7-b383-4e5d-a323-1944b09752c8/scratchpad/it2/home/Library/Application Support/kirokit-desktop/repo: commit or discard them, then try again","invalid":"true"}
+  OK   error under the select, aria-invalid
+  OK   nothing changed: still newest release, HEAD same, pick kept for retry
+  picture: evidence/it2-scenario-3-probe-refused.png
+## Probe: reload the app; the saved choice is still Newest release
+  after reload: {"inUse":"In use: newest release v1.1.0 at 432c1e1","selected":"","options":["Newest release · follows new releases (now v1.1.0)","feature","main","v1.1.0","v1.0.0"],"groups":["Branches","Tags"],"button":"Update","error":"","invalid":null}
+  OK   saved choice unchanged after a refused switch
