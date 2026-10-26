@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 13 of 13 tasks · 5 of 5 slices
 
-Building now: started 26 Oct, 13:07, 46 min so far.
+Building now: started 26 Oct, 13:07, 47 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -35,6 +35,7 @@ Written when the last task is ticked.
 - Slice 5 · Every role agent also carries `{ "capability": "skill", "match": ["analyze-session"], "effect": "allow" }`, because Kiro CLI v3 asked permission to load the skill (live run) and, without it, the agent improvised and never reported; nothing you approved changes.
 - Slice 4 · `feedbackURL` percent-encodes `! ' ( ) * ~` on top of `encodeURIComponent`, because Wails v2.17's `BrowserOpenURL` refuses them as shell metacharacters (found driving the real app); nothing you approved changes.
 - Slice 1 · `feedback.github` also rejects `.` or `..` as the repository name, so the address cannot step out of `owner/repo`; nothing you approved changes.
+- The Plan · Outline bookkeeping after the build: T11 Files gains desktop/frontend/src/pages/feedback.js (the Owner and Feedback cells live there, shared by both pages), and T12 Files gains testdata/golden/product-team/rendered/prompts/feedback.md (the /feedback owner table now lists the analyze-session skill). No task, Done means or user decision changes.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -79,6 +80,7 @@ Written when the last task is ticked.
 - T12 (tactical): every role agent also carries `{ "capability": "skill", "match": ["analyze-session"], "effect": "allow" }`, because Kiro CLI v3 asked permission to load the skill (live run) and, without it, the agent improvised and never reported; nothing you approved changes
 - T10 (tactical): `feedbackURL` percent-encodes `! ' ( ) * ~` on top of `encodeURIComponent`, because Wails v2.17's `BrowserOpenURL` refuses them as shell metacharacters (found driving the real app); nothing you approved changes
 - T1 (tactical): `feedback.github` also rejects `.` or `..` as the repository name, so the address cannot step out of `owner/repo`; nothing you approved changes
+- Plan (amended): Outline bookkeeping after the build: T11 Files gains desktop/frontend/src/pages/feedback.js (the Owner and Feedback cells live there, shared by both pages), and T12 Files gains testdata/golden/product-team/rendered/prompts/feedback.md (the /feedback owner table now lists the analyze-session skill). No task, Done means or user decision changes.
 
 ## Plan amended
 
@@ -89,6 +91,12 @@ d2 and the render contract: Kiro CLI 2.34.0 v3 still prompted for a subagent lis
 Amended by the agent on 2026-10-26; changed 03-plan.md, 04-outline.md.
 
 Reasoning: the Plan left open what a `subagent` permission rule's `match` compares against, and relied on `trustedAgents` to skip the prompt. With `product-team` installed into a scratch Kiro home, `kiro-cli chat --no-interactive --agent product-owner --v3` (kiro-cli 2.34.0) called `customer` and was denied twice with "tool permission approval is not supported in non-interactive mode", although `customer` was in `trustedAgents`. Adding `{ "capability": "subagent", "match": ["customer", "qa", "ux-designer"], "effect": "allow" }` to the scratch copy made the same call complete without a prompt, while a call to `engineer` (not in the rule) was still held for permission. So `match` compares against the target agent's name, and the rule is what implements "consulting non-writers needs no prompt; calling the engineer asks first". `trustedAgents` stays, since Kiro's docs name it and it costs nothing. Render now also checks the rule's names, because a typo there would leave an agent prompting forever.
+
+### Plan · amended
+
+Outline bookkeeping after the build: T11 Files gains desktop/frontend/src/pages/feedback.js (the Owner and Feedback cells live there, shared by both pages), and T12 Files gains testdata/golden/product-team/rendered/prompts/feedback.md (the /feedback owner table now lists the analyze-session skill). No task, Done means or user decision changes.
+
+Amended by the agent on 2026-10-26; changed 04-outline.md.
 
 ## Live Kiro runs
 
