@@ -69,60 +69,60 @@ The new example team is content only (no MCP servers, no secrets):
 
 **Slice 1 · Every team can name owners and a feedback repository** · T1, T2, T3, T4 · 11 files · +519 −5
 
-- `cmd/kirokit/commands/root_test.go` · T4, T5 · +31 −1
-- `internal/manifest/manifest.go` · T1 · +95 −2
-- `internal/manifest/manifest_test.go` · T1 · +101 −0
-- `internal/render/context.go` · T2 · +6 −0
-- `internal/render/funcs.go` · T2 · +42 −0
-- `internal/render/render.go` · T2, T3 · +111 −0
-- `internal/render/render_test.go` · T2, T3 · +124 −0
-- `teams/data-team/manifest.yaml` · T4 · +1 −0
-- `teams/platform-team/manifest.yaml` · T4 · +4 −0
-- `testdata/golden/data-team/context.json` · T4 · +3 −2
-- `testdata/golden/platform-team/context.json` · T4 · +1 −0
+- [`cmd/kirokit/commands/root_test.go`](https://github.com/mavogel/kirokit/pull/24/files#diff-3e4047a698e242b34a654d196f6f14f0c05d78c1f1e26f75192fa3c6dd51ea88) · T4, T5 · +31 −1
+- [`internal/manifest/manifest.go`](https://github.com/mavogel/kirokit/pull/24/files#diff-690e7b459192b78ffe0159d8c095aa41c210de896d67b92b7bf548a8f585f371) · T1 · +95 −2
+- [`internal/manifest/manifest_test.go`](https://github.com/mavogel/kirokit/pull/24/files#diff-9fa6b9b6ac53923eed836a50409016adb3eff24f78aee49c601106b960ff57ac) · T1 · +101 −0
+- [`internal/render/context.go`](https://github.com/mavogel/kirokit/pull/24/files#diff-ab3233924e21b127260088fa87b31af121c011a8e444b171e6014133a3492ff3) · T2 · +6 −0
+- [`internal/render/funcs.go`](https://github.com/mavogel/kirokit/pull/24/files#diff-9b7c3f12a190eda80756dc985f3b6fd6986db9f368e0a93ea25b2b30a5d7fe7a) · T2 · +42 −0
+- [`internal/render/render.go`](https://github.com/mavogel/kirokit/pull/24/files#diff-958be64db7636ed99935de3eb080951f6f57f38d5f7c9811de20dd01aaff94d5) · T2, T3 · +111 −0
+- [`internal/render/render_test.go`](https://github.com/mavogel/kirokit/pull/24/files#diff-66b32ffffb7326b9d3ae8dea89eaabaf7883f4ad9f046fc7958a7d04da6a7061) · T2, T3 · +124 −0
+- [`teams/data-team/manifest.yaml`](https://github.com/mavogel/kirokit/pull/24/files#diff-f29078c1604d858c02e5083b7bea0d5c406efa312c8e92eb727054b76bb8e37a) · T4 · +1 −0
+- [`teams/platform-team/manifest.yaml`](https://github.com/mavogel/kirokit/pull/24/files#diff-cf711c3e8e6fa44d82b63f67e54a0f880c210aac463e4bf568ac7c8f0ea581a5) · T4 · +4 −0
+- [`testdata/golden/data-team/context.json`](https://github.com/mavogel/kirokit/pull/24/files#diff-9133fa67013be8872d69f2296c2c573b1988a0b662313f988e0ecdae58536606) · T4 · +3 −2
+- [`testdata/golden/platform-team/context.json`](https://github.com/mavogel/kirokit/pull/24/files#diff-9c61cb8b262d7641125f02d92349077490fe09829f0ad1d9cfd949a83e054f3a) · T4 · +1 −0
 
 **Slice 2 · A team can install five role agents that consult each other** · T5, T6, T7 · 15 files · +457 −2
 
-- `desktop/catalog_test.go` · T5, T9 · +92 −2
-- `teams/product-team/agents/customer/agent.json.tmpl` · T5, T6, T12 · new · +23 −0
-- `teams/product-team/agents/engineer/agent.json.tmpl` · T5, T6, T12 · new · +29 −0
-- `teams/product-team/agents/product-owner/agent.json.tmpl` · T5, T6, T12 · new · +23 −0
-- `teams/product-team/agents/qa/agent.json.tmpl` · T5, T6, T12 · new · +23 −0
-- `teams/product-team/agents/ux-designer/agent.json.tmpl` · T5, T6, T12 · new · +23 −0
-- `teams/product-team/manifest.yaml` · T5 · new · +19 −0
-- `teams/product-team/steerings/spec-review-gates.md.tmpl` · T6 · new · +34 −0
-- `testdata/golden/product-team/context.json` · T5 · new · +26 −0
-- `testdata/golden/product-team/rendered/agents/customer.json` · T5, T6, T12 · new · +25 −0
-- `testdata/golden/product-team/rendered/agents/engineer.json` · T5, T6, T12 · new · +31 −0
-- `testdata/golden/product-team/rendered/agents/product-owner.json` · T5, T6, T12 · new · +25 −0
-- `testdata/golden/product-team/rendered/agents/qa.json` · T5, T6, T12 · new · +25 −0
-- `testdata/golden/product-team/rendered/agents/ux-designer.json` · T5, T6, T12 · new · +25 −0
-- `testdata/golden/product-team/rendered/steering/spec-review-gates.md` · T6 · new · +34 −0
+- [`desktop/catalog_test.go`](https://github.com/mavogel/kirokit/pull/24/files#diff-378958c2068bc01659303d9140791e1c09ab9606062fe2ee45af7e24cf1ca25a) · T5, T9 · +92 −2
+- [`teams/product-team/agents/customer/agent.json.tmpl`](https://github.com/mavogel/kirokit/pull/24/files#diff-fb237d524fa80edaddf8e0c0b9ca3647e9fbd9dfd81a5fa02f29d45a01701d99) · T5, T6, T12 · new · +23 −0
+- [`teams/product-team/agents/engineer/agent.json.tmpl`](https://github.com/mavogel/kirokit/pull/24/files#diff-ed347f60e6c0ddd161a01f5ca04dd1c6f392de312add072b56b99839e4ce52e0) · T5, T6, T12 · new · +29 −0
+- [`teams/product-team/agents/product-owner/agent.json.tmpl`](https://github.com/mavogel/kirokit/pull/24/files#diff-37af02a405d03fee6c948cb8f7b713f884e1aa14215accd17faca3160147e1b2) · T5, T6, T12 · new · +23 −0
+- [`teams/product-team/agents/qa/agent.json.tmpl`](https://github.com/mavogel/kirokit/pull/24/files#diff-79e66618383d37545241504ce67ded516f0d1dd2ccfebbc07a82baefb7e1b7e3) · T5, T6, T12 · new · +23 −0
+- [`teams/product-team/agents/ux-designer/agent.json.tmpl`](https://github.com/mavogel/kirokit/pull/24/files#diff-589d369e0dc30ff9a37d6b4fe9a7c8c5170c800847b737b56d8059a550acbfca) · T5, T6, T12 · new · +23 −0
+- [`teams/product-team/manifest.yaml`](https://github.com/mavogel/kirokit/pull/24/files#diff-b12311ab55faf81fd9e9f0493f22f2cdb939819842a05eb0a845dc35d130ebac) · T5 · new · +19 −0
+- [`teams/product-team/steerings/spec-review-gates.md.tmpl`](https://github.com/mavogel/kirokit/pull/24/files#diff-4df1d4859b2c704e48eb280decde61ac29904e8252c99469ba2d7a6fbd520983) · T6 · new · +34 −0
+- [`testdata/golden/product-team/context.json`](https://github.com/mavogel/kirokit/pull/24/files#diff-2d3f7c702c3153680cf25203c85babee669eb944009051df489dd61afe97d421) · T5 · new · +26 −0
+- [`testdata/golden/product-team/rendered/agents/customer.json`](https://github.com/mavogel/kirokit/pull/24/files#diff-4f3c43a6fbab1139997243abfd4153d9bb3501cf9be914892596f6556acf44e6) · T5, T6, T12 · new · +25 −0
+- [`testdata/golden/product-team/rendered/agents/engineer.json`](https://github.com/mavogel/kirokit/pull/24/files#diff-e487f9aa02b0dbeb8a43cc38ebe78276ed2cd8c3edb12bf17d6814e8ddf0f57e) · T5, T6, T12 · new · +31 −0
+- [`testdata/golden/product-team/rendered/agents/product-owner.json`](https://github.com/mavogel/kirokit/pull/24/files#diff-4cd3e835f6bfd9f7a16413c5924d98a1b623e467e552327a872626e99b07ffe1) · T5, T6, T12 · new · +25 −0
+- [`testdata/golden/product-team/rendered/agents/qa.json`](https://github.com/mavogel/kirokit/pull/24/files#diff-ae818caeb6534ceac9c8a00737463868922ee884a8102a56bd6a13ecadd3cf51) · T5, T6, T12 · new · +25 −0
+- [`testdata/golden/product-team/rendered/agents/ux-designer.json`](https://github.com/mavogel/kirokit/pull/24/files#diff-c4451a00d9752419ce05a3d9db202903773b232c02c4b58ddbe3fedd237a903d) · T5, T6, T12 · new · +25 −0
+- [`testdata/golden/product-team/rendered/steering/spec-review-gates.md`](https://github.com/mavogel/kirokit/pull/24/files#diff-38074449f1dffb94c7b8dde82f86178b6109b94ede2917c26c0b2da1e177a8b3) · T6 · new · +34 −0
 
 **Slice 3 · `/feedback` in Kiro drafts a prefilled issue for the owner** · T8 · 2 files · +91 −0
 
-- `teams/product-team/prompts/feedback.md.tmpl` · T8 · new · +44 −0
-- `testdata/golden/product-team/rendered/prompts/feedback.md` · T8, T12 · new · +47 −0
+- [`teams/product-team/prompts/feedback.md.tmpl`](https://github.com/mavogel/kirokit/pull/24/files#diff-b8b236651093fa1bf054ec7bf0576643980fd9e1d7a634e3c8cb0cf9f00a99cd) · T8 · new · +44 −0
+- [`testdata/golden/product-team/rendered/prompts/feedback.md`](https://github.com/mavogel/kirokit/pull/24/files#diff-0afcf6e5152a78bf85c573985f756e381372e6b9c0c9f5b9937136174bb019fa) · T8, T12 · new · +47 −0
 
 **Slice 4 · The desktop app shows owners and opens a feedback issue** · T9, T10, T11 · 11 files · +368 −31
 
-- `desktop/catalog.go` · T9 · +31 −13
-- `desktop/frontend/index.html` · T11 · +4 −4
-- `desktop/frontend/src/api.js` · T10 · +27 −0
-- `desktop/frontend/src/api.test.js` · T10 · +36 −0
-- `desktop/frontend/src/main.js` · T11 · +15 −2
-- `desktop/frontend/src/pages/agents.js` · T11 · +14 −6
-- `desktop/frontend/src/pages/feedback.js` · T10, T11 · new · +80 −0
-- `desktop/frontend/src/pages/feedback.test.js` · T10 · new · +71 −0
-- `desktop/frontend/src/pages/pages.test.js` · T11 · +71 −0
-- `desktop/frontend/src/pages/skills.js` · T11 · +16 −6
-- `desktop/frontend/src/style.css` · T11 · +3 −0
+- [`desktop/catalog.go`](https://github.com/mavogel/kirokit/pull/24/files#diff-0834c61066a97277b759850557ffeffdc25424290e1a9350a78d7a3dccd29491) · T9 · +31 −13
+- [`desktop/frontend/index.html`](https://github.com/mavogel/kirokit/pull/24/files#diff-d7021ef4c2c37f5c5a57b6c688d8b2233915c45bab1dd0e9db359c958c4bb3a3) · T11 · +4 −4
+- [`desktop/frontend/src/api.js`](https://github.com/mavogel/kirokit/pull/24/files#diff-1f29e5662697e24380064e530fe5825088c24b4d5bc3c757d0d884e5e8a60d4e) · T10 · +27 −0
+- [`desktop/frontend/src/api.test.js`](https://github.com/mavogel/kirokit/pull/24/files#diff-9fb087146e29f9abfd08f248f0d02945b9dac48fd111fbe49012d129ebf44c28) · T10 · +36 −0
+- [`desktop/frontend/src/main.js`](https://github.com/mavogel/kirokit/pull/24/files#diff-a59db5aebe85dd0ca14d4373fe7f1ffdb3718c69002286f0b33cde422d53f38b) · T11 · +15 −2
+- [`desktop/frontend/src/pages/agents.js`](https://github.com/mavogel/kirokit/pull/24/files#diff-f6b04ce648f569814ab7ca3fb0b17aab733baf114fbe24c7fc4ab660c728e851) · T11 · +14 −6
+- [`desktop/frontend/src/pages/feedback.js`](https://github.com/mavogel/kirokit/pull/24/files#diff-6e0efe30c2690fe86bd78641b77edef759ffca3219b29a037e02da9bece96da4) · T10, T11 · new · +80 −0
+- [`desktop/frontend/src/pages/feedback.test.js`](https://github.com/mavogel/kirokit/pull/24/files#diff-7c0bb9f479e1e872ddf96b7cee58e2355ba9137d6ca0ac772acc02a456e9e438) · T10 · new · +71 −0
+- [`desktop/frontend/src/pages/pages.test.js`](https://github.com/mavogel/kirokit/pull/24/files#diff-03c538c0ea841db73cb94e2ab514452b5add1f97253c33e2a34197facd87e52a) · T11 · +71 −0
+- [`desktop/frontend/src/pages/skills.js`](https://github.com/mavogel/kirokit/pull/24/files#diff-d46bbf4034fae5f125f140402b50b9e0cc802a4480e967b49494aaca1874facd) · T11 · +16 −6
+- [`desktop/frontend/src/style.css`](https://github.com/mavogel/kirokit/pull/24/files#diff-99b8fafca09e3b45f60088c58fc121b6a2cfee2f53fa7a7b6868e66c89de9c6d) · T11 · +3 −0
 
 **Slice 5 · `analyze-session` turns a Kiro chat into owner issues, and the README explains it all** · T12, T13 · 3 files · +183 −2
 
-- `README.md` · T13 · +28 −2
-- `teams/product-team/skills/analyze-session/SKILL.md.tmpl` · T12 · new · +76 −0
-- `testdata/golden/product-team/rendered/skills/analyze-session/SKILL.md` · T12 · new · +79 −0
+- [`README.md`](https://github.com/mavogel/kirokit/pull/24/files#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5) · T13 · +28 −2
+- [`teams/product-team/skills/analyze-session/SKILL.md.tmpl`](https://github.com/mavogel/kirokit/pull/24/files#diff-7d55b546ecea2bee4f5a8154733e8e90e2f61fb70e87dcef458ceea76f7c30c3) · T12 · new · +76 −0
+- [`testdata/golden/product-team/rendered/skills/analyze-session/SKILL.md`](https://github.com/mavogel/kirokit/pull/24/files#diff-fb50166837a8ba701271bffd9fcb4e8e0d295ba1b4008093bf90e723a4f812db) · T12 · new · +79 −0
 <!-- /ql:slices -->
 
 ## What was asked for, and how each point was proved
