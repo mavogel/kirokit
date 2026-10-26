@@ -20,6 +20,9 @@ const collapse = document.getElementById('collapse');
 const navButtons = [...document.querySelectorAll('.nav button')];
 const sidebar = createSidebar({ isHidden: () => setup() });
 
+// What the pages know of the clone's versions before (or without) a read.
+const noCheckout = { current: { kind: '', name: '', commit: '' }, branches: [], tags: [], newest: '' };
+
 // The pages draw from one view: the catalog, the install records, whether the
 // clone exists, and the state of the buttons. A catalog error is kept as text
 // for the pages. Until the first State arrives (loaded) nothing is decided.
@@ -34,7 +37,7 @@ const view = {
   notice: '', // the no-release message, or why the last clone failed
   welcome: { address: '', error: '', busy: false },
   ref: '', // the saved version every sync uses; '' is Newest release
-  checkout: { current: { kind: '', name: '', commit: '' }, branches: [], tags: [], newest: '' },
+  checkout: noCheckout,
   switching: '', // where a version switch was started: 'settings' or 'welcome'
   refError: null, // { where, message } of the last failed switch
 };
@@ -213,7 +216,7 @@ async function loadCatalog() {
       view.checkout = await api.checkout();
     } catch {
       // A clone git cannot read shows no version line; the catalog reports the clone's problems.
-      view.checkout = { current: { kind: '', name: '', commit: '' }, branches: [], tags: [], newest: '' };
+      view.checkout = noCheckout;
     }
   } catch (e) {
     view.error = message(e);
