@@ -575,3 +575,96 @@ func TestRenderTeam_RestoresTheOutputFolderWhenPublishingTheFreshRenderFails(t *
 		t.Errorf("backup folders left after a successful restore: %v", left)
 	}
 }
+
+func writeTeamFile(t *testing.T, teamsRoot, rel, content string) {
+	t.Helper()
+	p := filepath.Join(teamsRoot, "fixture-team", filepath.FromSlash(rel))
+	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(p, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+const ownersTableTemplate = "{{ range owners }}{{ .Kind }} {{ .Name }} {{ .Owner }} {{ .FromTeam }}\n{{ end }}repo={{ feedbackRepo }}\n"
+
+// The owner table lists every agent and skill once, vendored skills with the
+// team owner, sorted by kind then name.
+func TestRenderTeam_OwnersAndFeedbackRepoTemplateFunctions(t *testing.T) {
+	teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+	vendorPDF(t, teamsRoot)
+	writeTeamFile(t, teamsRoot, "manifest.yaml", manifestWithPDF+"owner: \"@jane\"\nowners:\n  skills:\n    skill1: \"@bob\"\nfeedback:\n  github: acme/cfg\n")
+	writeTeamFile(t, teamsRoot, "agents/agent0/agent.json.tmpl", `{"name": "agent0"}`)
+	writeTeamFile(t, teamsRoot, "prompts/fb.md.tmpl", ownersTableTemplate)
+	outDir := filepath.Join(t.TempDir(), "out")
+
+	if err := RenderTeam(teamsRoot, "fixture-team", globalRoot, envVersionsPath, outDir, "/kh"); err != nil {
+		t.Fatalf("RenderTeam: %v", err)
+	}
+	got, err := os.ReadFile(filepath.Join(outDir, "prompts", "fb.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "agent agent0 @jane true\nagent agent1 @jane true\nskill pdf @jane true\nskill skill1 @bob false\nrepo=acme/cfg\n"
+	if string(got) != want {
+		t.Errorf("prompts/fb.md =\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestRenderTeam_FeedbackRepoFailsWhenTheManifestSetsNone(t *testing.T) {
+	teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+	writeTeamFile(t, teamsRoot, "prompts/fb.md.tmpl", ownersTableTemplate)
+
+	err := RenderTeam(teamsRoot, "fixture-team", globalRoot, envVersionsPath, filepath.Join(t.TempDir(), "out"), "")
+
+	if err == nil || !strings.Contains(err.Error(), "feedbackRepo: fixture-team's manifest.yaml sets no feedback.github") {
+		t.Errorf("err = %v, want the feedbackRepo error naming the team", err)
+	}
+}
+
+func TestRenderTeam_OwnerKeyForAnItemTheTeamLacksFails(t *testing.T) {
+	for kind, want := range map[string]string{
+		"agents": "render: manifest.yaml: owners.agents.ghost: fixture-team has no agent ghost",
+		"skills": "render: manifest.yaml: owners.skills.ghost: fixture-team has no skill ghost",
+	} {
+		teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+		writeTeamFile(t, teamsRoot, "manifest.yaml", "team: fixture-team\nglobalSteerings:\n  - security-baseline\nowners:\n  "+kind+":\n    ghost: \"@x\"\n")
+
+		err := RenderTeam(teamsRoot, "fixture-team", globalRoot, envVersionsPath, filepath.Join(t.TempDir(), "out"), "")
+
+		if err == nil || err.Error() != want {
+			t.Errorf("%s: err = %v, want %q", kind, err, want)
+		}
+	}
+}
+
+func TestRenderTeam_SubagentNamesMustBeAgentsOfTheTeam(t *testing.T) {
+	agent := func(available, trusted string) string {
+		return `{"name": "agent1", "tools": ["subagent"], "toolsSettings": {"subagent": {"availableAgents": ` + available + `, "trustedAgents": ` + trusted + `}}}`
+	}
+	cases := []struct {
+		name, config, want string
+	}{
+		{"team agents and globs", agent(`["agent2", "*", "qa-?", "[ab]*"]`, `["agent2"]`), ""},
+		{"no subagent settings", `{"name": "agent1", "tools": ["read"]}`, ""},
+		{"unknown available", agent(`["agent2", "ghost"]`, `[]`), `render: agents/agent1/agent.json.tmpl: toolsSettings.subagent.availableAgents names "ghost", which is not an agent of fixture-team`},
+		{"unknown trusted", agent(`["agent2"]`, `["nobody"]`), `render: agents/agent1/agent.json.tmpl: toolsSettings.subagent.trustedAgents names "nobody", which is not an agent of fixture-team`},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			teamsRoot, globalRoot, envVersionsPath := setupFixture(t)
+			writeTeamFile(t, teamsRoot, "agents/agent1/agent.json.tmpl", c.config)
+			writeTeamFile(t, teamsRoot, "agents/agent2/agent.json.tmpl", `{"name": "agent2"}`)
+
+			err := RenderTeam(teamsRoot, "fixture-team", globalRoot, envVersionsPath, filepath.Join(t.TempDir(), "out"), "")
+
+			switch {
+			case c.want == "" && err != nil:
+				t.Errorf("err = %v, want none", err)
+			case c.want != "" && (err == nil || err.Error() != c.want):
+				t.Errorf("err = %v, want %q", err, c.want)
+			}
+		})
+	}
+}

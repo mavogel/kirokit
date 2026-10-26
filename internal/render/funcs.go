@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"text/template"
 
+	"github.com/mavogel/kirokit/internal/manifest"
 	"github.com/mavogel/kirokit/internal/sopswrap"
 )
 
@@ -17,6 +18,47 @@ func FuncMap(ctx *Context) template.FuncMap {
 		"jsonString":     jsonStringFunc,
 		"sopsCommand":    sopsCommandFunc,
 		"sopsArgsJSON":   sopsArgsJSONFunc(ctx.LaunchShell),
+		"owners":         ownersFunc(ctx),
+		"feedbackRepo":   feedbackRepoFunc(ctx),
+	}
+}
+
+// OwnerRow is one agent or skill of the team with its owner. Kind is
+// "agent" or "skill"; Owner is "" when neither the item nor the team names
+// one, and FromTeam is true when Owner is the team owner.
+type OwnerRow struct {
+	Kind     string
+	Name     string
+	Owner    string
+	FromTeam bool
+}
+
+// ownersFunc lists every agent, then every skill, of the team by name, each
+// with its owner.
+func ownersFunc(ctx *Context) func() []OwnerRow {
+	return func() []OwnerRow {
+		rows := make([]OwnerRow, 0, len(ctx.Agents)+len(ctx.Skills))
+		for _, group := range []struct {
+			kind  string
+			names []string
+		}{{manifest.KindAgent, ctx.Agents}, {manifest.KindSkill, ctx.Skills}} {
+			for _, name := range group.names {
+				owner, fromTeam := ctx.Team.OwnerOf(group.kind, name)
+				rows = append(rows, OwnerRow{Kind: group.kind, Name: name, Owner: owner, FromTeam: fromTeam})
+			}
+		}
+		return rows
+	}
+}
+
+// feedbackRepoFunc returns the owner/repo that receives the team's feedback
+// issues, and fails like mcpVersion does when the manifest names none.
+func feedbackRepoFunc(ctx *Context) func() (string, error) {
+	return func() (string, error) {
+		if ctx.Team.Feedback.GitHub == "" {
+			return "", fmt.Errorf("feedbackRepo: %s's manifest.yaml sets no feedback.github", ctx.Team.Team)
+		}
+		return ctx.Team.Feedback.GitHub, nil
 	}
 }
 

@@ -24,6 +24,12 @@ type Context struct {
 	// LaunchShell is the shell sopsArgsJSON quotes the MCP command for. It is
 	// a per-machine option, so it stays out of the golden context.json.
 	LaunchShell sopswrap.Shell `json:"-"`
+	// Agents and Skills are the names of the team's agents (agents/<name>/)
+	// and skills (its own skills/<name>/ plus vendored ones), sorted. Render
+	// fills them before any template runs; they are derived from the tree,
+	// so they stay out of context.json.
+	Agents []string `json:"-"`
+	Skills []string `json:"-"`
 }
 
 // BuildContext loads a team's manifest, the central MCP version pins, and

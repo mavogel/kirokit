@@ -121,6 +121,36 @@ func TestKirokitRepo_TestAndUpdateUseTheRepositoryGoldens(t *testing.T) {
 	}
 }
 
+// go test ./... must fail on any team's golden drift, not only one team's:
+// `kirokit test` with no team compares every folder under teams/.
+func TestKirokitRepo_EveryTeamMatchesItsGoldens(t *testing.T) {
+	repo := thisRepo(t)
+	chdir(t, t.TempDir())
+	t.Setenv("KIROKIT_REPO", repo)
+
+	got, err := runRoot(t, "test")
+	if err != nil {
+		t.Fatalf("kirokit test: %v\n%s", err, got)
+	}
+	entries, err := os.ReadDir(filepath.Join(repo, "teams"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	teams := 0
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		teams++
+		if want := e.Name() + ": ok"; !strings.Contains(got, want) {
+			t.Errorf("output = %q, want it to contain %q", got, want)
+		}
+	}
+	if teams < 2 {
+		t.Fatalf("found %d teams under %s, want the example teams", teams, filepath.Join(repo, "teams"))
+	}
+}
+
 func TestKirokitRepo_SyncWithExplicitRepoIgnoresKirokitRepo(t *testing.T) {
 	origin := t.TempDir()
 	git(t, origin, "init", "-q", "-b", "main")

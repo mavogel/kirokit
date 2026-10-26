@@ -297,3 +297,82 @@ externalSkills:
 		t.Errorf("entries = %+v, want two collections at skills and extra/skills", m.ExternalSkills)
 	}
 }
+
+func TestLoad_OwnersAndFeedback(t *testing.T) {
+	path := writeFixture(t, `team: t
+owner: "@jane"
+owners:
+  agents:
+    qa: "@acme/qa-team"
+  skills:
+    jira: "@bob"
+feedback:
+  github: acme/kiro-config
+`)
+	m, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	if m.Owner != "@jane" || m.Feedback.GitHub != "acme/kiro-config" {
+		t.Errorf("Owner = %q, Feedback = %q", m.Owner, m.Feedback.GitHub)
+	}
+	cases := []struct {
+		kind, name, owner string
+		fromTeam          bool
+	}{
+		{"agent", "qa", "@acme/qa-team", false},
+		{"skill", "jira", "@bob", false},
+		{"agent", "engineer", "@jane", true},
+		{"skill", "vendored", "@jane", true},
+		// An agent override does not leak to a skill of the same name.
+		{"skill", "qa", "@jane", true},
+	}
+	for _, c := range cases {
+		owner, fromTeam := m.OwnerOf(c.kind, c.name)
+		if owner != c.owner || fromTeam != c.fromTeam {
+			t.Errorf("OwnerOf(%s, %s) = %q, %v; want %q, %v", c.kind, c.name, owner, fromTeam, c.owner, c.fromTeam)
+		}
+	}
+}
+
+func TestLoad_NoOwnerIsValidAndOwnsNothing(t *testing.T) {
+	m, err := Load(writeFixture(t, "team: t\nowners:\n  agents:\n    qa: \"@x\"\n"))
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	if owner, fromTeam := m.OwnerOf("agent", "other"); owner != "" || fromTeam {
+		t.Errorf("OwnerOf without a team owner = %q, %v; want empty", owner, fromTeam)
+	}
+	if owner, _ := m.OwnerOf("agent", "qa"); owner != "@x" {
+		t.Errorf("override = %q, want @x", owner)
+	}
+}
+
+func TestLoad_RejectsMalformedOwnersAndFeedback(t *testing.T) {
+	cases := []struct {
+		yaml, want string
+	}{
+		{"owner: jane", `owner: "jane" is not a GitHub handle (write @jane)`},
+		{`owner: "@"`, `owner: "@" is not a GitHub handle`},
+		{`owner: "@-x"`, `owner: "@-x" is not a GitHub handle`},
+		{`owner: "@a b"`, `owner: "@a b" is not a GitHub handle`},
+		{"owners:\n  agents:\n    qa: jane", `owners.agents.qa: "jane" is not a GitHub handle (write @jane)`},
+		{"owners:\n  skills:\n    s: \"@a/\"", `owners.skills.s: "@a/" is not a GitHub handle`},
+		{"feedback:\n  github: owner", `feedback.github: "owner" is not a GitHub repository (write owner/repo)`},
+		{"feedback:\n  github: a/b/c", `feedback.github: "a/b/c" is not a GitHub repository`},
+		{"feedback:\n  github: https://github.com/a/b", `feedback.github: "https://github.com/a/b" is not a GitHub repository`},
+		{"feedback:\n  github: \"javascript:x\"", `feedback.github: "javascript:x" is not a GitHub repository`},
+	}
+	for _, c := range cases {
+		path := writeFixture(t, "team: t\n"+c.yaml+"\n")
+		_, err := Load(path)
+		if err == nil || !strings.Contains(err.Error(), c.want) || !strings.Contains(err.Error(), path) {
+			t.Errorf("Load(%q) err = %v, want it to name %s and contain %q", c.yaml, err, path, c.want)
+		}
+	}
+	for _, ok := range []string{`owner: "@jane"`, `owner: "@acme/platform-leads"`, `owner: "@a1-b"`, "feedback:\n  github: acme/kiro.config_1"} {
+		if _, err := Load(writeFixture(t, "team: t\n"+ok+"\n")); err != nil {
+			t.Errorf("Load(%q) = %v, want ok", ok, err)
+		}
+	}
+}

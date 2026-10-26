@@ -1,6 +1,7 @@
 {
   "Team": {
     "Team": "platform-team",
+    "Owner": "@mavogel",
     "GlobalSteerings": [
       "security-baseline"
     ]

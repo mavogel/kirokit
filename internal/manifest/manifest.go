@@ -4,19 +4,109 @@ package manifest
 
 import (
 	"fmt"
+	"maps"
 	"net/url"
 	"os"
 	"path"
+	"regexp"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
-// Manifest is a team's manifest.yaml.
+// Manifest is a team's manifest.yaml. Owner, Owners and Feedback are
+// optional; they stay out of the golden context.json when unset.
 type Manifest struct {
-	Team            string          `yaml:"team"`
+	Team string `yaml:"team"`
+	// Owner is the team owner, a GitHub handle (@user or @org/team), who owns
+	// every agent and skill without an entry in Owners.
+	Owner           string          `yaml:"owner" json:",omitempty"`
+	Owners          Owners          `yaml:"owners" json:",omitzero"`
+	Feedback        Feedback        `yaml:"feedback" json:",omitzero"`
 	GlobalSteerings []string        `yaml:"globalSteerings"`
 	ExternalSkills  []ExternalSkill `yaml:"externalSkills" json:",omitempty"`
+}
+
+// Owners overrides the team owner for single agents and skills, by name.
+type Owners struct {
+	Agents map[string]string `yaml:"agents" json:",omitempty"`
+	Skills map[string]string `yaml:"skills" json:",omitempty"`
+}
+
+// Feedback names where feedback on the team's agents and skills goes:
+// GitHub is the owner/repo whose issues receive it.
+type Feedback struct {
+	GitHub string `yaml:"github" json:",omitempty"`
+}
+
+// The kinds OwnerOf takes.
+const (
+	KindAgent = "agent"
+	KindSkill = "skill"
+)
+
+// OwnerOf returns the owner of the agent or skill name (kind is KindAgent or
+// KindSkill) and whether that owner is the team owner. It is "" when neither
+// the item nor the team names one.
+func (m Manifest) OwnerOf(kind, name string) (owner string, fromTeam bool) {
+	overrides := m.Owners.Agents
+	if kind == KindSkill {
+		overrides = m.Owners.Skills
+	}
+	if o, ok := overrides[name]; ok {
+		return o, false
+	}
+	if m.Owner == "" {
+		return "", false
+	}
+	return m.Owner, true
+}
+
+var (
+	githubHandle = regexp.MustCompile(`^@[A-Za-z0-9][A-Za-z0-9-]{0,38}(?:/[A-Za-z0-9._-]+)?$`)
+	githubRepo   = regexp.MustCompile(`^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$`)
+)
+
+// validateOwnership checks every handle and the feedback repository, naming
+// the field that is wrong. Map keys are checked in sorted order so the same
+// manifest always reports the same error.
+func (m Manifest) validateOwnership() error {
+	checkHandle := func(field, v string) error {
+		if !githubHandle.MatchString(v) {
+			return fmt.Errorf("%s: %q is not a GitHub handle (write @%s)", field, v, suggestHandle(v))
+		}
+		return nil
+	}
+	if m.Owner != "" {
+		if err := checkHandle("owner", m.Owner); err != nil {
+			return err
+		}
+	}
+	for _, group := range []struct {
+		field string
+		names map[string]string
+	}{{"owners.agents", m.Owners.Agents}, {"owners.skills", m.Owners.Skills}} {
+		for _, name := range slices.Sorted(maps.Keys(group.names)) {
+			if err := checkHandle(group.field+"."+name, group.names[name]); err != nil {
+				return err
+			}
+		}
+	}
+	if r := m.Feedback.GitHub; r != "" && !githubRepo.MatchString(r) {
+		return fmt.Errorf("feedback.github: %q is not a GitHub repository (write owner/repo)", r)
+	}
+	return nil
+}
+
+// suggestHandle is the example shown after "write @": the value without
+// leading @ signs, or "jane" when nothing usable is left.
+func suggestHandle(v string) string {
+	s := strings.TrimLeft(v, "@")
+	if !githubHandle.MatchString("@" + s) {
+		return "jane"
+	}
+	return s
 }
 
 // ExternalSkill declares skill directories of a git repository that the team
@@ -67,6 +157,9 @@ func Load(path string) (*Manifest, error) {
 	}
 	if m.Team == "" {
 		return nil, fmt.Errorf("manifest: %s: missing required field %q", path, "team")
+	}
+	if err := m.validateOwnership(); err != nil {
+		return nil, fmt.Errorf("manifest: %s: %w", path, err)
 	}
 	expanded, err := expandExternalSkills(m.ExternalSkills)
 	if err != nil {
