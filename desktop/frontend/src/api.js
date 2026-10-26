@@ -54,6 +54,33 @@ export const shellWrite = (data) => shellLine(() => app().ShellWrite(data));
 
 export const shellResize = (cols, rows) => app().ShellResize(cols, rows);
 
+// The only addresses the app opens in the system browser: a GitHub
+// repository's new-issue form. The address comes from a cloned repository's
+// manifest, so anything else (another host, another page, javascript:) is
+// refused. The parsed check also catches what the pattern alone would let
+// through, such as a "/../" that leaves the repository.
+const ISSUE_FORM = /^https:\/\/github\.com\/[A-Za-z0-9-]+\/[A-Za-z0-9._-]+\/issues\/new\?/;
+const ISSUE_PATH = /^\/[A-Za-z0-9-]+\/[A-Za-z0-9._-]+\/issues\/new$/;
+
+function isIssueForm(url) {
+  if (typeof url !== 'string' || !ISSUE_FORM.test(url)) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && u.host === 'github.com' && !u.username && ISSUE_PATH.test(u.pathname);
+  } catch {
+    return false;
+  }
+}
+
+// Opens url in the system browser; rejects with "refusing to open <url>" for
+// any address that is not a GitHub new-issue form.
+export async function openURL(url) {
+  if (!isIssueForm(url)) throw new Error(`refusing to open ${url}`);
+  const rt = window.runtime;
+  if (!rt || !rt.BrowserOpenURL) throw new Error('kirokit is not running inside its window');
+  rt.BrowserOpenURL(url);
+}
+
 // Subscribes to a Go event; returns the function that unsubscribes.
 export function on(event, handler) {
   const rt = window.runtime;

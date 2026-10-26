@@ -171,6 +171,58 @@ func TestCatalog_SkillSources(t *testing.T) {
 	}
 }
 
+// Owners follow the manifest: an override for the item, else the team owner
+// (vendored skills included); a team without feedback.github has none.
+func TestCatalog_OwnersAndFeedbackRepository(t *testing.T) {
+	root := fixtureRepo(t)
+	write(t, filepath.Join(root, "teams", "t1", "agents", "a2", "agent.json.tmpl"), `{"name": "a2", "description": "d", "tools": []}`)
+	write(t, filepath.Join(root, "teams", "t1", "external", "skills", "ext-skill", "SKILL.md"), "---\nname: ext-skill\n---\n")
+	lockSkill(t, root, "t1", "ext-skill", "https://example.com/skills.git", "v1.2.0")
+	manifest := filepath.Join(root, "teams", "t1", "manifest.yaml")
+	data, err := os.ReadFile(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, manifest, string(data)+"owner: \"@jane\"\nowners:\n  agents:\n    a1: \"@nick\"\nfeedback:\n  github: acme/kiro-config\n")
+	write(t, filepath.Join(root, "teams", "t2", "manifest.yaml"), "team: t2\nglobalSteerings: []\n")
+	write(t, filepath.Join(root, "teams", "t2", "agents", "b1", "agent.json.tmpl"), `{"name": "b1", "description": "d", "tools": []}`)
+
+	cat, err := BuildCatalog(root)
+	if err != nil {
+		t.Fatalf("BuildCatalog: %v", err)
+	}
+	t1 := findTeam(t, cat, "t1")
+	if t1.Feedback != "acme/kiro-config" {
+		t.Errorf("t1 feedback = %q, want acme/kiro-config", t1.Feedback)
+	}
+	if a := findAgent(t, t1, "a1"); a.Owner != "@nick" || a.OwnerFromTeam {
+		t.Errorf("a1 owner = %q, fromTeam %v; want @nick from the override", a.Owner, a.OwnerFromTeam)
+	}
+	if a := findAgent(t, t1, "a2"); a.Owner != "@jane" || !a.OwnerFromTeam {
+		t.Errorf("a2 owner = %q, fromTeam %v; want the team owner @jane", a.Owner, a.OwnerFromTeam)
+	}
+	for _, s := range t1.Skills {
+		if s.Owner != "@jane" || !s.OwnerFromTeam {
+			t.Errorf("skill %s owner = %q, fromTeam %v; want the team owner @jane", s.Name, s.Owner, s.OwnerFromTeam)
+		}
+	}
+	t2 := findTeam(t, cat, "t2")
+	if b := findAgent(t, t2, "b1"); t2.Feedback != "" || b.Owner != "" || b.OwnerFromTeam {
+		t.Errorf("t2 feedback = %q, b1 owner = %q (%v); want none", t2.Feedback, b.Owner, b.OwnerFromTeam)
+	}
+}
+
+// The real example team routes feedback to the kirokit repository.
+func TestCatalog_ProductTeamFeedbackRepository(t *testing.T) {
+	cat, err := BuildCatalog("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := findTeam(t, cat, "product-team").Feedback; got != "mavogel/kirokit" {
+		t.Errorf("product-team feedback = %q, want mavogel/kirokit", got)
+	}
+}
+
 // A template that cannot render reaches the page as an error with its
 // message; nothing panics and no half-built table is returned.
 func TestCatalog_RenderErrorCarriesMessage(t *testing.T) {

@@ -3,9 +3,9 @@
 ## Summary
 
 <!-- ql:summary -->
-8 of 13 tasks · 3 of 5 slices
+11 of 13 tasks · 4 of 5 slices
 
-Building now: started 26 Oct, 13:07, 19 min so far.
+Building now: started 26 Oct, 13:07, 28 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -16,7 +16,7 @@ Building now: started 26 Oct, 13:07, 19 min so far.
 | 1 | Every team can name owners and a feedback repository | After this slice `manifest.yaml` accepts `owner`, `owners` and `feedback.github`, rejects malformed handles and unknown agent or skill keys, and templates can read the owner table and the feedback repository. | done |
 | 2 | A team can install five role agents that consult each other | After this slice `kirokit install product-team` gives the product owner, engineer, customer, QA and UX/UI designer agents, each able to call the other four, with a steering that asks the product owner to review requirements and the engineer to review a design. | done |
 | 3 | `/feedback` in Kiro drafts a prefilled issue for the owner | After this slice a person in any `product-team` chat types `/feedback <what went wrong>` and gets a title, a body that @-mentions the owner, and a percent-encoded `issues/new` link in `mavogel/kirokit`, with nothing sent. | done |
-| 4 | The desktop app shows owners and opens a feedback issue | After this slice the Agents and Skills pages show each owner and a Feedback button that opens the prefilled GitHub issue in the browser; a team without `feedback.github` shows its buttons off with the reason, and any address that is not a GitHub issues form is refused. | next |
+| 4 | The desktop app shows owners and opens a feedback issue | After this slice the Agents and Skills pages show each owner and a Feedback button that opens the prefilled GitHub issue in the browser; a team without `feedback.github` shows its buttons off with the reason, and any address that is not a GitHub issues form is refused. | done |
 | 5 | `analyze-session` turns a Kiro chat into owner issues, and the README explains it all | After this slice every role agent has the `analyze-session` skill, which reads a past session and reports recommendations grouped by owner with one prefilled issue per owner, and the README documents the example team, owners, feedback and session analysis. | next |
 <!-- /ql:slices -->
 
@@ -51,11 +51,15 @@ Written when the last task is ticked.
 - slice 2 · ea2bc5f · `task build` · reused: nothing changed since it passed at 13:22
 - T8 · ec8394b · `go test ./cmd/kirokit/...` · exit 0 · 4.4s
 - slice 3 · ec8394b · `go test ./...` · exit 0 · 2.2s
+- T9 · 2d1b288 · `go -C desktop test ./...` · exit 0 · 0.3s
+- T10 · 2d1b288 · `task desktop:test` · exit 0 · 3.1s
+- T11 · 2d1b288 · `task desktop:test` · reused: nothing changed since it passed at 13:35
+- slice 4 · 2d1b288 · `task desktop:test` · reused: nothing changed since it passed at 13:35
 
 ## Known limits
 
 <!-- ql:limits -->
-None recorded.
+- T11 · The Feedback button's real browser open was run only on macOS; Linux and Windows were not run locally (Docker was off, no Windows machine), and CI's tests there fake BrowserOpenURL.
 <!-- /ql:limits -->
 
 ## Deviations
@@ -81,3 +85,4 @@ Reasoning: the Plan left open what a `subagent` permission rule's `match` compar
 - **Scenario 1 (Done means 1):** `kiro-cli chat --no-interactive --agent product-owner --v3 "Ask the customer agent what frustrates them most about onboarding…"` against the committed config: `[tool] Sub-agent: customer` → `Completed`, and the product owner summarised the customer persona's answer. Log: [records/live-s1-product-owner-consults-customer.txt](records/live-s1-product-owner-consults-customer.txt).
 - **Scenario 2 (Done means 2):** Kiro CLI v3 runs specs in a chat (`--mode spec`). `kiro-cli chat --no-interactive --agent engineer --v3 --mode spec --trust-tools=fs_read,fs_write "Write a quick spec … export a team's agents as a CSV file"` wrote `requirements.md`, `design.md` and `tasks.md`; after requirements it called `product-owner` (which itself consulted `qa` and `customer`) and folded the gaps in; the engineer reviewed `design.md` itself, as the steering says when the writer is the reviewer. Log: [records/live-s2-spec-mode-review-gates.txt](records/live-s2-spec-mode-review-gates.txt). The Plan's assumption "Kiro CLI v3 runs the spec workflow in a chat" is confirmed.
 - **Scenario 4 (Done means 4, 5):** `kiro-cli chat --no-interactive --agent product-owner --v3 "/feedback the customer agent ignored my persona notes …"` printed a title, a body with `**Team:** product-team`, `**Agent:** customer`, `**Owner:** @mavogel`, and `https://github.com/mavogel/kirokit/issues/new?title=…&body=…&labels=feedback,team:product-team,agent:customer`; decoded, title and body round-trip and the body is about 400 characters. The first run wrote "@mavogel (team owner)" on the Owner line; the prompt now asks for the bare handle and the rerun shows it. No tool was called. Log: [records/live-s4-feedback-prompt.txt](records/live-s4-feedback-prompt.txt).
+- **Scenario 5 (Done means 3, 4, 5):** `go tool wails dev` with a throwaway `HOME`, cloning a tag-free local copy of this branch (so `product-team` is present), driven by headless Chrome at `http://localhost:34115`. Agents shows `@mavogel` for `product-owner` (its own entry) and `@mavogel team owner` for the rest; Skills shows the team owner on every skill; the four `data-team`/`platform-team` agent buttons are disabled with the note "… names no feedback repository in its manifest.yaml, so its Feedback buttons are off." Pressing Feedback on `product-owner`, and Tab + Enter on `engineer` (focus ring `solid 2px`, visible in dark theme), asked Wails to open `https://github.com/mavogel/kirokit/issues/new?…` with title `Feedback: product-team agent product-owner`, labels `feedback,team:product-team,agent:product-owner` and `**Owner:** @mavogel` in the body. The first run found a defect the unit tests could not: Wails v2.17's `BrowserOpenURL` refused the address ("shell metacharacters not allowed") because `encodeURIComponent` leaves `*` (from `**Team:**`) unescaped; `feedbackURL` now also encodes `! ' ( ) * ~`, a test mirrors Wails' character rule, and the rerun logged no refusal. The browser tab itself was not observed. Evidence: [records/s5/report.json](records/s5/report.json), [records/s5/agents-light.png](records/s5/agents-light.png), [records/s5/skills-light.png](records/s5/skills-light.png), [records/s5/agents-dark-focus.png](records/s5/agents-dark-focus.png).

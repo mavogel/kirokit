@@ -28,17 +28,20 @@ type Catalog struct {
 	Tag   string            `json:"tag"`
 }
 
-// Team is one folder under teams/, as rendered.
+// Team is one folder under teams/, as rendered. Feedback is the owner/repo
+// whose GitHub issues receive feedback, empty when the manifest names none.
 type Team struct {
 	Name      string   `json:"name"`
 	Agents    []Agent  `json:"agents"`
 	Skills    []Skill  `json:"skills"`
 	Prompts   int      `json:"prompts"`
 	Steerings []string `json:"steerings"`
+	Feedback  string   `json:"feedback"`
 }
 
 // Agent is one rendered agent file. NeedsKey is true when the agent ships an
-// encrypted secrets file.
+// encrypted secrets file. Owner is its GitHub handle, empty when neither the
+// agent nor the team names one; OwnerFromTeam is true for the team owner.
 type Agent struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
@@ -46,14 +49,19 @@ type Agent struct {
 	Servers     []string `json:"servers"`
 	// Pins are the keys of env/mcp-versions.yaml the agent's template resolves
 	// with mcpVersion; a server name need not equal the key of its pin.
-	Pins     []string `json:"pins"`
-	NeedsKey bool     `json:"needsKey"`
+	Pins          []string `json:"pins"`
+	NeedsKey      bool     `json:"needsKey"`
+	Owner         string   `json:"owner"`
+	OwnerFromTeam bool     `json:"ownerFromTeam"`
 }
 
-// Skill's Source is "Written by the team" or "<source> @ <ref>".
+// Skill's Source is "Written by the team" or "<source> @ <ref>". Owner and
+// OwnerFromTeam are as on Agent; a vendored skill has the team owner.
 type Skill struct {
-	Name   string `json:"name"`
-	Source string `json:"source"`
+	Name          string `json:"name"`
+	Source        string `json:"source"`
+	Owner         string `json:"owner"`
+	OwnerFromTeam bool   `json:"ownerFromTeam"`
 }
 
 const teamSkillSource = "Written by the team"
@@ -107,6 +115,13 @@ func BuildCatalog(repo string) (Catalog, error) {
 func readTeam(teamsRoot, name, rendered string) (Team, error) {
 	teamDir := filepath.Join(teamsRoot, name)
 	team := Team{Name: name, Agents: []Agent{}, Skills: []Skill{}, Steerings: []string{}}
+	// The render before this call has already loaded this manifest, so an
+	// error here means the clone changed in between.
+	m, err := manifest.Load(filepath.Join(teamDir, "manifest.yaml"))
+	if err != nil {
+		return team, err
+	}
+	team.Feedback = m.Feedback.GitHub
 
 	agentFiles, _ := filepath.Glob(filepath.Join(rendered, "agents", "*.json"))
 	sort.Strings(agentFiles)
@@ -136,6 +151,9 @@ func readTeam(teamsRoot, name, rendered string) (Team, error) {
 		a.Pins = templatePins(filepath.Join(teamDir, "agents", file, "agent.json.tmpl"))
 		_, statErr := os.Stat(filepath.Join(teamDir, "agents", file, "env", "secrets.enc.yaml"))
 		a.NeedsKey = statErr == nil
+		// Owners are keyed by the agent's folder name, which the name field
+		// in the file may differ from.
+		a.Owner, a.OwnerFromTeam = m.OwnerOf(manifest.KindAgent, file)
 		team.Agents = append(team.Agents, a)
 	}
 
@@ -156,7 +174,9 @@ func readTeam(teamsRoot, name, rendered string) (Team, error) {
 			if !ok {
 				src = teamSkillSource
 			}
-			team.Skills = append(team.Skills, Skill{Name: d.Name(), Source: src})
+			s := Skill{Name: d.Name(), Source: src}
+			s.Owner, s.OwnerFromTeam = m.OwnerOf(manifest.KindSkill, d.Name())
+			team.Skills = append(team.Skills, s)
 		}
 	}
 
@@ -171,11 +191,9 @@ func readTeam(teamsRoot, name, rendered string) (Team, error) {
 			team.Steerings = append(team.Steerings, n)
 		}
 	}
-	if m, err := manifest.Load(filepath.Join(teamDir, "manifest.yaml")); err == nil {
-		for _, g := range m.GlobalSteerings {
-			if !seen[g] {
-				team.Steerings = append(team.Steerings, g)
-			}
+	for _, g := range m.GlobalSteerings {
+		if !seen[g] {
+			team.Steerings = append(team.Steerings, g)
 		}
 	}
 	sort.Strings(team.Steerings)

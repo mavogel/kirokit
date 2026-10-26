@@ -104,6 +104,9 @@ tr:last-child td { border-bottom: 0; }
 td.mono, .mono { font-family: var(--mono); font-size: 13px; }
 td.num { font-variant-numeric: tabular-nums; }
 .desc { color: var(--muted); max-width: 46ch; }
+.owner { display: grid; gap: 2px; }
+.owner .mono { white-space: nowrap; }
+.owner .from { color: var(--muted); font-size: 12px; }
 .note { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
 .field { display: grid; gap: 6px; max-width: 520px; margin-bottom: 16px; }
 .field label { font-weight: 600; }

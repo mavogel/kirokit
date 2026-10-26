@@ -362,6 +362,7 @@ func TestLoad_RejectsMalformedOwnersAndFeedback(t *testing.T) {
 		{"feedback:\n  github: a/b/c", `feedback.github: "a/b/c" is not a GitHub repository`},
 		{"feedback:\n  github: https://github.com/a/b", `feedback.github: "https://github.com/a/b" is not a GitHub repository`},
 		{"feedback:\n  github: \"javascript:x\"", `feedback.github: "javascript:x" is not a GitHub repository`},
+		{"feedback:\n  github: a/..", `feedback.github: "a/.." is not a GitHub repository`},
 	}
 	for _, c := range cases {
 		path := writeFixture(t, "team: t\n"+c.yaml+"\n")

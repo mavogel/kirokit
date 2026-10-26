@@ -93,7 +93,7 @@ func (m Manifest) validateOwnership() error {
 			}
 		}
 	}
-	if r := m.Feedback.GitHub; r != "" && !githubRepo.MatchString(r) {
+	if r := m.Feedback.GitHub; r != "" && (!githubRepo.MatchString(r) || path.Base(r) == "." || path.Base(r) == "..") {
 		return fmt.Errorf("feedback.github: %q is not a GitHub repository (write owner/repo)", r)
 	}
 	return nil
