@@ -1,0 +1,19 @@
+# Oracle, from the runs captured in this iteration (no receipt covers it)
+
+## product-team installed into a temporary Kiro home; product-owner consults customer (it1-scenario-1.txt)
+5:installed product-team into <scratch>/kh.3Cdr
+31:[tool] Sub-agent: customer
+33:[tool] status: Completed
+34:[tool] status: Completed
+35:Here's what Sam, the example operations-lead persona, said frustrates them most about onboarding:
+
+## /feedback address (it1-scenario-4.txt)
+30:https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-team%20agent%20customer%3A%20ignored%20pers
+14:**Agent:** customer
+15:**Owner:** @mavogel
+42:**Agent:** customer
+43:**Owner:** @mavogel
+
+## desktop Feedback button address (it1-scenario-5.txt)
+25:## Step 3: pressed Feedback on product-owner; Wails ran: open https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-t
+30: "body": "**Team:** product-team\n**Agent:** product-owner\n**Owner:** @mavogel\n\n**What happened**\n<describe what the agent did>\n\n**

@@ -42,3 +42,39 @@ test('A failed keystroke call does not hold back the next one, and each target h
   assert.ok(log.indexOf('start run x') > log.indexOf('end run boom'), 'x waits for boom to end');
   assert.ok(log.includes('end run x'));
 });
+
+// The app opens the system browser only for a GitHub new-issue form, since the
+// address is built from a cloned repository's manifest.
+test('openURL opens a GitHub new-issue form and refuses every other address', async () => {
+  const opened = [];
+  globalThis.window = { runtime: { BrowserOpenURL: (url) => opened.push(url) } };
+  const api = await import('./api.js');
+
+  const ok = 'https://github.com/acme/kiro.config_1/issues/new?title=x&body=y';
+  await api.openURL(ok);
+  assert.deepEqual(opened, [ok]);
+
+  for (const bad of [
+    'javascript:alert(1)',
+    'https://evil.example/issues/new?x',
+    'https://github.com/a/b/pulls?x',
+    'https://github.com/a/b/issues/new',
+    'https://github.com.evil.example/a/b/issues/new?x',
+    'https://github.com@evil.example/a/b/issues/new?x',
+    'http://github.com/a/b/issues/new?x',
+    'https://github.com/a/../issues/new?x',
+    ' https://github.com/a/b/issues/new?x',
+    undefined,
+  ]) {
+    await assert.rejects(api.openURL(bad), new RegExp(`^Error: refusing to open ${String(bad).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`), String(bad));
+  }
+  assert.equal(opened.length, 1, 'no refused address reached the browser');
+});
+
+// Outside the Wails window (no runtime) a valid address fails with a message
+// the page can show, instead of a TypeError.
+test('openURL outside the app window rejects with a readable message', async () => {
+  globalThis.window = {};
+  const api = await import('./api.js');
+  await assert.rejects(api.openURL('https://github.com/acme/cfg/issues/new?title=x'), /^Error: kirokit is not running inside its window$/);
+});

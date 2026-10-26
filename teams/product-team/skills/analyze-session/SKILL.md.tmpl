@@ -1,0 +1,76 @@
+---
+name: analyze-session
+description: Analyze a past Kiro chat session and recommend harness improvements (a hook to add, a steering to harden, a missing permission, an agent prompt or skill description to sharpen), grouped by the owner of each agent, skill or steering, then offer one prefilled GitHub issue per owner. Use when someone asks to review, analyze or learn from a session or chat.
+---
+
+# Analyze a Kiro session
+
+Turn one past chat into concrete improvements to this team's harness, and route each one to the person who owns the part it changes. You only read files. You send nothing, run no shell command and change no file.
+
+## Who owns what in {{ .Team.Team }}
+
+| Kind | Name | Owner |
+|---|---|---|
+{{- range owners }}
+| {{ .Kind }} | `{{ .Name }}` | {{ if .Owner }}{{ .Owner }}{{ if .FromTeam }} (team owner){{ end }}{{ else }}no owner{{ end }} |
+{{- end }}
+
+Steerings, hooks and prompts belong to the team owner{{ if .Team.Owner }} ({{ .Team.Owner }}){{ end }}.
+
+## 1. Find the session
+
+Sessions live in `{{ .KiroHome }}/sessions/<workspace hash>/sess_<id>/`, each with `session.json` and `messages.jsonl`.
+
+- If I gave a session id (from `/session-id`), find its folder with the glob `{{ .KiroHome }}/sessions/*/sess_<id>/session.json`.
+- Otherwise glob `{{ .KiroHome }}/sessions/*/sess_*/session.json`, read each one's `title`, `agentMode`, `workspacePaths` and `lastModifiedAt`, show me the ten most recent as a numbered list, and ask which one. Skip the session you are running in now.
+- A session stored as `{{ .KiroHome }}/sessions/cli/<id>.json` is an older format: say you cannot analyze it.
+
+## 2. Read it
+
+Read `session.json` and `messages.jsonl`. Each line of `messages.jsonl` is `{id, timestamp, payload}`; `payload.type` tells you what happened. These are the fields you use:
+
+| `payload.type` | Fields | What it tells you |
+|---|---|---|
+| `session_start` | `agentType`, `steeringDocuments[].displayName` | the agent, and the steerings it loaded |
+| `user` | `content` | what I asked, and where I corrected the agent |
+| `tool_call` | `toolName`, `title`, `status`, `args`, `_meta.kiro.agentMode` | each tool use; `status: "denied"` was blocked |
+| `tool_result` | `toolCallId`, `success` | `success: false` failed |
+| `pending_interaction` | `interactionType: "tool_approval"`, `question` | a permission prompt, e.g. `Sub-agent: customer` |
+| `interaction_resolved` | `toolCallId`, `outcome` | how the prompt ended (`cancelled`, accepted, rejected) |
+| `steering_inclusion` | `documents` | steerings pulled into a turn |
+| `session_metadata` | `key: "contextUsage"`, `value.usagePercentage` | how full the context was |
+| `usage_summary` | `promptTurnSummaries[].usedTools` | the tools each turn used |
+
+If the file has none of these types, tell me which ones you looked for and that Kiro's session format may have changed. Do not report "no findings" in that case.
+
+The agent configs you can read are today's, and they may have changed since the session ran (compare the session's `lastModifiedAt` with what you find). When today's config already holds the fix for a signal, say it looks fixed since that session instead of calling it a bug.
+
+## 3. Look for these signals
+
+- **Denied or failed tools:** a `tool_call` with `status: "denied"`, or a `tool_result` with `success: false`. Name the tool and how often.
+- **Permission prompts:** `pending_interaction` with `interactionType: "tool_approval"`, especially the same `question` more than once, or one that ended `cancelled`. Recommend a permission rule in the agent's config, written out, for example `{ "capability": "subagent", "match": ["customer"], "effect": "allow" }`, or say why it should keep asking.
+- **Repeated lookups:** the same file read or the same search three or more times. Recommend a steering or a knowledge resource that gives the agent the answer up front.
+- **Skills that never activated:** a skill in the agent's `resources` (read `{{ .KiroHome }}/agents/<agentType>.json`) whose description matches what I asked, but that no `tool_call` or turn used. Recommend a sharper skill description.
+- **Corrections:** a `user` message that repeats an instruction or says the agent got it wrong. Recommend sharpening the agent's prompt or hardening a steering.
+- **Heavy context:** `contextUsage` above 70 percent. Recommend loading less up front (a `fileMatch` or `manual` steering, or `skill://` instead of `file://`).
+- **Work a hook should do:** the same follow-up step after every write (formatting, linting, running a test). Recommend a hook, with its trigger and command.
+
+## 4. Report, grouped by owner
+
+For each owner, list their recommendations. Each one says:
+
+- **What I saw:** the signal, how often, and one short quote or event from the session (no secrets, tokens, hostnames or customer data; leave them out and say so).
+- **Change:** a hook to add, a steering to harden, a permission to add, or a prompt or description to sharpen, written concretely enough to apply.
+- **Where:** the agent, skill, steering or hook it changes, as its source path in the team's config repository: `teams/{{ .Team.Team }}/agents/<name>/agent.json.tmpl`, `skills/<name>/SKILL.md.tmpl`, `steerings/<name>.md.tmpl` or `hooks/<name>.json.tmpl`.
+
+Put an item the table does not name (a steering, a hook, Kiro itself) under the team owner. Keep the whole report short; the strongest three to five recommendations beat a long list.
+
+## 5. Offer one issue per owner
+
+Ask me whether to prepare the issues. When I say yes, for each owner build one link in the same format as `/feedback`:
+
+- Title: `Harness review: {{ .Team.Team }} session <session title>`
+- Body, at most 1500 characters: `**Team:** {{ .Team.Team }}`, `**Owner:** <handle>` with its `@` (left out when there is no owner), then that owner's recommendations as a short list, ending with `_Sent with analyze-session in Kiro._`
+- Link: `https://github.com/{{ feedbackRepo }}/issues/new?title=<title>&body=<body>&labels=feedback,team:{{ .Team.Team }},<kind>:<name>`, with one `<kind>:<name>` label per agent or skill it covers. Percent-encode the title and the body.
+
+Show each title, its body in a code block I can copy, and its link. Tell me nothing is sent until I submit it on GitHub.

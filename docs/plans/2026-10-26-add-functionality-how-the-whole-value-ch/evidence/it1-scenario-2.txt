@@ -1,0 +1,223 @@
+# Step 1
+$ cat $KIRO_HOME/steering/spec-review-gates.md
+---
+inclusion: always
+---
+
+# Spec review gates
+
+When you write a spec (`requirements.md`, `design.md`, `tasks.md`), each phase is reviewed by the role that owns it before the next phase starts. Use the `subagent` tool for each review, wait for its answer, and fold it in.
+
+## After requirements
+
+Ask the `product-owner` agent to review `requirements.md` for:
+
+- **Vision fit:** does it serve the product's goal and the user named in it?
+- **Completeness:** are every user, state and error case covered?
+- **Acceptance criteria:** can a tester check each one (WHEN ... THEN ...)?
+- **Prioritisation:** is each requirement marked must, should or could?
+
+Change `requirements.md` for every gap it names, or say why you keep it, before you start `design.md`.
+
+## After design
+
+Ask the `engineer` agent to review `design.md` for:
+
+- **Deep modules:** simple interfaces that hide a lot of behaviour, not shallow pass-through layers.
+- **Information hiding:** internals stay behind the interface; a change stays inside one module.
+- **Red flags:** special cases a better abstraction would remove, names that do not say what a thing is, a change that ripples across many modules.
+
+Change `design.md` for every red flag it names, or say why you keep it, before you write `tasks.md`.
+
+## Other roles
+
+The `qa`, `ux-designer` and `customer` agents review on request: ask them when the person does, or when a requirement depends on how something fails, looks or feels.
+
+If you are the reviewing agent yourself, review the file directly instead of calling yourself.
+
+$ grep spec-review-gates $KIRO_HOME/agents/*.json
+<scratch>/kh.3Cdr/agents/customer.json:"file://<scratch>/kh.3Cdr/steering/spec-review-gates.md"
+<scratch>/kh.3Cdr/agents/product-owner.json:"file://<scratch>/kh.3Cdr/steering/spec-review-gates.md"
+<scratch>/kh.3Cdr/agents/qa.json:"file://<scratch>/kh.3Cdr/steering/spec-review-gates.md"
+<scratch>/kh.3Cdr/agents/engineer.json:"file://<scratch>/kh.3Cdr/steering/spec-review-gates.md"
+<scratch>/kh.3Cdr/agents/ux-designer.json:"file://<scratch>/kh.3Cdr/steering/spec-review-gates.md"
+
+# Step 2 (scratch workspace <scratch>/ws2, kiro-cli 2.34.0)
+$ kiro-cli chat --no-interactive --agent engineer --v3 --mode spec --trust-tools=fs_read,fs_write "Write a quick spec for a CLI feature: export a team's agents as a CSV file with the columns name, description and tools."
+[ERROR] (node:64191) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+I'll start by checking the workspace to understand the project context.
+[tool] List Directory
+[tool] status: InProgress
+[tool] status: Completed
+The workspace is empty, so this is a fresh spec. I'll write a concise spec following the review gates: requirements first, then product-owner review, then design (which I review myself as engineer), then tasks.
+
+Let me draft the requirements document.
+[tool] Write File
+[tool] status: Pending
+[tool] status: Completed
+Now I'll have the product-owner review the requirements before moving to design.
+[tool] Sub-agent: product-owner
+[tool] status: InProgress
+[tool] Read File
+[tool] status: InProgress
+[tool] status: Completed
+[tool] status: Completed
+[tool] status: Completed
+[tool] status: Completed
+The product-owner review is solid. I'll fold in the valid gaps: blank team name, tool names containing `;`, store-unreadable vs not-found, trailing newline, duplicate names, two missing acceptance criteria, promoting exit codes to Must, reconciling the M3/S2 overlap, and a one-line authorization note.
+[tool] Write File
+[tool] status: Pending
+[tool] status: Completed
+Requirements are folded in. Now I'll write the design, focusing on deep modules and information hiding.
+[tool] Write File
+[tool] status: Pending
+[tool] status: Completed
+Now I review the design myself as the engineer. Reading it critically against deep modules, information hiding, and red flags.
+
+My review:
+
+- **Deep modules:** `TeamStore.loadAgents` and `AgentCsvExporter.export` each hide a lot behind a one-method interface. The Command does real policy work (arg validation, output-target resolution, exit-code mapping), so it's orchestration, not a shallow pass-through. Sound.
+- **Information hiding:** the concern table shows storage, CSV format, and exit codes each isolated. A format or storage change stays in one module. Sound.
+- **Red flags — none structural.** No special-case branch for empty agents (the loop handles it), names say what things are, no ripple. But I found two real gaps worth folding in:
+  1. **Correctness footgun:** if the process calls `os.Exit` right after writing, deferred file `Close()` won't run, so buffered writes can be lost and write errors masked. The design's `run(args) int` pattern only works if `main` does the `os.Exit` and `run` returns normally (so defers fire). This needs to be explicit.
+  2. **Open integration point:** the concrete `TeamStore` backend (where teams actually live) is a stub. If this integrates into an existing app, the store should wrap that app's team source, not invent a new layout. Worth flagging so it's confirmed before build.
+
+Let me fold both into the design.
+[tool] Replace in File
+[tool] status: Pending
+[tool] status: Completed
+[tool] Replace in File
+[tool] status: Pending
+[tool] status: Completed
+[tool] Replace in File
+[tool] status: Pending
+[tool] status: Completed
+Design is reviewed and folded in. Now I'll write the tasks, organized as small, test-first, reversible steps.
+[tool] Write File
+[tool] status: Pending
+[tool] status: Completed
+The spec is complete. Let me verify the files are in place.
+[tool] List Directory
+[tool] status: InProgress
+[tool] status: Completed
+Spec is written at `specs/export-agents-csv/` with the three docs, and I ran the review gates:
+
+- **requirements.md** — product-owner reviewed; I folded in blank-team handling, tool-name `;` assumption, store-unreadable vs not-found, trailing newline, duplicate names, two missing acceptance criteria, and promoted exit codes to Must.
+- **design.md** — I reviewed it as the engineer; it uses two deep modules (`TeamStore` hides storage, `AgentCsvExporter` hides the CSV format) behind one-method interfaces, with the Command owning exit-code policy. I added a correctness note (main does `os.Exit`, `Run` returns normally so deferred close/flush fires) and flagged the store backend as an open integration point.
+- **tasks.md** — small, test-first, reversible steps through model → exporter → store → command → wiring → acceptance → docs, defaulting to Go.
+
+Two things to confirm before building: the implementation language (I assumed Go), and where teams/agents actually live so `TeamStore` wraps the real source rather than inventing a layout.
+exit=0
+
+$ find ws2 -type f
+<scratch>/ws2/specs/export-agents-csv/requirements.md
+<scratch>/ws2/specs/export-agents-csv/tasks.md
+<scratch>/ws2/specs/export-agents-csv/design.md
+
+$ grep -c "" specs/export-agents-csv/*.md
+<scratch>/ws2/specs/export-agents-csv/requirements.md:53
+<scratch>/ws2/specs/export-agents-csv/design.md:93
+<scratch>/ws2/specs/export-agents-csv/tasks.md:50
+
+# Step 3 does not apply: CLI v3 runs specs (--mode spec, Step 2).
+# Probe past the script: requirements asked for outside spec mode, from the qa agent
+$ kiro-cli chat --no-interactive --agent qa --v3 "Draft the requirements (no design) for: let a person rename an agent in the desktop app. Show them here; do not write files."
+[ERROR] (node:67938) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+I'll take a quick look at the workspace to ground the requirements in what actually exists, rather than guessing what "agent" means here.
+[tool] List Directory
+The workspace is empty, so there's no existing app to ground this in. I'll draft from reasonable assumptions about a desktop app where an "agent" is a named, configurable assistant (the Kiro-style meaning). I'll flag the assumptions inline so they can be corrected.
+
+As QA, I'm writing these with testable acceptance criteria (WHEN…THEN…) and I've folded the failure modes I'd normally raise in review straight into the requirements, so they're covered up front rather than caught later.
+
+---
+
+# Requirements — Rename an agent
+
+## Goal
+Let a person change the display name of an agent they have access to in the desktop app, so the agent is easier to identify across the UI and in conversation history.
+
+## Primary user
+The agent's owner — the person who created or has edit rights to the agent.
+
+## Assumptions (correct me if wrong)
+- An agent has a user-visible display name that appears in the sidebar, agent detail view, chat title, and past conversation headers.
+- Agents are owned individually; sharing/collaboration is out of scope unless flagged.
+- Names are stored locally and/or synced to a backing service. The rename must survive app restart either way.
+
+## Out of scope
+- Renaming built-in/system agents shipped with the app (unless explicitly allowed).
+- Bulk rename of multiple agents at once.
+- Changing any agent property other than the display name (prompt, tools, model, icon).
+
+---
+
+## Requirements
+
+### R1 — Initiate rename (must)
+A user with edit rights can open the agent's detail/settings and edit its display name in place, without leaving the current view.
+
+- **AC1.1** WHEN the user opens an agent they own and selects the name field THEN an editable text input is shown pre-filled with the current name.
+- **AC1.2** WHEN the user opens an agent they can view but not edit THEN the name field is read-only and shows a tooltip/affordance explaining why (e.g., "You can't rename an agent you don't own").
+- **AC1.3** WHEN rename is unavailable (e.g., built-in agent) THEN the field is either hidden or visibly disabled with an explanatory label.
+
+### R2 — Validate input (must)
+The app rejects names that are empty, only whitespace, or exceed the max length, before applying.
+
+- **AC2.1** WHEN the user clears the name and confirms THEN the app blocks the save, keeps the old name, and shows a message naming the problem ("Name can't be empty").
+- **AC2.2** WHEN the user enters only spaces/tabs and confirms THEN the save is blocked with a "Name can't be blank" message; the existing name is unchanged.
+- **AC2.3** WHEN the user enters a name longer than the max length (proposed: 64 chars) THEN input is either capped at the limit or the save is blocked with "Name is too long (max 64 characters)".
+- **AC2.4** WHEN the user enters leading/trailing whitespace THEN it is trimmed before save, so "  Atlas  " is stored and displayed as "Atlas".
+
+### R3 — Handle duplicate names (should)
+Two agents can share a name (names are labels, not IDs), but the app should warn to prevent confusion.
+
+- **AC3.1** WHEN the new name matches another agent's existing name THEN the app saves the rename but shows a non-blocking warning ("Another agent already uses this name").
+- **Note for product-owner:** the alternative — blocking duplicates entirely — is simpler but breaks use cases like "Research Assistant" across teams. Confirm which behavior you want; this drives several test cases below.
+
+### R4 — Accept any valid text content (must)
+Names may contain unicode, emoji, and non-Latin scripts; these must display and persist correctly.
+
+- **AC4.1** WHEN the user names an agent "助手 🤖" THEN it is stored and displayed identically across the sidebar, detail view, and conversation headers.
+- **AC4.2** WHEN the user names an agent with right-to-left text THEN it renders with correct directionality in every place the name appears.
+- **AC4.3** WHEN the user enters control characters or newline characters THEN they are stripped or rejected, so a name can't break the UI layout.
+
+### R5 — Apply and persist (must)
+A confirmed rename takes effect immediately and survives app restart.
+
+- **AC5.1** WHEN the user confirms a valid new name THEN every visible occurrence of the name updates within the same session without a manual refresh: sidebar, detail view, open chat title, and past conversation headers.
+- **AC5.2** WHEN the app is restarted after a successful rename THEN the agent still shows the new name.
+- **AC5.3** WHEN the rename is mid-save and the user closes the window THEN the app either completes the save in the background or, if it can't, restores the previous name on next launch and surfaces that the rename didn't complete.
+
+### R6 — Concurrency & conflicting edits (should)
+If the same agent is edited from two places, the outcome is predictable and no data is silently lost.
+
+- **AC6.1** WHEN the agent is renamed on device A and device B has a stale view THEN device B shows the updated name after sync; if offline, on reconnect.
+- **AC6.2** WHEN the agent is renamed on two devices at nearly the same time THEN the last-write-wins result is shown consistently on both devices, and the app doesn't crash or show conflicting names in different views.
+
+### R7 — Feedback on failure (must)
+If a rename fails for any reason, the user is told and the old name is preserved.
+
+- **AC7.1** WHEN the save fails (storage error, sync error) THEN the app shows an error message, keeps the old name, and offers a retry.
+- **AC7.2** WHEN the user cancels the rename (Esc / discard) THEN no save occurs and the original name is restored with no error shown.
+
+### R8 — Accessibility (must)
+The rename control is usable with keyboard and assistive tech.
+
+- **AC8.1** WHEN the user navigates by keyboard THEN they can focus, edit, confirm (Enter), and cancel (Esc) the rename without a mouse.
+- **AC8.2** WHEN a screen reader encounters the name field THEN it announces the field label and any validation error in plain language.
+
+---
+
+## Acceptance criteria that need clarification before they're testable
+- **Duplicate behavior (R3):** block duplicates, or allow-with-warning? Drives AC3.1 and a family of conflict tests.
+- **Max length (AC2.3):** 64 is a placeholder — confirm the real limit, or whether there is one.
+- **Offline behavior (R5/R6):** is this a local-only app, or does it sync to a service? This changes whether "survives restart" is a local test or a sync test.
+- **Shared agents (R1.2):** if agents can be shared, define who can rename a shared agent and whether the rename is visible to other members.
+
+---
+
+This is a draft, not a filed `requirements.md`, so I haven't run the product-owner review gate yet. Want me to send it to the product-owner agent for the vision/coverage/prioritisation pass, or revise the flagged assumptions first?
+exit=0
+# Sub-agent calls in this run: 0

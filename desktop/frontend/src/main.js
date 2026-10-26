@@ -7,6 +7,7 @@ import { initTeams } from './pages/teams.js';
 import { initAgents } from './pages/agents.js';
 import { initInstall, syncArgs, uninstallArgs } from './pages/install.js';
 import { initSkills } from './pages/skills.js';
+import { feedbackFor, feedbackWhere } from './pages/feedback.js';
 import { initWelcome, showWelcome } from './pages/welcome.js';
 import { createDialogs, installPlan } from './dialogs.js';
 import { createDock, shellLabel } from './tabs.js';
@@ -89,6 +90,18 @@ async function installTeam(team) {
   await runCommand(['install', team], 'install:' + team);
 }
 
+// Opens the prefilled GitHub issue for an agent or skill in the browser. A
+// refusal shows beside that row's Feedback button.
+async function giveFeedback(item) {
+  view.actionError = null;
+  try {
+    await api.openURL(feedbackFor(view.catalog, item));
+  } catch (e) {
+    view.actionError = { where: feedbackWhere(item.team, item.kind, item.name), message: message(e) };
+  }
+  draw();
+}
+
 async function startClone(address, dir = '') {
   const typed = { address: address.trim(), dir: dir.trim() };
   view.welcome = { ...typed, error: '', dirError: '', busy: true };
@@ -128,10 +141,10 @@ const settings = initSettings(() => runCommand(updateArgs(view.installs), 'updat
 const paint = [
   initWelcome(document.getElementById('page-welcome'), startClone),
   initTeams(document.getElementById('teams-grid'), installTeam),
-  initAgents(document.getElementById('page-agents')),
+  initAgents(document.getElementById('page-agents'), giveFeedback),
   initInstall(document.getElementById('page-install'), (action, team) =>
     runCommand(action === 'sync' ? syncArgs(team) : uninstallArgs(team), action + ':' + team)),
-  initSkills(document.getElementById('page-skills')),
+  initSkills(document.getElementById('page-skills'), giveFeedback),
   settings.paint,
 ];
 

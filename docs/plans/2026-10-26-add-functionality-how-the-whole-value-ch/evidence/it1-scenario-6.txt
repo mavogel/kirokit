@@ -1,0 +1,120 @@
+# Step 1: the Scenario 1 step 5 chat (product-owner, engineer denied twice) ended; its session folder:
+<scratch>/kh.3Cdr/sessions/038b4c485150fa79/sess_13b66eb1-1bd0-46c5-a945-1c8f84adfb19
+messages.jsonl
+session.json
+denied tool_call lines in messages.jsonl: 2
+
+# Step 2 + 3
+$ kiro-cli chat --no-interactive --agent qa --v3 "Analyze my session sess_13b66eb1-1bd0-46c5-a945-1c8f84adfb19 with the analyze-session skill, then prepare the issue per owner."
+[ERROR] (node:72698) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[tool] Load skill: analyze-session
+I'll analyze session `sess_13b66eb1-1bd0-46c5-a945-1c8f84adfb19`. Let me locate and read it.
+[tool] List Directory
+[tool] File Search
+The session folder wasn't found directly. Let me search the subdirectories.
+[tool] List Directory
+Found it. Let me read the session metadata and messages.
+[tool] Read File
+[tool] Read File
+Now let me check today's agent config for the product-owner to see if the permission rule already exists, and look at the team config layout.
+[tool] List Directory
+[tool] List Directory
+[tool] Read File
+I've read the full session. Here's what I found.
+
+## Session: "Feasibility Check: One-Minute Onboarding"
+
+- **Agent:** product-owner | **Mode:** autopilot | **Context:** peaked at ~1.2% | **One user turn**
+
+The user asked the product-owner to consult the engineer sub-agent on whether one-minute onboarding is feasible. The product-owner tried to call `invoke_sub_agent` (engineer) twice. Both times the "Sub-agent: engineer" approval prompt was **cancelled** (not answered, not rejected), so both calls landed `status: "denied"` with `success: false`. The turn ended with the agent explaining the prompt wasn't answered and offering to proceed without the engineer. No feasibility input was ever produced.
+
+## Report by owner
+
+### @mavogel (team owner)
+
+**1. Missing permission rule for the engineer sub-agent (strong)**
+
+- **What I saw:** The product-owner prompt explicitly instructs it to "ask the engineer agent whether it is feasible." The agent followed that, but the "Sub-agent: engineer" approval prompt was cancelled twice. Both `invoke_sub_agent` calls failed and the user got no feasibility input. The same prompt will recur every time the agent follows its core instruction.
+- **Change:** Add `{ "capability": "subagent", "match": ["engineer"], "effect": "allow" }` to the product-owner's permission rules, and add `"engineer"` to `toolsSettings.subagent.trustedAgents`. Today's config already auto-allows `customer`, `qa`, and `ux-designer` but omits `engineer`, so the gap still exists. The split looks deliberate (engineer can write code, the others are read-only), but a product-owner→engineer sub-agent call is advisory — the engineer's own permissions still govern what it can touch. If the team prefers to keep engineer gated, the product-owner prompt should say so instead of instructing consultation as standard practice.
+- **Where:** `teams/product-team/agents/product-owner/agent.json.tmpl`
+
+**2. Agent retried an identical call after a cancelled prompt (minor)**
+
+- **What I saw:** After the first cancelled prompt the agent reattempted the exact same `invoke_sub_agent` call, which produced the same cancelled prompt. It stopped after two and explained well, so no real harm.
+- **Change:** A one-line prompt note — "When a sub-agent permission prompt is cancelled (not rejected), don't retry the same call; ask the user to approve it or offer an alternative" — would save one wasted round-trip. Low priority; the agent already behaves acceptably.
+- **Where:** `teams/product-team/agents/product-owner/agent.json.tmpl`
+
+No other signals: no repeated lookups, no unactivated skills (the `analyze-session` skill in resources didn't match the request), no user corrections, context was minimal, and no repeated post-write steps that a hook should own.
+
+## Prepared issue (one owner: @mavogel)
+
+You said to prepare it, so here it is. Nothing is sent until you submit it on GitHub.
+
+**Title:**
+```
+Harness review: product-team session Feasibility Check: One-Minute Onboarding
+```
+
+**Body:**
+```
+**Team:** product-team
+**Owner:** @mavogel
+
+- The product-owner prompt says to consult the engineer sub-agent, but no permission rule allows that call. The "Sub-agent: engineer" approval prompt was cancelled twice (not rejected), so both invoke_sub_agent calls failed and the turn produced no feasibility input.
+- Fix: add { "capability": "subagent", "match": ["engineer"], "effect": "allow" } to product-owner permission rules, and add "engineer" to toolsSettings.subagent.trustedAgents. Today's config allows customer, qa and ux-designer but omits engineer.
+- Where: teams/product-team/agents/product-owner/agent.json.tmpl
+
+_Sent with analyze-session in Kiro._
+```
+
+**Link:**
+
+https://github.com/mavogel/kirokit/issues/new?title=Harness%20review%3A%20product-team%20session%20Feasibility%20Check%3A%20One-Minute%20Onboarding&body=%2A%2ATeam%3A%2A%2A%20product-team%0A%2A%2AOwner%3A%2A%2A%20%40mavogel%0A%0A-%20The%20product-owner%20prompt%20says%20to%20consult%20the%20engineer%20sub-agent%2C%20but%20no%20permission%20rule%20allows%20that%20call.%20The%20%22Sub-agent%3A%20engineer%22%20approval%20prompt%20was%20cancelled%20twice%20%28not%20rejected%29%2C%20so%20both%20invoke_sub_agent%20calls%20failed%20and%20the%20turn%20produced%20no%20feasibility%20input.%0A-%20Fix%3A%20add%20%7B%20%22capability%22%3A%20%22subagent%22%2C%20%22match%22%3A%20%5B%22engineer%22%5D%2C%20%22effect%22%3A%20%22allow%22%20%7D%20to%20product-owner%20permission%20rules%2C%20and%20add%20%22engineer%22%20to%20toolsSettings.subagent.trustedAgents.%20Today%27s%20config%20allows%20customer%2C%20qa%20and%20ux-designer%20but%20omits%20engineer.%0A-%20Where%3A%20teams%2Fproduct-team%2Fagents%2Fproduct-owner%2Fagent.json.tmpl%0A%0A_Sent%20with%20analyze-session%20in%20Kiro._&labels=feedback,team:product-team,agent:product-owner
+
+Labels on the issue: `feedback`, `team:product-team`, `agent:product-owner`.
+
+The headline finding is the missing engineer permission — today's config auto-approves the other three sub-agents but leaves engineer gated, which blocks the product-owner's standard consultation workflow. Open the link to create the issue when you're ready.
+exit=0
+# tools used:    1 [tool] File Search;   4 [tool] List Directory;   1 [tool] Load skill: analyze-session;   3 [tool] Read File;   9 [tool] status: Completed;   9 [tool] status: InProgress;
+
+# decoded issue link
+path: /mavogel/kirokit/issues/new
+title: Harness review: product-team session Feasibility Check: One-Minute Onboarding
+labels: feedback,team:product-team,agent:product-owner
+body length: 662
+
+# Probe: an id that does not exist
+$ kiro-cli chat --no-interactive --agent customer --v3 "Analyze my session sess_00000000-dead-beef-0000-000000000000 with the analyze-session skill."
+[ERROR] (node:74573) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+I'll activate the analyze-session skill to review your session.
+[tool] Load skill: analyze-session
+Now let me find the session you specified.
+[tool] File Search
+The exact path search came up empty. Let me search more broadly for that session id.
+[tool] File Search
+Let me check the sessions directory structure directly.
+[tool] List Directory
+[tool] List Directory
+[tool] List Directory
+[tool] List Directory
+[tool] List Directory
+[tool] List Directory
+Let me also check the older format location.
+[tool] File Search
+The session `sess_00000000-dead-beef-0000-000000000000` doesn't exist on disk. I checked all session directories under the sessions root and there's no folder matching that id, and no older `cli/` format either. The id looks like a placeholder (`dead-beef` is a classic debug hex pattern) rather than a real session.
+
+Here are the sessions I did find. These are the seven most recent:
+
+1. `sess_86b3cf02-0115-4d30-8207-f8880695abcd`
+2. `sess_c9d693c8-12d6-41c9-b02e-0a8c483c2bbf`
+3. `sess_ab1831d1-82ef-4a1d-948f-1de02c0c017b`
+4. `sess_630aa537-b975-4888-a3d7-ce9bba837d29`
+5. `sess_181e5518-17bd-401f-bf9c-381f703619a6`
+6. `sess_6fd5a1db-65f7-4884-9668-6bae7af8a010`
+7. `sess_13b66eb1-1bd0-46c5-a945-1c8f84adfb19`
+8. `sess_ef5a1cee-e9bc-4fb8-88ce-e7452997d29e`
+
+Want me to read each one's title and timestamp so you can pick the right one, or do you have a different session id in mind?
+exit=0

@@ -1,4 +1,8 @@
 team: platform-team
+# The team owner, a GitHub handle (@user or @org/team), owns every agent and
+# skill unless `owners` names someone else. See "Role agents and feedback" in
+# the README for `owners` and `feedback`.
+owner: "@mavogel"
 globalSteerings:
   - security-baseline
 

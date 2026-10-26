@@ -1,0 +1,4 @@
+[tool] Sub-agent: customer
+[tool] status: InProgress
+[tool] status: Completed
+The customer's biggest frustration is onboarding that makes them do work before the tool does any work for them — walls of setup screens, forced team invites, and guided tours that narrate the obvious all get in the way before they've seen real value. They want to do something useful in the first five minutes, get help out of the way once they've got it, and be spoken to in plain language rather than jargon.

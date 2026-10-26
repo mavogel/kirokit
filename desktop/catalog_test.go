@@ -54,8 +54,20 @@ func TestCatalog_ReadsRealTeams(t *testing.T) {
 	for _, tm := range cat.Teams {
 		names = append(names, tm.Name)
 	}
-	if !slices.Equal(names, []string{"data-team", "platform-team"}) {
-		t.Fatalf("teams = %v, want data-team and platform-team", names)
+	if !slices.Equal(names, []string{"data-team", "platform-team", "product-team"}) {
+		t.Fatalf("teams = %v, want data-team, platform-team and product-team", names)
+	}
+
+	product := findTeam(t, cat, "product-team")
+	roles := []string{}
+	for _, a := range product.Agents {
+		roles = append(roles, a.Name)
+		if !slices.Contains(a.Tools, "subagent") || a.NeedsKey || len(a.Servers) != 0 {
+			t.Errorf("product-team/%s tools = %v, needsKey = %v, servers = %v; want subagent, no key, no servers", a.Name, a.Tools, a.NeedsKey, a.Servers)
+		}
+	}
+	if !slices.Equal(roles, []string{"customer", "engineer", "product-owner", "qa", "ux-designer"}) {
+		t.Errorf("product-team agents = %v, want the five roles", roles)
 	}
 
 	devops := findAgent(t, findTeam(t, cat, "platform-team"), "devops")
@@ -156,6 +168,84 @@ func TestCatalog_SkillSources(t *testing.T) {
 		if got[name] != src {
 			t.Errorf("skill %s source = %q, want %q (all: %v)", name, got[name], src, got)
 		}
+	}
+}
+
+// Owners follow the manifest: an override for the item, else the team owner
+// (vendored skills included); a team without feedback.github has none.
+func TestCatalog_OwnersAndFeedbackRepository(t *testing.T) {
+	root := fixtureRepo(t)
+	write(t, filepath.Join(root, "teams", "t1", "agents", "a2", "agent.json.tmpl"), `{"name": "a2", "description": "d", "tools": []}`)
+	write(t, filepath.Join(root, "teams", "t1", "external", "skills", "ext-skill", "SKILL.md"), "---\nname: ext-skill\n---\n")
+	lockSkill(t, root, "t1", "ext-skill", "https://example.com/skills.git", "v1.2.0")
+	manifest := filepath.Join(root, "teams", "t1", "manifest.yaml")
+	data, err := os.ReadFile(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, manifest, string(data)+"owner: \"@jane\"\nowners:\n  agents:\n    a1: \"@nick\"\nfeedback:\n  github: acme/kiro-config\n")
+	write(t, filepath.Join(root, "teams", "t2", "manifest.yaml"), "team: t2\nglobalSteerings: []\n")
+	write(t, filepath.Join(root, "teams", "t2", "agents", "b1", "agent.json.tmpl"), `{"name": "b1", "description": "d", "tools": []}`)
+
+	cat, err := BuildCatalog(root)
+	if err != nil {
+		t.Fatalf("BuildCatalog: %v", err)
+	}
+	t1 := findTeam(t, cat, "t1")
+	if t1.Feedback != "acme/kiro-config" {
+		t.Errorf("t1 feedback = %q, want acme/kiro-config", t1.Feedback)
+	}
+	if a := findAgent(t, t1, "a1"); a.Owner != "@nick" || a.OwnerFromTeam {
+		t.Errorf("a1 owner = %q, fromTeam %v; want @nick from the override", a.Owner, a.OwnerFromTeam)
+	}
+	if a := findAgent(t, t1, "a2"); a.Owner != "@jane" || !a.OwnerFromTeam {
+		t.Errorf("a2 owner = %q, fromTeam %v; want the team owner @jane", a.Owner, a.OwnerFromTeam)
+	}
+	for _, s := range t1.Skills {
+		if s.Owner != "@jane" || !s.OwnerFromTeam {
+			t.Errorf("skill %s owner = %q, fromTeam %v; want the team owner @jane", s.Name, s.Owner, s.OwnerFromTeam)
+		}
+	}
+	t2 := findTeam(t, cat, "t2")
+	if b := findAgent(t, t2, "b1"); t2.Feedback != "" || b.Owner != "" || b.OwnerFromTeam {
+		t.Errorf("t2 feedback = %q, b1 owner = %q (%v); want none", t2.Feedback, b.Owner, b.OwnerFromTeam)
+	}
+}
+
+// Owners are keyed by the agent's folder (agents/<folder>/), which is what the
+// manifest and render check against, not by the "name" inside the file.
+func TestCatalog_OwnerIsKeyedByTheAgentFolder(t *testing.T) {
+	root := fixtureRepo(t)
+	write(t, filepath.Join(root, "teams", "t1", "agents", "folder-x", "agent.json.tmpl"), `{"name": "shown-as-y", "description": "d", "tools": []}`)
+	write(t, filepath.Join(root, "teams", "t1", "manifest.yaml"), "team: t1\nglobalSteerings: []\nowner: \"@jane\"\nowners:\n  agents:\n    folder-x: \"@nick\"\n")
+
+	cat, err := BuildCatalog(root)
+	if err != nil {
+		t.Fatalf("BuildCatalog: %v", err)
+	}
+	seen := false
+	for _, a := range findTeam(t, cat, "t1").Agents {
+		if a.Name == "a1" {
+			continue
+		}
+		seen = true
+		if a.Owner != "@nick" || a.OwnerFromTeam {
+			t.Errorf("agent %q (folder folder-x) owner = %q, fromTeam %v; want @nick from owners.agents.folder-x", a.Name, a.Owner, a.OwnerFromTeam)
+		}
+	}
+	if !seen {
+		t.Fatal("the agent of folder folder-x is missing from the catalog")
+	}
+}
+
+// The real example team routes feedback to the kirokit repository.
+func TestCatalog_ProductTeamFeedbackRepository(t *testing.T) {
+	cat, err := BuildCatalog("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := findTeam(t, cat, "product-team").Feedback; got != "mavogel/kirokit" {
+		t.Errorf("product-team feedback = %q, want mavogel/kirokit", got)
 	}
 }
 

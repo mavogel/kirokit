@@ -1,0 +1,27 @@
+Here's your feedback report.
+
+**Title:**
+Feedback: product-team agent customer: ignored persona notes, answered like a generic user
+
+**Body:**
+```text
+**Team:** product-team
+**Agent:** customer
+**Owner:** @mavogel
+
+**What happened**
+The customer agent ignored my persona notes and answered like a generic user instead of staying in the customer persona I set up.
+
+**What I expected**
+The customer agent should have responded from the perspective of the specific customer persona described in my notes, using that persona's goals, frustrations, and language, rather than giving generic user feedback.
+
+**From the chat**
+> the customer agent ignored my persona notes and answered like a generic user
+
+_Sent with /feedback in Kiro._
+```
+
+**Link:**
+https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-team%20agent%20customer%3A%20ignored%20persona%20notes%2C%20answered%20like%20a%20generic%20user&body=%2A%2ATeam%3A%2A%2A%20product-team%0A%2A%2AAgent%3A%2A%2A%20customer%0A%2A%2AOwner%3A%2A%2A%20%40mavogel%0A%0A%2A%2AWhat%20happened%2A%2A%0AThe%20customer%20agent%20ignored%20my%20persona%20notes%20and%20answered%20like%20a%20generic%20user%20instead%20of%20staying%20in%20the%20customer%20persona%20I%20set%20up.%0A%0A%2A%2AWhat%20I%20expected%2A%2A%0AThe%20customer%20agent%20should%20have%20responded%20from%20the%20perspective%20of%20the%20specific%20customer%20persona%20described%20in%20my%20notes%2C%20using%20that%20persona%27s%20goals%2C%20frustrations%2C%20and%20language%2C%20rather%20than%20giving%20generic%20user%20feedback.%0A%0A%2A%2AFrom%20the%20chat%2A%2A%0A%3E%20the%20customer%20agent%20ignored%20my%20persona%20notes%20and%20answered%20like%20a%20generic%20user%0A%0A_Sent%20with%20%2Ffeedback%20in%20Kiro._&labels=feedback,team:product-team,agent:customer
+
+The link opens GitHub's new-issue form with the title, body, and labels prefilled. Nothing is sent until you submit it there. GitHub applies the labels only for people who can triage issues in `mavogel/kirokit` — the title and body name the team and the agent so everyone else can still see what it's about.

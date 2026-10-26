@@ -6,17 +6,21 @@ package render
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 
 	"github.com/mavogel/kirokit/internal/backup"
 	"github.com/mavogel/kirokit/internal/externalskills"
 	"github.com/mavogel/kirokit/internal/kiroconfig"
+	"github.com/mavogel/kirokit/internal/manifest"
 	"github.com/mavogel/kirokit/internal/sopswrap"
 )
 
@@ -50,6 +54,12 @@ func RenderTeamWith(teamsRoot, team, globalRoot, envVersionsPath, outDir string,
 	externalNames, err := externalskills.Resolve(teamDir, ctx.Team.ExternalSkills)
 	if err != nil {
 		return fmt.Errorf("render: %w", err)
+	}
+	if ctx.Agents, ctx.Skills, err = teamInventory(teamDir, externalNames); err != nil {
+		return fmt.Errorf("render: %w", err)
+	}
+	if err := checkOwnerKeys(ctx); err != nil {
+		return err
 	}
 	agentResources := append(globalSteeringURIs(ctx), externalSkillURIs(ctx.KiroHome, externalNames)...)
 	agentResources = append(agentResources, workspaceResources...)
@@ -115,6 +125,11 @@ func RenderTeamWith(teamsRoot, team, globalRoot, envVersionsPath, outDir string,
 
 		if err := validateOutput(outRel, content); err != nil {
 			return fmt.Errorf("render: %s: %w", relPath, err)
+		}
+		if strings.HasPrefix(outRel, "agents/") {
+			if err := checkSubagents(content, ctx); err != nil {
+				return fmt.Errorf("render: %s: %w", relPath, err)
+			}
 		}
 
 		outPath := filepath.Join(tmpDir, filepath.FromSlash(outRel))
@@ -221,6 +236,102 @@ func agentOf(relPath string) string {
 		return segments[1]
 	}
 	return relPath
+}
+
+// teamInventory returns the sorted names of the team's agents (folders under
+// agents/) and skills (folders under skills/ plus the vendored names).
+func teamInventory(teamDir string, externalNames []string) (agents, skills []string, err error) {
+	dirs := func(category string) ([]string, error) {
+		entries, err := os.ReadDir(filepath.Join(teamDir, category))
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		var names []string
+		for _, e := range entries {
+			if e.IsDir() {
+				names = append(names, e.Name())
+			}
+		}
+		return names, nil
+	}
+	if agents, err = dirs("agents"); err != nil {
+		return nil, nil, err
+	}
+	if skills, err = dirs("skills"); err != nil {
+		return nil, nil, err
+	}
+	skills = append(skills, externalNames...)
+	slices.Sort(agents)
+	slices.Sort(skills)
+	return agents, slices.Compact(skills), nil
+}
+
+// checkOwnerKeys fails on an owners entry that names an agent or skill the
+// team does not have, which is most likely a typo that would leave the real
+// item with the team owner.
+func checkOwnerKeys(ctx *Context) error {
+	for _, group := range []struct {
+		kind   string
+		owners map[string]string
+		have   []string
+	}{
+		{manifest.KindAgent, ctx.Team.Owners.Agents, ctx.Agents},
+		{manifest.KindSkill, ctx.Team.Owners.Skills, ctx.Skills},
+	} {
+		for _, name := range slices.Sorted(maps.Keys(group.owners)) {
+			if !slices.Contains(group.have, name) {
+				return fmt.Errorf("render: manifest.yaml: owners.%ss.%s: %s has no %s %s", group.kind, name, ctx.Team.Team, group.kind, name)
+			}
+		}
+	}
+	return nil
+}
+
+// checkSubagents fails when an agent's subagent settings, or the match of a
+// subagent permission rule (which Kiro compares with the agent name), name an
+// agent the team does not have. kiro-cli accepts any name there, so a typo
+// would only show up as a subagent that never runs or keeps prompting.
+// Entries with glob characters are patterns and are not checked.
+func checkSubagents(content []byte, ctx *Context) error {
+	var doc struct {
+		ToolsSettings struct {
+			Subagent struct {
+				AvailableAgents []string `json:"availableAgents"`
+				TrustedAgents   []string `json:"trustedAgents"`
+			} `json:"subagent"`
+		} `json:"toolsSettings"`
+		Permissions struct {
+			Rules []struct {
+				Capability string   `json:"capability"`
+				Match      []string `json:"match"`
+			} `json:"rules"`
+		} `json:"permissions"`
+	}
+	if err := json.Unmarshal(content, &doc); err != nil {
+		return err
+	}
+	type field struct {
+		name  string
+		names []string
+	}
+	sub := doc.ToolsSettings.Subagent
+	fields := []field{{"toolsSettings.subagent.availableAgents", sub.AvailableAgents}, {"toolsSettings.subagent.trustedAgents", sub.TrustedAgents}}
+	for i, r := range doc.Permissions.Rules {
+		if r.Capability == "subagent" {
+			fields = append(fields, field{fmt.Sprintf("permissions.rules[%d].match", i), r.Match})
+		}
+	}
+	for _, field := range fields {
+		for _, n := range field.names {
+			if !strings.ContainsAny(n, "*?[") && !slices.Contains(ctx.Agents, n) {
+				return fmt.Errorf("%s names %q, which is not an agent of %s", field.name, n, ctx.Team.Team)
+			}
+		}
+	}
+	return nil
 }
 
 func validateOutput(outRel string, content []byte) error {

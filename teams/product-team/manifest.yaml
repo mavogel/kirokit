@@ -1,0 +1,19 @@
+team: product-team
+
+# The team owner, a GitHub handle (@user or @org/team), owns every agent and
+# skill unless `owners` names someone else. GitHub notifies the owner when a
+# feedback issue @-mentions them.
+owner: "@mavogel"
+owners:
+  agents:
+    product-owner: "@mavogel"
+  # skills:
+  #   analyze-session: "@your-org/harness-maintainers"
+
+# Feedback from /feedback in Kiro and the desktop app's Feedback button opens a
+# prefilled issue in this GitHub repository (owner/repo). Point it at your own
+# config repository.
+feedback:
+  github: mavogel/kirokit
+
+globalSteerings: []

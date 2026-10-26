@@ -1,0 +1,78 @@
+$ git rev-parse HEAD; git diff --stat 428a524 HEAD -- . ':(exclude)docs/plans/**'
+c9086861120e68b5647d326a9c0801393fc639ef
+$ go build -o kirokit ./cmd/kirokit  # exit 0
+$ KIRO_HOME=<tmp> kirokit install product-team
+installed product-team into <scratch>/kh.3Cdr
+exit=0
+$ ls $KIRO_HOME/agents
+customer.json
+engineer.json
+product-owner.json
+qa.json
+ux-designer.json
+$ ls $KIRO_HOME (top)
+agents
+prompts
+skills
+steering
+
+<scratch>/kh.3Cdr/prompts:
+feedback.md
+
+<scratch>/kh.3Cdr/skills:
+analyze-session
+
+<scratch>/kh.3Cdr/steering:
+spec-review-gates.md
+
+$ kiro-cli chat --no-interactive --agent product-owner --v3 "Ask the customer agent what frustrates them most about onboarding, then summarise its answer."   (kiro-cli 2.34.0, KIRO_HOME=<scratch>/kh.3Cdr, cwd <scratch>/ws1)
+[ERROR] (node:62296) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[tool] Sub-agent: customer
+[tool] status: InProgress
+[tool] status: Completed
+[tool] status: Completed
+Here's what Sam, the example operations-lead persona, said frustrates them most about onboarding:
+
+- **Setup before value.** You're asked to configure things before you've done a single meaningful action. It feels like homework before you've seen any payoff.
+- **Internal jargon.** Steps and labels use the product's own vocabulary instead of plain language, so you're decoding terminology instead of getting work done.
+- **Empty states with no direction.** You land on a blank screen and there's no guidance on what to do next.
+- **Repeated information entry.** You enter the same details in multiple places, which feels redundant and slow.
+- **Hidden progress.** You can't tell how far along you are or what's left, so the whole thing feels endless.
+
+What a good experience looks like for Sam:
+
+- One real action completed within the first minute.
+- Setup steps motivated by what you just tried to do, not front-loaded.
+- Plain language throughout.
+- A concrete summary at the end of what you accomplished.
+
+One caveat Sam flagged: they're an example persona, not a real customer. These points should be validated against actual customer interviews before driving decisions. If you'd like, I can ask the engineer or QA agent to weigh in on feasibility or failure modes for any of these.
+exit=0
+
+$ kiro-cli chat --no-interactive --agent product-owner --v3 "Ask the engineer agent whether a one-minute onboarding is feasible. Use the subagent tool."
+[ERROR] (node:62837) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+I'll ask the engineer agent whether a one-minute onboarding is feasible.
+[tool] Sub-agent: engineer
+[denied] tool permission approval is not supported in non-interactive mode. Use --trust-all-tools to auto-approve.
+[tool] status: Failed: Sub-agent: engineer: The permission request failed before it was answered, so this call did not run; the user did not reject it.
+The call to the engineer agent didn't go through because the permission request wasn't answered before it timed out. It wasn't rejected, just left unanswered.
+
+I'll try again so we can get the feasibility input.
+[tool] Sub-agent: engineer
+[denied] tool permission approval is not supported in non-interactive mode. Use --trust-all-tools to auto-approve.
+[tool] status: Failed: Sub-agent: engineer: The permission request failed before it was answered, so this call did not run; the user did not reject it.
+I've tried twice to reach the engineer agent, but the permission request wasn't answered either time, so the consultation didn't run.
+
+This usually means the prompt for approving the sub-agent call needs to be confirmed in your environment. Could you approve the subagent_engineer call when the permission prompt appears? Once approved, I'll get the engineer's feasibility read on the one-minute onboarding and bring it back to you.
+
+A couple of things that might help:
+- If you didn't see a prompt at all, check whether sub-agent permissions are being surfaced in your UI for this session.
+- If you'd rather I proceed differently, let me know — for example, I can give you my own product-owner take on one-minute onboarding feasibility first, and then we circle back to the engineer for validation.
+exit=0
+$ KIRO_HOME=<fresh tmp> kirokit install no-such-team
+kirokit install: manifest: read teams/no-such-team/manifest.yaml: open teams/no-such-team/manifest.yaml: no such file or directory
+exit=1
+$ ls <fresh tmp>
+(empty)

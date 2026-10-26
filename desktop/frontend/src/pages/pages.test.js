@@ -7,6 +7,7 @@ import { installView, syncArgs, uninstallArgs } from './install.js';
 import { updateArgs, saveAndMaybeClone, initSettings } from './settings.js';
 import { skillsView } from './skills.js';
 import { welcomeView, showWelcome } from './welcome.js';
+import { feedbackFor } from './feedback.js';
 
 const catalog = {
   tag: 'v1.0.0',
@@ -237,6 +238,76 @@ test('A finished clone clears the Cloning status in Settings', async () => {
 
   page.cloneDone({ ok: true, error: 'This repository has no release yet.' });
   assert.match(el('save-status').textContent, /no release yet/);
+});
+
+// Owners and feedback: alpha routes feedback to a repository, gamma does not.
+const owned = {
+  tag: '',
+  pins: {},
+  teams: [
+    {
+      name: 'alpha',
+      feedback: 'acme/cfg',
+      prompts: 0,
+      steerings: [],
+      agents: [
+        { name: 'po', description: 'd', tools: [], servers: [], owner: '@nick', ownerFromTeam: false },
+        { name: 'eng', description: 'd', tools: [], servers: [], owner: '@jane', ownerFromTeam: true },
+      ],
+      skills: [{ name: 'vendored', source: 'https://x @ v1', owner: '@jane', ownerFromTeam: true }],
+    },
+    {
+      name: 'gamma',
+      feedback: '',
+      prompts: 0,
+      steerings: [],
+      agents: [{ name: 'g1', description: 'd', tools: [], servers: [], owner: '', ownerFromTeam: false }],
+      skills: [{ name: 'gs', source: 'Written by the team', owner: '<b>@x</b>', ownerFromTeam: false }],
+    },
+  ],
+};
+const ownedView = { catalog: owned, installs: [], error: '', cloned: true };
+const row = (html, name) => html.split('</tr>').find((r) => r.includes(`>${name}<`));
+
+test('Agents shows each owner, marking the inherited one and the missing one', () => {
+  const html = agentsView(ownedView).html;
+  assert.match(row(html, 'po'), /<span class="mono">@nick<\/span><\/span>/);
+  assert.doesNotMatch(row(html, 'po'), /team owner/);
+  assert.match(row(html, 'eng'), /@jane<\/span><span class="from">team owner<\/span>/);
+  assert.match(row(html, 'g1'), /No owner/);
+});
+
+test('Each agent and skill has a Feedback button naming it, off for a team without a feedback repository', () => {
+  const agents = agentsView(ownedView);
+  assert.match(row(agents.html, 'po'), /<button class="btn" data-feedback="agent" data-team="alpha" data-name="po" aria-label="Give feedback on po">Feedback<\/button>/);
+  assert.match(row(agents.html, 'g1'), /<button class="btn" disabled aria-label="Give feedback on g1 \(no feedback repository\)">Feedback<\/button>/);
+  assert.match(agents.note, /gamma names no feedback repository in its manifest.yaml, so its Feedback buttons are off/);
+  assert.doesNotMatch(agents.note, /alpha/);
+
+  const skills = skillsView(ownedView);
+  assert.match(row(skills.skills, 'vendored'), /@jane<\/span><span class="from">team owner<\/span>/);
+  assert.match(row(skills.skills, 'vendored'), /data-feedback="skill" data-team="alpha" data-name="vendored"/);
+  assert.match(row(skills.skills, 'gs'), /&lt;b&gt;@x&lt;\/b&gt;/);
+  assert.match(row(skills.skills, 'gs'), /disabled/);
+  assert.match(skills.note, /gamma names no feedback repository/);
+  const allRouted = { ...ownedView, catalog: { ...owned, teams: [owned.teams[0]] } };
+  assert.equal(agentsView(allRouted).note, '', 'no note when no row has a disabled button');
+  assert.equal(skillsView(allRouted).note, '');
+});
+
+test('A refused open shows beside the Feedback button it came from', () => {
+  const view = { ...ownedView, actionError: { where: 'feedback:alpha:agent:po', message: 'refusing to open x' } };
+  const html = agentsView(view).html;
+  assert.match(row(html, 'po'), /role="alert">refusing to open x</);
+  assert.doesNotMatch(row(html, 'eng'), /role="alert"/);
+});
+
+test('Feedback builds the issue for the pressed item from the catalog', () => {
+  const url = new URL(feedbackFor(owned, { team: 'alpha', kind: 'agent', name: 'po' }));
+  assert.equal(url.pathname, '/acme/cfg/issues/new');
+  assert.match(url.searchParams.get('body'), /\*\*Owner:\*\* @nick/);
+  assert.throws(() => feedbackFor(owned, { team: 'alpha', kind: 'skill', name: 'gone' }), /gone is no longer in alpha/);
+  assert.throws(() => feedbackFor(owned, { team: 'gamma', kind: 'agent', name: 'g1' }), /gamma names no feedback repository/);
 });
 
 test('No page source names a sample team', () => {

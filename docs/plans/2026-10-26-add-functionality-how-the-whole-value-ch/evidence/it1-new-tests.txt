@@ -1,0 +1,29 @@
+=== RUN   TestLoad_OwnerHandleBoundariesAndEmptyOverride
+--- PASS: TestLoad_OwnerHandleBoundariesAndEmptyOverride (0.00s)
+PASS
+ok  	github.com/mavogel/kirokit/internal/manifest	0.249s
+=== RUN   TestRenderTeam_OwnerKeyForAVendoredSkillIsAccepted
+--- PASS: TestRenderTeam_OwnerKeyForAVendoredSkillIsAccepted (0.01s)
+PASS
+ok  	github.com/mavogel/kirokit/internal/render	0.207s
+=== RUN   TestCatalog_OwnerIsKeyedByTheAgentFolder
+--- PASS: TestCatalog_OwnerIsKeyedByTheAgentFolder (0.02s)
+PASS
+ok  	github.com/mavogel/kirokit/desktop	0.258s
+✔ Keystrokes reach Go one call at a time, in the order they were typed (44.400959ms)
+✔ A failed keystroke call does not hold back the next one, and each target has its own line (23.112208ms)
+✔ openURL opens a GitHub new-issue form and refuses every other address (0.713916ms)
+✔ openURL outside the app window rejects with a readable message (0.153458ms)
+✔ Feedback opens the new-issue form of the team repository, prefilled for the owner (0.588625ms)
+✔ A skill is labelled as a skill, and an item without owner mentions nobody (0.15925ms)
+✔ The address passes the browser opener: no shell metacharacters survive encoding (0.11975ms)
+✔ Names with characters that mean something in an address arrive unchanged (0.09975ms)
+✔ A Feedback press reports the pressed item, and only for an enabled Feedback button (0.417375ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 183.62575
