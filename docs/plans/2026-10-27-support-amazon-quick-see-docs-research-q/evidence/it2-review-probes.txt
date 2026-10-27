@@ -1,0 +1,33 @@
+# probes of this round's fix (9b6ff3b) through the built CLI at a6805ce, on a throwaway KIROKIT_REPO with team t
+--- vendored skill with an executable scripts/run.sh (0755 in the team folder)
+$ KIROKIT_REPO=<scratch> kirokit render --quick t --out <scratch>/out
+rendered Quick bundle for t: 2 skills, 0 agents -> <scratch>/out
+warning: no Quick id for skill user-story yet (first import); run kirokit quick ids after importing
+warning: no Quick id for skill vend yet (first import); run kirokit quick ids after importing
+exit 0
+-rw------- ./skills/user-story/SKILL.md
+-rwx------ ./skills/vend/scripts/run.sh
+-rw------- ./skills/vend/SKILL.md
+--- kiro render of the same team keeps the bit too (for comparison)
+-rwx------ <scratch>/kiro/skills/vend/scripts/run.sh
+--- two listed skill folders whose SKILL.md share the name user-story
+$ KIROKIT_REPO=<scratch> kirokit render --quick t --out <scratch>/out2
+kirokit render: t: quick: skills "user-story" and "copy" share the name "user-story"; Quick matches skills by name
+exit 1
+$ test -e <scratch>/out2
+exit 1 (1 = nothing published)
+$ ls -a <scratch> (no leftover .kirokit-quick-* temp folder)
+.
+..
+env
+global
+kiro
+out
+teams
+--- same clash with an existing bundle at --out: the old bundle stays untouched
+$ KIROKIT_REPO=<scratch> kirokit render --quick t --out <scratch>/out
+kirokit render: t: quick: skills "user-story" and "copy" share the name "user-story"; Quick matches skills by name
+exit 1
+-rw------- ./skills/user-story/SKILL.md
+-rwx------ ./skills/vend/scripts/run.sh
+-rw------- ./skills/vend/SKILL.md

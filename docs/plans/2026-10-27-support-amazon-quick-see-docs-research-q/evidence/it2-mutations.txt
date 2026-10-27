@@ -1,0 +1,20 @@
+# isolated copy of go.mod, go.sum, internal/, cmd/ at a6805ce; each mutation is applied alone to internal/quick/quick.go, then restored
+--- unmutated
+ok  	github.com/mavogel/kirokit/internal/quick	0.271s
+--- mutation A: drop the shared-name check
+--- FAIL: TestRenderTeam_Errors (0.06s)
+    --- FAIL: TestRenderTeam_Errors/two_folders,_one_name (0.01s)
+        quick_test.go:277: err = <nil>, want it to contain "skills \"user-story\" and \"other\" share the name \"user-story\""
+FAIL
+--- mutation B: every file 0600 again (the behaviour before the fix)
+--- FAIL: TestRenderTeam_VendoredScriptStaysExecutable (0.01s)
+    quick_test.go:230: scripts/run.sh mode = -rw-------, want -rwx------
+FAIL
+FAIL	github.com/mavogel/kirokit/internal/quick	0.250s
+--- mutation C: copy the source mode as is (0755, group/other bits leak)
+ok  	github.com/mavogel/kirokit/internal/quick	0.224s
+--- mutation D: drop the Chmod, so umask decides (umask 022)
+ok  	github.com/mavogel/kirokit/internal/quick	0.294s
+# C and D are equivalent mutations, not test gaps: the Kiro tree that writeSkill copies from already holds the
+# script at 0700 (writeExternalSkills), so its own mode is 0700; and the bundle is written into a fresh temp
+# folder, so os.WriteFile creates the file with 0700 & ^umask = 0700. Neither can change observable output here.
