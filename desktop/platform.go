@@ -231,6 +231,18 @@ func shellNoteFor(goos, shell string) string {
 	return "Your shell is " + filepath.Base(shell) + ", so the bundled kirokit may not come first on its PATH if your startup files change it."
 }
 
+// openCommandFor is the program that shows a folder in the file manager.
+func openCommandFor(goos string) string {
+	switch goos {
+	case "darwin":
+		return "open"
+	case "windows":
+		return "explorer"
+	default:
+		return "xdg-open"
+	}
+}
+
 // sopsHintFor is the setup check's hint when sops is missing.
 func sopsHintFor(goos string) string {
 	switch goos {

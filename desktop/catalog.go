@@ -37,6 +37,9 @@ type Team struct {
 	Prompts   int      `json:"prompts"`
 	Steerings []string `json:"steerings"`
 	Feedback  string   `json:"feedback"`
+	// Quick is true when the manifest lists skills or agents for Amazon
+	// Quick, so the card offers Export for Quick.
+	Quick bool `json:"quick"`
 }
 
 // Agent is one rendered agent file. NeedsKey is true when the agent ships an
@@ -122,6 +125,7 @@ func readTeam(teamsRoot, name, rendered string) (Team, error) {
 		return team, err
 	}
 	team.Feedback = m.Feedback.GitHub
+	team.Quick = m.Quick != nil && (len(m.Quick.Skills) > 0 || len(m.Quick.Agents) > 0)
 
 	agentFiles, _ := filepath.Glob(filepath.Join(rendered, "agents", "*.json"))
 	sort.Strings(agentFiles)
