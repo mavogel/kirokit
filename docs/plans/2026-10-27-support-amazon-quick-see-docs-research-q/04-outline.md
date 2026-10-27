@@ -11,11 +11,26 @@ Five slices and fourteen tasks: the Quick bundle renders first (with ids and gol
 ## How the build runs
 
 <!-- ql:waves -->
+- Wave 1 · Slice 1 (A team renders its Amazon Quick bundle from the same templates) · first
+- Wave 2 · Slice 2 (Quick ids come back from Quick's own exports), Slice 3 (The desktop app exports a team for Quick) · side by side
+- Wave 3 · Slice 4 (Kiro IDE and kirocrew are confirmed, and the README starts with what kirokit is) · on its own
+- Wave 4 · Slice 5 (The showcase shows Quick, Kiro IDE and kirocrew) · on its own
+
+4 waves · longest path 11 of 13 tasks
+
+A fresh agent runs the scenarios after slice 5 (the recording drives two more desktop apps (Kiro IDE through Electron, kirocrew in headless Chrome) on this Mac.) before the build goes on.
 <!-- /ql:waves -->
 
 ## How each point is proved
 
 <!-- ql:proof-map -->
+- Done means 1 · A team's chosen skills and agents render into an importable Quick bundle → "Render the Quick bundle from the CLI" · runs after slice 1; "Export for Quick in the desktop app" · runs after slice 3
+- Done means 2 · Quick skill ids survive a reimport → "Ids from a Quick export come back on the next render" · runs after slice 2
+- Done means 3 · Quick output is checked like the Kiro output → "Render the Quick bundle from the CLI" · runs after slice 1
+- Done means 4 · Kiro IDE and kirocrew use what `kirokit install` puts in `KIRO_HOME` → "One install, three Kiro tools" · runs after slice 4
+- Done means 5 · The README opens with a new, short intro that names every supported Kiro tool and Quick → "The README is short and every link resolves" · runs after slice 4
+- Done means 6 · A new showcase GIF and video show the current product → "The new showcase" · runs after slice 5
+- Done means 7 · The Quick round trip works on a real account → "The Quick round trip on your account" · runs after slice 2
 <!-- /ql:proof-map -->
 
 ## Oracle
@@ -47,7 +62,7 @@ After this slice `kirokit render --quick product-team --out <dir>` writes the `u
  testdata/golden/product-team/ ~ regenerated, + quick/
 ```
 
-- [ ] T1 manifest.yaml accepts a strict `quick` section
+- [x] T1 manifest.yaml accepts a strict `quick` section
   - **Objective:** Teams list the skills and agents meant for Quick, with each agent's welcome message, starter prompts and pinned skills; a typo in that section fails the load instead of silently dropping content.
   - **Design:** "Manifest `quick` section"
   - **Files:** `internal/manifest/manifest.go`, `internal/manifest/manifest_test.go`
@@ -59,7 +74,7 @@ After this slice `kirokit render --quick product-team --out <dir>` writes the `u
     - Two agents with one name, or one skill listed twice, fail.
     - verify: `go test ./internal/manifest`
 
-- [ ] T2 `internal/quick` builds the bundle, with ids when known
+- [x] T2 `internal/quick` builds the bundle, with ids when known
   - **Objective:** A new package renders the team's Kiro tree into scratch, then writes `skills/<name>/SKILL.md` and `agents/<name>.json` in Quick's format, inserts `id:` lines and pinned ids from the ids map, and publishes the folder like render does.
   - **Design:** "`render` gains `--quick` and `--quick-ids`; output is the Quick bundle only", "Quick skill and agent shapes", "`quick-ids.yaml` and `kirokit quick ids`"
   - **Files:** `internal/quick/quick.go`, `internal/quick/ids.go`, `internal/quick/quick_test.go`, `internal/quick/ids_test.go`, `internal/render/render.go`
@@ -72,7 +87,7 @@ After this slice `kirokit render --quick product-team --out <dir>` writes the `u
     - `LoadIDs` reads the `skills:` map; a missing file is an empty map, an unreadable or malformed one is an error.
     - verify: `go test ./internal/quick ./internal/render`
 
-- [ ] T3 `kirokit render --quick` writes the bundle and warns about missing ids
+- [x] T3 `kirokit render --quick` writes the bundle and warns about missing ids
   - **Objective:** The CLI exposes the bundle with `--quick`, finds the ids file by flag, `KIROKIT_QUICK_IDS` or `<repo>/quick-ids.yaml`, prints one line per team and one warning per missing id.
   - **Design:** "`render` gains `--quick` and `--quick-ids`; output is the Quick bundle only"
   - **Files:** `cmd/kirokit/commands/render.go`, `cmd/kirokit/commands/quick_test.go`
@@ -84,16 +99,16 @@ After this slice `kirokit render --quick product-team --out <dir>` writes the `u
     - Plain `render` (no `--quick`) output is unchanged.
     - verify: `go test ./cmd/kirokit/commands -run 'Quick|KirokitRepo'`
 
-- [ ] T4 product-team ships `user-story` for Kiro and Quick, and its Quick goldens are checked
+- [x] T4 product-team ships `user-story` for Kiro and Quick, and its Quick goldens are checked
   - **Objective:** The example team gets a `user-story` skill and a `quick` section for it and the product-owner agent; the golden harness renders `quick/` with the committed fixture ids and fails on drift or on a stray `quick/` folder.
   - **Design:** "Golden harness covers the Quick bundle", "plan:decision:d2"
-  - **Files:** `teams/product-team/skills/user-story/SKILL.md.tmpl`, `teams/product-team/manifest.yaml`, `teams/product-team/agents/product-owner/agent.json.tmpl`, `internal/golden/golden.go`, `internal/golden/golden_test.go`, `testdata/golden/quick-ids.yaml`, `testdata/golden/product-team/context.json`, `testdata/golden/product-team/rendered/agents/product-owner.json`, `testdata/golden/product-team/rendered/skills/user-story/SKILL.md`, `testdata/golden/product-team/quick/skills/user-story/SKILL.md`, `testdata/golden/product-team/quick/agents/product-owner.json`, `desktop/catalog_test.go`
+  - **Files:** `teams/product-team/skills/user-story/SKILL.md.tmpl`, `teams/product-team/manifest.yaml`, `teams/product-team/agents/product-owner/agent.json.tmpl`, `internal/golden/golden.go`, `internal/golden/golden_test.go`, `testdata/golden/quick-ids.yaml`, `testdata/golden/product-team/context.json`, `testdata/golden/product-team/rendered/agents/product-owner.json`, `testdata/golden/product-team/rendered/skills/user-story/SKILL.md`, `testdata/golden/product-team/rendered/skills/analyze-session/SKILL.md`, `testdata/golden/product-team/rendered/prompts/feedback.md`, `testdata/golden/product-team/quick/skills/user-story/SKILL.md`, `testdata/golden/product-team/quick/agents/product-owner.json`
   - **Test first:** `TestCompare_Quick*` in `golden_test.go` sets up a fixture team with a `quick` section, runs `Update` then `Compare`, and expects a `quick/` golden and no diffs, then a diff after a skill change; it fails because the harness ignores Quick.
   - **Definition of done:**
     - `Update` writes `testdata/golden/<team>/quick/` for a team with a `quick` section, using `testdata/golden/quick-ids.yaml`.
     - `Compare` reports a changed, missing or extra Quick file, and a `quick/` folder for a team without the section.
     - The committed product-team Quick golden has the fixture id line and the pinned id; only product-team's goldens change.
-    - verify: `go test ./internal/golden ./desktop/... ./cmd/kirokit/commands`
+    - verify: `go test ./internal/golden ./cmd/kirokit/commands`
 
 **Validation:** automated: `go test ./...` · `task build` · `./kirokit render --quick product-team --out tmp/quick-check` · manual: none
 
@@ -103,11 +118,11 @@ After this slice `kirokit render --quick product-team --out <dir>` writes the `u
 
 After this slice `kirokit quick ids <exports>` turns skills exported from Quick (files, folders, zips) into the gitignored `quick-ids.yaml`, so the next render writes the ids back. Your round trip on your Quick account then checks the full two-pass flow.
 
-- [ ] T5 `kirokit quick ids` records ids from exported skills
+- [x] T5 `kirokit quick ids` records ids from exported skills
   - **Objective:** A new `quick ids` subcommand reads exported `SKILL.md` files, folders and `.zip` files in memory, merges their `name`/`id` pairs into the ids file (mode 0600, keys sorted) and the repository ignores that file.
   - **Design:** "`quick-ids.yaml` and `kirokit quick ids`"
   - **Files:** `internal/quick/ids.go`, `internal/quick/ids_test.go`, `cmd/kirokit/commands/quick.go`, `cmd/kirokit/commands/root.go`, `cmd/kirokit/commands/quick_test.go`, `.gitignore`
-  - **Test first:** `TestQuickIDs_*` in `quick_test.go` runs `quick ids` on an exported skill from `docs/research/quick/SKILL-minimal-exported.md` and expects `recorded 1 ids in <file>` with that id; it fails because the command does not exist.
+  - **Test first:** `TestQuickIDs_*` in `quick_test.go` renders a skill, adds an `id:` line the way Quick's export does, runs `quick ids` on it and expects `recorded 1 ids in <file>` and the id back on the next render; it fails because the command does not exist.
   - **Definition of done:**
     - A `SKILL.md`, a folder searched recursively, and a `.zip` with `SKILL.md` entries are all read; existing names are updated and others kept.
     - An export with no `id:` prints `skipped <path>: no id`; two different ids for one name in one run fail; a malformed id fails.
@@ -134,11 +149,11 @@ After this slice `kirokit quick ids <exports>` turns skills exported from Quick 
 
 After this slice each team card that lists Quick content has **Export for Quick**: it runs `kirokit render --quick <team> --out <app data>/quick/<team>` in the kirokit tab, shows the counts and the folder, and opens it once. A team without Quick content shows a one-line note.
 
-- [ ] T7 The app knows which teams have Quick content and can open their bundle folder
+- [x] T7 The app knows which teams have Quick content and can open their bundle folder
   - **Objective:** The catalog marks Quick teams, and three bound calls return the export folder, count the bundle and open the folder, never taking a path from the frontend.
   - **Design:** "Desktop: catalog flag, Export for Quick, open folder"
-  - **Files:** `desktop/catalog.go`, `desktop/catalog_test.go`, `desktop/quick.go`, `desktop/quick_test.go`, `desktop/platform.go`, `desktop/platform_test.go`
-  - **Test first:** `TestQuickDir_*` and `TestQuickBundle_*` in `desktop/quick_test.go` and `TestOpenCommandFor` in `platform_test.go`; they fail because the functions do not exist.
+  - **Files:** `desktop/catalog.go`, `desktop/app.go`, `desktop/quick.go`, `desktop/quick_test.go`, `desktop/platform.go`
+  - **Test first:** `TestQuickDir_*`, `TestQuickBundle_*`, `TestOpenFolder_*`, `TestPlatform_OpenCommand` and `TestCatalog_MarksTeamsWithQuickContent` in `desktop/quick_test.go`; they fail because the functions do not exist.
   - **Definition of done:**
     - `Team.Quick` is true for product-team and false for the others.
     - `QuickDir` returns `<dataDir>/quick/<team>` and refuses a name with a separator, `..` or empty.
@@ -146,7 +161,7 @@ After this slice each team card that lists Quick content has **Export for Quick*
     - `openCommandFor` gives `open` on darwin, `xdg-open` on linux, `explorer` on windows; `OpenFolder` refuses a team whose folder does not exist.
     - verify: `cd desktop && go test ./...`
 
-- [ ] T8 Teams page has Export for Quick with a result line
+- [x] T8 Teams page has Export for Quick with a result line
   - **Objective:** The card shows the button (or a note), disables it while a command runs, and after a successful run shows "Quick bundle ready: N skills, M agents", the folder and Show folder; a failed run shows the error beside the button.
   - **Design:** "Desktop: catalog flag, Export for Quick, open folder"
   - **Files:** `desktop/frontend/src/pages/teams.js`, `desktop/frontend/src/pages/pages.test.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/api.js`, `desktop/frontend/src/style.css`
@@ -166,7 +181,7 @@ After this slice each team card that lists Quick content has **Export for Quick*
 
 After this slice the README is a short intro (pitch, video, why, install, first steps, Works with, docs index), and its reference sections live in `docs/` pages with every link resolving. Kiro IDE and kirocrew are confirmed to list the installed product-team agents, and the README says what each picks up.
 
-- [ ] T9 Kiro IDE and kirocrew list the installed product-team agents
+- [x] T9 Kiro IDE and kirocrew list the installed product-team agents
   - **Objective:** Repeat the IDE and kirocrew probes on a fresh Kiro home with this build's product-team (now with `user-story`), to confirm the docs' "Works with" claims.
   - **Design:** "plan:decision:d4"
   - **Files:** none
@@ -177,18 +192,18 @@ After this slice the README is a short intro (pitch, video, why, install, first 
     - Nothing is written outside `/tmp/kirokit-ide-check`.
     - verify: `grep -c product-owner docs/plans/2026-10-27-support-amazon-quick-see-docs-research-q/records/check-kirocrew-agents.json`
 
-- [ ] T10 Reference sections move to `docs/` pages and every link resolves
+- [x] T10 Reference sections move to `docs/` pages and every link resolves
   - **Objective:** Each README reference section becomes a page under `docs/`, a new `docs/amazon-quick.md` explains the two-pass flow, and every file that names a README section points at its new page.
   - **Design:** "plan:decision:d6"
-  - **Files:** `docs/configuration.md`, `docs/agents-and-skills.md`, `docs/secrets.md`, `docs/install-and-sync.md`, `docs/testing.md`, `docs/desktop-app.md`, `docs/amazon-quick.md`, `scripts/check-doc-links.mjs`, `global/steerings/security-baseline.md`, `internal/scaffold/starter/agents/example-agent/env/mcp.env.tmpl`, `teams/platform-team/manifest.yaml`, `teams/data-team/steerings/data-conventions.md.tmpl`, `testdata/golden/platform-team/rendered/kirokit-steerings/platform-team/security-baseline.md`, `testdata/golden/data-team/rendered/steering/data-conventions.md`, `CONTRIBUTING.md`, `AGENTS.md`
-  - **Test first:** `node scripts/check-doc-links.mjs` lists every relative Markdown link and anchor in `README.md`, `CONTRIBUTING.md`, `AGENTS.md` and `docs/*.md` and every quoted README section name, and fails on one that does not resolve; it fails at first on the moved sections.
+  - **Files:** `docs/configuration.md`, `docs/agents-and-skills.md`, `docs/secrets.md`, `docs/install-and-sync.md`, `docs/testing.md`, `docs/desktop-app.md`, `docs/amazon-quick.md`, `scripts/check-doc-links.mjs`, `global/steerings/security-baseline.md`, `internal/scaffold/starter/agents/example-agent/env/mcp.env.tmpl`, `teams/platform-team/manifest.yaml`, `teams/data-team/steerings/data-conventions.md.tmpl`, `testdata/golden/platform-team/rendered/kirokit-steerings/platform-team/security-baseline.md`, `testdata/golden/data-team/rendered/steering/data-conventions.md`, `testdata/golden/platform-team/context.json`, `CONTRIBUTING.md`, `AGENTS.md`
+  - **Test first:** `node scripts/check-doc-links.mjs` lists every relative Markdown link and anchor in `README.md`, `CONTRIBUTING.md`, `AGENTS.md` and `docs/*.md` and every quoted section name of the README or a `docs/` page, and fails on one that does not resolve; in a throwaway worktree it fails on the old `README's "Secrets via SOPS"` line once that section has moved, on a renamed anchor and on a link to a missing page.
   - **Definition of done:**
     - Each README section in the Plan's table has a home page; no content is dropped (heading inventory compared before and after).
     - `docs/amazon-quick.md` documents `render --quick`, `--quick-ids`, `KIROKIT_QUICK_IDS`, `quick ids`, the ids file shape, the manifest `quick` section and the import steps, with the Plan's "After" Mermaid block.
     - Goldens that quote a section name are regenerated with `./kirokit update` and match.
     - verify: `node scripts/check-doc-links.mjs`
 
-- [ ] T11 The README is a short intro in the QualityLayer README's order
+- [x] T11 The README is a short intro in the QualityLayer README's order
   - **Objective:** Rewrite `README.md` to logo, one-line pitch naming Kiro CLI, Kiro IDE, kirocrew and Amazon Quick, the GIF linking the MP4, "Why kirokit", install for CLI and app, first steps, "Works with" (with the Mermaid block) and a docs index.
   - **Design:** "plan:decision:d6", "plan:decision:d4"
   - **Files:** `README.md`
@@ -208,10 +223,10 @@ After this slice the README is a short intro (pitch, video, why, install, first 
 
 After this slice `task showcase` records title, CLI (install product-team, Kiro chat, `render --quick`), Kiro IDE, kirocrew, the app and the end card, checked for privacy, size and a 30 to 90 second length. The README's GIF and MP4 are the new recording.
 
-- [ ] T12 Showcase scripts drive the IDE and kirocrew scenes and the longer limits
+- [x] T12 Showcase scripts drive the IDE and kirocrew scenes and the longer limits
   - **Objective:** Update the CLI scene, add `ide-drive.mjs` and `crew-drive.mjs`, compose them in `record.sh`, raise the limits and add the captions, with tests for each new limit and failure path.
   - **Design:** "Showcase scenes", "plan:decision:d5"
-  - **Files:** `scripts/showcase/cli-drive.sh`, `scripts/showcase/ide-drive.mjs`, `scripts/showcase/crew-drive.mjs`, `scripts/showcase/record.sh`, `scripts/showcase/checks.sh`, `scripts/showcase/caption.mjs`, `scripts/showcase/showcase.test.mjs`, `CONTRIBUTING.md`
+  - **Files:** `scripts/showcase/cli-drive.sh`, `scripts/showcase/ide-drive.mjs`, `scripts/showcase/crew-drive.mjs`, `scripts/showcase/record.sh`, `scripts/showcase/checks.sh`, `scripts/showcase/caption.mjs`, `scripts/showcase/showcase.test.mjs`, `CONTRIBUTING.md`, `AGENTS.md`
   - **Test first:** new cases in `showcase.test.mjs` expect a 75 s video to pass and 95 s to fail the length check, a 9 MB GIF to pass, the privacy check to read `ide-text.txt` and `crew-text.txt`, and the new captions to be timed; they fail on today's limits.
   - **Definition of done:**
     - `checks.sh length` accepts 30 to 90 s; `size` accepts up to 10 MB GIF and 6 MB MP4.
@@ -338,4 +353,35 @@ The Plan's contracts hold the design.
 ## Commands the build runs
 
 <!-- ql:commands -->
+- `go test ./...` · slice 1, slice 2, slice 4, project checks
+- `task build` · slice 1, scenario 1
+- `./kirokit render --quick product-team --out tmp/quick-check` · slice 1
+- `task lint` · slice 2
+- `task desktop:test` · slice 3, project checks
+- `node scripts/check-doc-links.mjs` · slice 4, T10, T11, scenario 5
+- `node scripts/sync-agent-assets.mjs --check` · slice 4, project checks
+- `node --test scripts/showcase/` · slice 5, T12, scenario 6, project checks
+- `go test ./internal/manifest` · T1
+- `go test ./internal/quick ./internal/render` · T2
+- `go test ./cmd/kirokit/commands -run 'Quick|KirokitRepo'` · T3
+- `go test ./internal/golden ./cmd/kirokit/commands` · T4
+- `go test ./internal/quick ./cmd/kirokit/commands -run 'Quick'` · T5
+- `diff records/quick-roundtrip/user-story-reexport.md tmp/quick-pass2/skills/user-story/SKILL.md` · T6
+- `cd desktop && go test ./...` · T7
+- `cd desktop/frontend && node --test "src/**/*.test.js"` · T8
+- `grep -c product-owner docs/plans/2026-10-27-support-amazon-quick-see-docs-research-q/records/check-kirocrew-agents.json` · T9
+- `ffprobe -v error -show_entries format=duration -of csv=p=0 assets/kirokit-showcase.mp4` · T13
+- `env KIROKIT_QUICK_IDS=/nonexistent ./kirokit render --quick product-team --out tmp/scenario1` · scenario 1
+- `rtk proxy find tmp/scenario1 -type f` · scenario 1
+- `./kirokit render --quick data-team --out tmp/scenario1-data` · scenario 1
+- `./kirokit test` · scenario 1
+- `./kirokit quick ids --quick-ids tmp/ids.yaml tmp/export` · scenario 2
+- `./kirokit render --quick product-team --quick-ids tmp/ids.yaml --out tmp/scenario2` · scenario 2
+- `diff tmp/export/SKILL.md tmp/scenario2/skills/user-story/SKILL.md` · scenario 2
+- `grep -c 0123456789abcdef0123456789abcdef tmp/scenario2/agents/product-owner.json` · scenario 2
+- `env KIRO_HOME=/tmp/kirokit-ide-check/kiro ./kirokit install product-team` · scenario 4
+- `env KIRO_HOME=/tmp/kirokit-ide-check/kiro kiro-cli agent list` · scenario 4
+- `scripts/showcase/checks.sh length assets/kirokit-showcase.mp4` · scenario 6
+- `task ci` · project checks
+- `go vet ./...` · project checks
 <!-- /ql:commands -->

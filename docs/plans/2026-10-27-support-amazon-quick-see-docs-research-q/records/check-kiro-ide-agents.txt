@@ -1,0 +1,13 @@
+# check: Kiro IDE 1.4.26 lists the product-team agents (2026-10-27, HEAD 62f4623 + uncommitted ide-drive.mjs)
+$ KIRO_HOME=/tmp/kirokit-ide-check/kiro ./kirokit install product-team
+$ node scripts/showcase/ide-drive.mjs <out> /tmp/kirokit-ide-check/kiro /tmp/kirokit-ide-check/ide /tmp/kirokit-ide-check/ws customer engineer product-owner qa ux-designer
+exit 0; marks: {"opened":1.23,"picker":4.25,"agents":4.37,"end":7.37}
+Agent names found as whole lines in the chat panel text:
+  customer: 1
+  engineer: 1
+  product-owner: 1
+  qa: 1
+  ux-designer: 1
+Privacy check (HOME, git email, USER) on ide-text.txt: 0 hits
+Also listed: kirocrew's own agents (kirocrew, kirocrew-*), written into the same agents/ folder by the kirocrew gateway run before this check.
+Screenshot: check-kiro-ide-agents.png

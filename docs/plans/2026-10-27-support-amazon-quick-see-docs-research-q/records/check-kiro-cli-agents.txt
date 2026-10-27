@@ -1,0 +1,7 @@
+customer Global
+engineer Global
+kiro_help (Built-in)
+kiro_planner (Built-in)
+product-owner Global
+qa Global
+ux-designer Global
