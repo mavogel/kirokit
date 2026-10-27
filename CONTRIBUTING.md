@@ -101,16 +101,16 @@ Add or extend tests for changed behaviour. For bug fixes, a test that fails befo
 
 ### Showcase video
 
-The README's showcase (`assets/kirokit-showcase.gif`, with the sharper `assets/kirokit-showcase.mp4`) is recorded from the real CLI and desktop app. When the CLI output or the app's UI changes, record it again on a Mac:
+The README's showcase (`assets/kirokit-showcase.gif`, with the sharper `assets/kirokit-showcase.mp4`) is recorded from the real CLI, Kiro IDE, kirocrew and desktop app. When the CLI output or the app's UI changes, record it again on a Mac:
 
 ```bash
 brew install tmux asciinema agg ffmpeg node
 task showcase   # scripts/showcase/record.sh; --keep leaves /tmp/kirokit-demo for inspection
 ```
 
-It also needs Google Chrome in `/Applications`, a signed-in `kiro-cli`, the SOPS age key at its default location (or `SOPS_AGE_KEY_FILE`), network access to github.com, and free ports 34115 and 5173 (no `task desktop:dev` running). The run types into a real Kiro session but never sends a chat message. It refuses to write `assets/` if the recorded text shows your home path, user name or git email, if the GIF exceeds 8 MB or the MP4 4 MB, or if the cut falls outside 30 to 60 seconds.
+It also needs Google Chrome and Kiro IDE in `/Applications`, `kirocrew` on `PATH`, a signed-in `kiro-cli`, the SOPS age key at its default location (or `SOPS_AGE_KEY_FILE`), network access to github.com, and free ports 34115, 5173 and 34117 (no `task desktop:dev` or kirocrew gateway running). The CLI scene installs `product-team` into the demo Kiro home and renders its Quick bundle; Kiro IDE then opens a window on a fresh profile with that Kiro home and your existing Kiro sign-in, and kirocrew runs its gateway on a throwaway home that links to kiro-cli's sign-in folder. The run types into a real Kiro session but never sends a chat message. It refuses to write `assets/` if the recorded text shows your home path, user name or git email, if the GIF exceeds 10 MB or the MP4 6 MB, or if the cut falls outside 30 to 90 seconds.
 
-`node --test scripts/showcase/` tests the recorder's own checks, caption timing and error paths without recording anything (about 40 s; the tests that need tmux, ffmpeg or Chrome skip without them).
+`node --test scripts/showcase/` tests the recorder's own checks, caption timing and error paths without recording anything (about 40 s; the tests that need tmux, ffmpeg, Chrome or Kiro IDE skip without them).
 
 
 ## Working with templates and golden files

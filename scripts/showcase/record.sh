@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Record the README showcase from the real CLI and desktop app:
-# assets/kirokit-showcase.gif and assets/kirokit-showcase.mp4.
+# Record the README showcase from the real CLI, Kiro IDE, kirocrew and desktop
+# app: assets/kirokit-showcase.gif and assets/kirokit-showcase.mp4.
 #
 # Everything runs in the fixed, neutral folder /tmp/kirokit-demo, which the
 # EXIT trap removes. --keep leaves it (and the intermediate clips) for
-# inspection. Needs tmux, asciinema, agg, ffmpeg, Node, Google Chrome, a
-# signed-in kiro-cli and the SOPS age key. Run it with `task showcase`.
+# inspection. Needs tmux, asciinema, agg, ffmpeg, Node, Google Chrome, Kiro IDE
+# in /Applications, kirocrew, a signed-in kiro-cli and the SOPS age key. Run it
+# with `task showcase`.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -55,15 +56,16 @@ trap 'fail "command failed at line $LINENO"' ERR
 
 # --- 1. preflight -----------------------------------------------------------
 step=preflight
-for tool in tmux asciinema agg ffmpeg ffprobe node npm go git kiro-cli lsof; do
+for tool in tmux asciinema agg ffmpeg ffprobe node npm go git kiro-cli kirocrew lsof; do
   command -v "$tool" >/dev/null || fail "$tool not found"
 done
 [[ -d "/Applications/Google Chrome.app" ]] || fail "Google Chrome not found in /Applications"
+[[ -d "/Applications/Kiro.app" ]] || fail "Kiro IDE not found in /Applications"
 agekey="${SOPS_AGE_KEY_FILE:-$HOME/Library/Application Support/sops/age/keys.txt}"
 [[ -f "$agekey" ]] || fail "SOPS age key not found at $agekey"
-for port in 34115 5173; do
+for port in 34115 5173 34117; do
   if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
-    fail "port $port is busy: close the running wails dev first"
+    fail "port $port is busy: close the running wails dev or kirocrew gateway first"
   fi
 done
 
@@ -75,13 +77,16 @@ rm -rf "${demo:?}"
 mkdir -m 700 "$demo" || fail "could not create $demo"
 owned=1
 echo $$ > "$demo/pid"
-mkdir "$demo"/{bin,home,kiro,work} "$out"
+mkdir "$demo"/{bin,home,kiro,work,ide,ws,crew-home} "$out"
 
 # --- 2. build ---------------------------------------------------------------
 step=build
 go build -o "$demo/bin/kirokit" ./cmd/kirokit
 go build -o desktop/build/dev-bin/kirokit ./cmd/kirokit
 npm ci --prefix "$here" --no-audit --no-fund --loglevel=error
+# The ffmpeg build playwright-core records video with; each playwright-core
+# version names its own, so a dependency update needs a fresh one.
+node "$here/node_modules/playwright-core/cli.js" install ffmpeg >/dev/null
 
 # --- 3. CLI clip ------------------------------------------------------------
 step=cli
@@ -100,13 +105,29 @@ done
 "$here/cli-drive.sh" "$sock" kk || fail "the terminal driver stopped"
 wait "$rec" || fail "asciinema exited with an error"
 
-# End the cast at "Session ended": tmux prints "[exited]" after it.
-awk '{ print } /Session ended/ { exit }' "$out/cli-raw.cast" > "$out/cli.cast"
+# End the cast at the Quick bundle listing's SKILL.md line, after the render;
+# the typed "exit" and tmux's "[exited]" follow it.
+awk '{ print } /rendered Quick bundle/ { quick = 1 } quick && /SKILL\.md/ { exit }' "$out/cli-raw.cast" > "$out/cli.cast"
 grep -q 'Session ended' "$out/cli.cast" || fail "the cast has no 'Session ended'"
+grep -q 'SKILL\.md' "$out/cli.cast" || fail "the cast has no Quick bundle listing"
 # caption.mjs replays the cast with the same 3 s idle limit for its cue times.
 agg --quiet --idle-time-limit 3 --last-frame-duration 2 --font-size 16 --theme github-dark \
   "$out/cli.cast" "$out/cli.gif"
 say "cli.gif ready"
+
+# --- 3b. Kiro IDE and kirocrew clips ---------------------------------------
+# Both read the Kiro home the CLI clip installed product-team into. Kiro IDE
+# runs on a fresh profile with the real HOME (its sign-in); kirocrew runs on a
+# throwaway HOME. The IDE goes first, before kirocrew adds its own agents.
+agents=(customer engineer product-owner qa ux-designer)
+step=ide
+say "recording Kiro IDE"
+node "$here/ide-drive.mjs" "$out" "$demo/kiro" "$demo/ide" "$demo/ws" "${agents[@]}" \
+  || fail "the Kiro IDE driver stopped"
+step=crew
+say "recording kirocrew"
+node "$here/crew-drive.mjs" "$out" "$demo/kiro" "$demo/crew-home" "${agents[@]}" \
+  || fail "the kirocrew driver stopped"
 
 # --- 4. app clip ------------------------------------------------------------
 step=app
@@ -161,44 +182,64 @@ say "composing showcase.mp4 and showcase.gif"
 title=2.5 # seconds on the title card
 ending=3.5 # seconds on the end card
 fade=0.4 # into the CLI clip and into the end card
-cross=0.5 # between the CLI and the app clip
+cross=0.5 # between two clips
 calc() { awk "BEGIN { printf \"%.3f\", $1 }"; }
 off1="$(calc "$title - $fade")"
 off2="$(calc "$off1 + $CLI_DURATION - $cross")"
-off3="$(calc "$off2 + $APP_DURATION - $fade")"
+off3="$(calc "$off2 + $IDE_DURATION - $cross")"
+off4="$(calc "$off3 + $CREW_DURATION - $cross")"
+off5="$(calc "$off4 + $APP_DURATION - $fade")"
 
 # Each clip sits in the 1280x800 video area on #13111f inside the rounded frame;
 # its caption fills the 96 px band below. The CLI clip is padded with the
-# terminal's own background to the frame size.
+# terminal's own background to the frame size; the IDE clip (1280x800) is
+# scaled down into it.
 norm="fps=30,settb=AVTB,setsar=1,format=yuv420p"
+fit="scale=1180:760:force_original_aspect_ratio=decrease,pad=1180:760:(ow-iw)/2:(oh-ih)/2:color=0x13111f"
 ffmpeg -v error -y \
   -loop 1 -framerate 30 -t "$title" -i "$out/title.png" \
   -i "$out/cli.gif" \
+  -i "$out/ide.webm" \
+  -i "$out/crew.webm" \
   -i "$out/app.webm" \
   -loop 1 -framerate 30 -t "$ending" -i "$out/end.png" \
-  -i "$out/frame.png" -i "$out/frame.png" \
+  -i "$out/frame.png" -i "$out/frame.png" -i "$out/frame.png" -i "$out/frame.png" \
   -i "$out/cap-1.png" -i "$out/cap-2.png" -i "$out/cap-3.png" -i "$out/cap-4.png" \
+  -i "$out/cap-5.png" -i "$out/cap-6.png" -i "$out/cap-7.png" \
   -filter_complex "
     color=c=0x13111f:s=1280x896:r=30:d=${CLI_DURATION}[bg1];
-    color=c=0x13111f:s=1280x896:r=30:d=${APP_DURATION}[bg2];
+    color=c=0x13111f:s=1280x896:r=30:d=${IDE_DURATION}[bg2];
+    color=c=0x13111f:s=1280x896:r=30:d=${CREW_DURATION}[bg3];
+    color=c=0x13111f:s=1280x896:r=30:d=${APP_DURATION}[bg4];
     [0:v]${norm}[title];
     [1:v]fps=30,pad=1180:760:(ow-iw)/2:(oh-ih)/2:color=0x171b21[c0];
     [bg1][c0]overlay=50:20[c1];
-    [c1][4:v]overlay=50:20[c2];
-    [c2][6:v]overlay=0:800:enable='lt(t,$CAP2_AT)'[c3];
-    [c3][7:v]overlay=0:800:enable='gte(t,$CAP2_AT)',${norm}[cli];
-    [2:v]split=2[a][b];
+    [c1][6:v]overlay=50:20[c2];
+    [c2][10:v]overlay=0:800:enable='lt(t,$CAP2_AT)'[c3];
+    [c3][11:v]overlay=0:800:enable='gte(t,$CAP2_AT)*lt(t,$CAP3_AT)'[c4];
+    [c4][12:v]overlay=0:800:enable='gte(t,$CAP3_AT)',${norm}[cli];
+    [2:v]trim=start=$IDE_T0:end=$IDE_T1,setpts=PTS-STARTPTS,fps=30,${fit}[i0];
+    [bg2][i0]overlay=50:20[i1];
+    [i1][7:v]overlay=50:20[i2];
+    [i2][13:v]overlay=0:800,${norm}[ide];
+    [3:v]trim=start=$CREW_T0:end=$CREW_T1,setpts=PTS-STARTPTS,fps=30,${fit}[k0];
+    [bg3][k0]overlay=50:20[k1];
+    [k1][8:v]overlay=50:20[k2];
+    [k2][14:v]overlay=0:800,${norm}[crew];
+    [4:v]split=2[a][b];
     [a]trim=start=$APP_A0:end=$APP_A1,setpts=PTS-STARTPTS[a1];
     [b]trim=start=$APP_B0:end=$APP_B1,setpts=PTS-STARTPTS[b1];
     [a1][b1]concat=n=2:v=1,fps=30,scale=1180:760[p0];
-    [bg2][p0]overlay=50:20[p1];
-    [p1][5:v]overlay=50:20[p2];
-    [p2][8:v]overlay=0:800:enable='lt(t,$CAP4_AT)'[p3];
-    [p3][9:v]overlay=0:800:enable='gte(t,$CAP4_AT)',${norm}[app];
-    [3:v]${norm}[end];
+    [bg4][p0]overlay=50:20[p1];
+    [p1][9:v]overlay=50:20[p2];
+    [p2][15:v]overlay=0:800:enable='lt(t,$CAP7_AT)'[p3];
+    [p3][16:v]overlay=0:800:enable='gte(t,$CAP7_AT)',${norm}[app];
+    [5:v]${norm}[end];
     [title][cli]xfade=transition=fade:duration=$fade:offset=${off1}[x1];
-    [x1][app]xfade=transition=fade:duration=$cross:offset=${off2}[x2];
-    [x2][end]xfade=transition=fade:duration=$fade:offset=${off3}[v]" \
+    [x1][ide]xfade=transition=fade:duration=$cross:offset=${off2}[x2];
+    [x2][crew]xfade=transition=fade:duration=$cross:offset=${off3}[x3];
+    [x3][app]xfade=transition=fade:duration=$cross:offset=${off4}[x4];
+    [x4][end]xfade=transition=fade:duration=$fade:offset=${off5}[v]" \
   -map "[v]" -an -c:v libx264 -preset slow -crf 24 -pix_fmt yuv420p -movflags +faststart \
   "$out/showcase.mp4"
 
@@ -212,7 +253,7 @@ say "showcase.mp4 and showcase.gif ready"
 # --- 7. checks --------------------------------------------------------------
 # checks.sh prints its own "showcase: <check>: <reason>".
 step=checks
-"$here/checks.sh" privacy "$out/cli.cast" "$out/app-dock.txt" "$out/captions.txt" || exit 1
+"$here/checks.sh" privacy "$out/cli.cast" "$out/ide-text.txt" "$out/crew-text.txt" "$out/app-dock.txt" "$out/captions.txt" || exit 1
 "$here/checks.sh" size "$out/showcase.gif" "$out/showcase.mp4" || exit 1
 "$here/checks.sh" length "$out/showcase.mp4" "$out/showcase.gif" || exit 1
 

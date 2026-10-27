@@ -17,6 +17,7 @@ import { inflateSync } from 'node:zlib';
 const here = dirname(fileURLToPath(import.meta.url));
 const has = (tool) => spawnSync('sh', ['-c', `command -v ${tool}`]).status === 0;
 const hasChrome = existsSync('/Applications/Google Chrome.app');
+const hasKiroIDE = existsSync('/Applications/Kiro.app');
 
 function scratch(t) {
   const dir = mkdtempSync(join(tmpdir(), 'showcase-test-'));
@@ -108,29 +109,42 @@ test('privacy: a missing file or no file at all fails instead of passing', (t) =
   assert.match(r.stderr, /showcase: privacy: no files to check/);
 });
 
-test('size: the GIF may be exactly 8 MiB and the MP4 exactly 4 MiB, one byte more fails', (t) => {
+// The IDE and kirocrew scenes write their sampled text to files of their own.
+test('privacy: the Kiro IDE and kirocrew text files are checked like the others', (t) => {
+  const dir = scratch(t);
+  const ide = file(dir, 'ide-text.txt', 'GLOBAL\nproduct-owner\n');
+  const crew = file(dir, 'crew-text.txt', 'Project: /Users/demo-person/work\n');
+  assert.equal(checks(dir, ['privacy', ide]).status, 0);
+  const r = checks(dir, ['privacy', ide, crew]);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, new RegExp(`showcase: privacy: home path in ${crew}`));
+  const signedIn = file(dir, 'ide-text2.txt', 'Signed in as dev@example.com\n');
+  assert.match(checks(dir, ['privacy', signedIn]).stderr, /git email in/);
+});
+
+test('size: the GIF may be exactly 10 MiB and the MP4 exactly 6 MiB, one byte more fails', (t) => {
   const dir = scratch(t);
   const gif = join(dir, 's.gif');
   const mp4 = join(dir, 's.mp4');
   writeFileSync(gif, '');
   writeFileSync(mp4, '');
-  truncateSync(gif, 8 * 1024 * 1024);
-  truncateSync(mp4, 4 * 1024 * 1024);
+  truncateSync(gif, 10 * 1024 * 1024);
+  truncateSync(mp4, 6 * 1024 * 1024);
   assert.equal(checks(dir, ['size', gif, mp4]).status, 0);
 
-  truncateSync(gif, 8 * 1024 * 1024 + 1);
+  truncateSync(gif, 10 * 1024 * 1024 + 1);
   let r = checks(dir, ['size', gif, mp4]);
   assert.equal(r.status, 1);
-  assert.match(r.stderr, new RegExp(`showcase: size: ${gif} .*limit 8 MB`));
+  assert.match(r.stderr, new RegExp(`showcase: size: ${gif} .*limit 10 MB`));
 
-  truncateSync(gif, 1024);
-  truncateSync(mp4, 4 * 1024 * 1024 + 1);
+  truncateSync(gif, 9 * 1024 * 1024);
+  truncateSync(mp4, 6 * 1024 * 1024 + 1);
   r = checks(dir, ['size', gif, mp4]);
   assert.equal(r.status, 1);
-  assert.match(r.stderr, new RegExp(`showcase: size: ${mp4} .*limit 4 MB`));
+  assert.match(r.stderr, new RegExp(`showcase: size: ${mp4} .*limit 6 MB`));
 });
 
-test('length: 30 and 60 s pass, just outside fails naming the file', { skip: !has('ffmpeg') }, (t) => {
+test('length: 30, 75 and 90 s pass, just outside fails naming the file', { skip: !has('ffmpeg') }, (t) => {
   const dir = scratch(t);
   const clip = (secs) => {
     const path = join(dir, `${secs}.wav`);
@@ -138,12 +152,12 @@ test('length: 30 and 60 s pass, just outside fails naming the file', { skip: !ha
     assert.equal(r.status, 0, r.stderr);
     return path;
   };
-  assert.equal(checks(dir, ['length', clip(30), clip(60)]).status, 0);
-  for (const secs of [29.9, 60.1]) {
+  assert.equal(checks(dir, ['length', clip(30), clip(75), clip(90)]).status, 0);
+  for (const secs of [29.9, 90.1, 95]) {
     const path = clip(secs);
     const r = checks(dir, ['length', path]);
     assert.equal(r.status, 1, `${secs} s passed`);
-    assert.match(r.stderr, new RegExp(`showcase: length: ${path} is .* s \\(needs 30 to 60 s\\)`));
+    assert.match(r.stderr, new RegExp(`showcase: length: ${path} is .* s \\(needs 30 to 90 s\\)`));
   }
 });
 
@@ -181,23 +195,32 @@ const v3 = (events) => [
   ...events.map((e) => JSON.stringify(e)),
 ].join('\n');
 
-// Intervals of 0.5, 10, 2 and 20 s: the two long waits are capped at agg's 3 s
-// idle limit, so "installed" shows at 3.5 s and "Session ended" at 8.5 s of the
-// rendered clip, which agg holds 2 s more (record.sh: --last-frame-duration 2).
+// Intervals of 0.5, 10, 2, 20, 4 and 2 s: the long waits are capped at agg's
+// 3 s idle limit, so "installed" shows at 3.5 s, "Session ended" at 8.5 s, the
+// Quick render at 11.5 s and the bundle listing at 13.5 s of the rendered clip,
+// which agg holds 2 s more (record.sh: --last-frame-duration 2).
 const STORY = [
   [0.5, 'o', '$ '],
-  [10, 'o', 'installed platform-team into /tmp/kirokit-demo/kiro\r\n'],
-  [2, 'o', '$ kiro-cli chat --agent devops --v3\r\n'],
+  [10, 'o', 'installed product-team into /tmp/kirokit-demo/kiro\r\n'],
+  [2, 'o', '$ kiro-cli chat --agent product-owner --v3\r\n'],
   [20, 'o', 'Session ended\r\n'],
+  [4, 'o', 'rendered Quick bundle for product-team: 1 skills, 1 agents -> quick\r\n'],
+  [2, 'o', 'quick/skills/user-story:\r\nSKILL.md\r\n'],
 ];
 
 // A slow clone: the teams show 34 s after Clone is pressed.
 const MARKS = { welcome: 2, clone: 6, teams: 40, install: 42.5, end: 55 };
+// The IDE window is up at 1.2 s; its picker opens at 4.3 s. kirocrew's
+// dashboard is past its first-run dialogs at 2.7 s.
+const IDE_MARKS = { opened: 1.2, picker: 4.3, agents: 4.4, end: 7.4 };
+const CREW_MARKS = { opened: 2.7, picker: 3.9, agents: 4.3, end: 7.3 };
 
-function captionDir(t, cast, marks = MARKS) {
+function captionDir(t, cast, marks = MARKS, ide = IDE_MARKS, crew = CREW_MARKS) {
   const dir = scratch(t);
   if (cast !== undefined) writeFileSync(join(dir, 'cli.cast'), cast);
   if (marks !== undefined) writeFileSync(join(dir, 'app-marks.json'), JSON.stringify(marks));
+  if (ide !== undefined) writeFileSync(join(dir, 'ide-marks.json'), JSON.stringify(ide));
+  if (crew !== undefined) writeFileSync(join(dir, 'crew-marks.json'), JSON.stringify(crew));
   return dir;
 }
 
@@ -247,32 +270,61 @@ test('caption: app marks without a step fail naming it', (t) => {
   assert.match(r.stderr, /caption: app-marks.json has no "teams"/);
 });
 
-test('caption: a caption shorter than 2.5 s fails the run', (t) => {
-  // "installed" at 0.5 s leaves caption 1 on screen for under 2.5 s.
-  const dir = captionDir(t, v3([[0.5, 'o', 'installed platform-team into x\r\n'], [5, 'o', 'Session ended\r\n']]));
+test('caption: a cast without the Quick render fails naming it', (t) => {
+  const dir = captionDir(t, v3(STORY.slice(0, 4)));
   const r = caption(dir);
   assert.equal(r.status, 1);
-  assert.match(r.stderr, /caption: a caption would show only .* s \(at least 2.5 s\)/);
+  assert.match(r.stderr, /caption: cli.cast never shows "rendered Quick bundle for product-team"/);
 });
 
-test('caption: cue times follow the rendered CLI clip and the clone wait is cut', { skip: !hasChrome }, (t) => {
+test('caption: IDE or kirocrew marks without a step fail naming the file and step', (t) => {
+  const { picker, ...noPicker } = IDE_MARKS;
+  let r = caption(captionDir(t, v3(STORY), MARKS, noPicker));
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /caption: ide-marks.json has no "picker"/);
+  const noCrew = captionDir(t, v3(STORY));
+  rmSync(join(noCrew, 'crew-marks.json'));
+  r = caption(noCrew);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /caption: missing input .*crew-marks.json/);
+});
+
+test('caption: a caption shorter than 2.5 s fails the run', (t) => {
+  // "installed" at 0.5 s leaves caption 1 on screen for under 2.5 s.
+  const short = [[0.5, 'o', 'installed product-team into x\r\n'], [5, 'o', 'Session ended\r\n'], [5, 'o', 'rendered Quick bundle for product-team\r\n']];
+  let r = caption(captionDir(t, v3(short)));
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /caption: a caption would show only .* s \(at least 2.5 s\)/);
+  // A kirocrew clip that ends 2 s after its dashboard opened is too short for its caption.
+  r = caption(captionDir(t, v3(STORY), MARKS, IDE_MARKS, { opened: 3, picker: 3.5, agents: 4, end: 5 }));
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /caption: a caption would show only 2.00 s/);
+});
+
+test('caption: cue times follow the rendered CLI clip, the IDE and kirocrew marks, and the clone wait is cut', { skip: !hasChrome }, (t) => {
   const dir = captionDir(t, v3(STORY));
   const r = caption(dir);
   assert.equal(r.status, 0, r.stderr);
   const c = cues(dir);
 
-  // The idle limit and the 2 s last frame make the clip 10.5 s, not 34.5 s.
-  assert.equal(c.CLI_DURATION, 10.5);
-  // Caption 2 takes over after the install line, and both captions last 2.5 s.
-  assert.ok(c.CAP2_AT > 3.5, `CAP2_AT ${c.CAP2_AT}`);
-  assert.ok(c.CAP2_AT >= 2.5 && c.CLI_DURATION - c.CAP2_AT >= 2.5);
+  // The idle limit and the 2 s last frame make the clip 15.5 s, not 40.5 s.
+  assert.equal(c.CLI_DURATION, 15.5);
+  // Caption 2 takes over after the install line, caption 3 once the session
+  // ended, before the Quick render shows; each lasts at least 2.5 s.
+  assert.ok(c.CAP2_AT > 3.5 && c.CAP3_AT > 8.5 && c.CAP3_AT < 11.5, `CAP2_AT ${c.CAP2_AT} CAP3_AT ${c.CAP3_AT}`);
+  assert.ok(c.CAP2_AT >= 2.5 && c.CAP3_AT - c.CAP2_AT >= 2.5 && c.CLI_DURATION - c.CAP3_AT >= 2.5);
+
+  // The IDE clip starts 2.5 s before its picker opens (after the window is up);
+  // kirocrew's starts once its dialogs are gone. Both keep the list to the end.
+  assert.deepEqual([c.IDE_T0, c.IDE_T1, c.IDE_DURATION], [1.8, 7.4, 5.6]);
+  assert.deepEqual([c.CREW_T0, c.CREW_T1, c.CREW_DURATION], [2.7, 7.3, 4.6]);
 
   // At most 1.5 s of the 34 s clone wait is kept; the teams-to-end part (15 s) is all kept.
   assert.equal(c.APP_A1, MARKS.clone + 1.5);
   assert.ok(c.APP_DURATION >= MARKS.end - MARKS.teams && c.APP_DURATION < 25, `APP_DURATION ${c.APP_DURATION}`);
-  assert.ok(c.CAP4_AT >= 2.5 && c.APP_DURATION - c.CAP4_AT >= 2.5);
+  assert.ok(c.CAP7_AT >= 2.5 && c.APP_DURATION - c.CAP7_AT >= 2.5);
 
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 7; i++) {
     const p = png(join(dir, `cap-${i}.png`));
     assert.deepEqual([p.width, p.height, p.colorType, p.corner], [1280, 96, 6, 0], `cap-${i}.png`);
   }
@@ -284,6 +336,7 @@ test('caption: cue times follow the rendered CLI clip and the clone wait is cut'
   }
   const words = readFileSync(join(dir, 'captions.txt'), 'utf8');
   assert.match(words, /Install your team's Kiro config/);
+  assert.match(words, /Or export it for Amazon Quick\nKiro IDE lists the same agents\nSo does kirocrew\n/);
   assert.match(words, /brew install --cask mavogel\/tap\/kirokit-desktop/);
 });
 
@@ -324,7 +377,7 @@ test('caption: every render paints the whole frame and every caption', { skip: !
     }
     assert.equal(pixel(frame, 590, 380), '00000000', `run ${run}: frame centre is clear`);
     assert.equal(pixel(frame, 0, 0), '13111fff', `run ${run}: frame corner is the background`);
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 7; i++) {
       assert.equal(pixel(join(dir, `cap-${i}.png`), 640, 48).slice(6), 'ff', `run ${run}: cap-${i}.png centre is painted`);
     }
   }
@@ -353,6 +406,98 @@ test('app-drive: without a dev server it stops at the welcome step', { skip: !ha
   assert.equal(existsSync(join(dir, 'app.webm')), false);
 });
 
+// --- ide-drive.mjs ----------------------------------------------------------
+
+test('ide-drive: missing arguments print the usage', () => {
+  const r = run('node', [join(here, 'ide-drive.mjs'), '/tmp/out', '/tmp/kiro']);
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /usage: node ide-drive.mjs <outdir> <kiro-home> <profile-dir> <workspace> <agent>\.\.\./);
+});
+
+test('ide-drive: without Kiro IDE it stops before starting anything', (t) => {
+  const dir = scratch(t);
+  const r = run('node', [join(here, 'ide-drive.mjs'), dir, join(dir, 'kiro'), join(dir, 'ide'), join(dir, 'ws'), 'qa'],
+    { env: { ...process.env, KIROKIT_IDE_APP: join(dir, 'no-such-Kiro') } });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, new RegExp(`ide-drive: Kiro IDE not found at ${join(dir, 'no-such-Kiro')}`));
+  assert.equal(existsSync(join(dir, 'ide.webm')), false);
+});
+
+// A Kiro that starts but never opens a window must not hang the recording.
+test('ide-drive: a Kiro that never starts gives up at the deadline and is stopped', (t) => {
+  const dir = scratch(t);
+  const pidFile = join(dir, 'kiro.pid');
+  const fake = file(dir, 'Kiro', `#!/bin/sh\necho $$ > '${pidFile}'\nexec sleep 300\n`);
+  chmodSync(fake, 0o755);
+  const t0 = Date.now();
+  const r = run('node', [join(here, 'ide-drive.mjs'), dir, join(dir, 'kiro'), join(dir, 'ide'), join(dir, 'ws'), 'qa'],
+    { env: { ...process.env, KIROKIT_IDE_APP: fake, KIROKIT_IDE_DEADLINE: '4' } });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /ide-drive: launch: gave up after 4 s/);
+  assert.ok(Date.now() - t0 < 20_000, 'the deadline was not applied');
+  let alive = true;
+  for (let i = 0; i < 20 && alive; i++) {
+    try {
+      process.kill(Number(readFileSync(pidFile, 'utf8')), 0);
+      spawnSync('sleep', ['0.1']);
+    } catch {
+      alive = false;
+    }
+  }
+  assert.equal(alive, false, 'the fake Kiro still runs');
+});
+
+// --- crew-drive.mjs ---------------------------------------------------------
+
+const crewArgs = (dir) => [join(here, 'crew-drive.mjs'), dir, join(dir, 'kiro'), join(dir, 'crew-home'), 'qa'];
+
+test('crew-drive: missing arguments print the usage', () => {
+  const r = run('node', [join(here, 'crew-drive.mjs'), '/tmp/out']);
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /usage: node crew-drive.mjs <outdir> <kiro-home> <crew-home> <agent>\.\.\./);
+});
+
+test('crew-drive: without kirocrew it fails at the gateway step', (t) => {
+  const dir = scratch(t);
+  const r = run('node', crewArgs(dir), { env: { ...process.env, KIROKIT_CREW_BIN: join(dir, 'no-kirocrew') } });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, new RegExp(`crew-drive: gateway: ${join(dir, 'no-kirocrew')} not found`));
+});
+
+test('crew-drive: a gateway that exits before it is ready fails naming that', (t) => {
+  const dir = scratch(t);
+  const bin = file(dir, 'kirocrew', '#!/bin/sh\necho "starting"\nexit 3\n');
+  chmodSync(bin, 0o755);
+  const r = run('node', crewArgs(dir), { env: { ...process.env, KIROKIT_CREW_BIN: bin } });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /crew-drive: gateway: kirocrew gateway exited \(3\) before it was ready/);
+});
+
+// The gateway is stopped on every exit, also when the dashboard never loads,
+// and its throwaway HOME gets only a link to kiro-cli's sign-in.
+test('crew-drive: the gateway is stopped when the dashboard step fails', { skip: !hasChrome }, async (t) => {
+  if (!(await portFree(34999))) return t.skip('port 34999 is in use');
+  const dir = scratch(t);
+  const pidFile = join(dir, 'gateway.pid');
+  const bin = file(dir, 'kirocrew', `#!/bin/sh\necho $$ > '${pidFile}'\necho 'KIROCREW_READY:{"port": 34999, "token": "secret-token"}'\nexec sleep 300\n`);
+  chmodSync(bin, 0o755);
+  const r = run('node', crewArgs(dir), { env: { ...process.env, KIROKIT_CREW_BIN: bin, KIROKIT_CREW_PORT: '34999' } });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /crew-drive: dashboard: /);
+  assert.doesNotMatch(r.stderr, /secret-token/);
+  const pid = Number(readFileSync(pidFile, 'utf8'));
+  let alive = true;
+  for (let i = 0; i < 20 && alive; i++) {
+    try {
+      process.kill(pid, 0);
+      spawnSync('sleep', ['0.1']);
+    } catch {
+      alive = false;
+    }
+  }
+  assert.equal(alive, false, `gateway ${pid} still runs`);
+});
+
 // --- cli-drive.sh -----------------------------------------------------------
 
 test('cli-drive: no session prints the usage', () => {
@@ -371,13 +516,13 @@ test('cli-drive: a shell without kirokit times out naming the awaited text', { s
   const t0 = Date.now();
   const r = run(join(here, 'cli-drive.sh'), [sock, 'kk']);
   assert.equal(r.status, 1);
-  assert.match(r.stderr, /timeout waiting for installed platform-team/);
+  assert.match(r.stderr, /timeout waiting for installed product-team/);
   assert.ok(Date.now() - t0 < 45_000, 'the 30 s limit was not applied');
 });
 
 // --- record.sh preflight ----------------------------------------------------
 
-const TOOLS = ['tmux', 'asciinema', 'agg', 'ffmpeg', 'ffprobe', 'node', 'npm', 'go', 'git', 'kiro-cli'];
+const TOOLS = ['tmux', 'asciinema', 'agg', 'ffmpeg', 'ffprobe', 'node', 'npm', 'go', 'git', 'kiro-cli', 'kirocrew'];
 
 // A PATH of no-op stand-ins, so preflight runs without recording anything.
 function stubPath(t, without = []) {
@@ -410,13 +555,20 @@ test('record.sh: a missing tool fails preflight and leaves no work folder', { sk
   assert.equal(existsSync('/tmp/kirokit-demo'), false);
 });
 
-test('record.sh: a missing age key fails preflight naming its path', { skip: demoBusy() || !hasChrome }, (t) => {
+test('record.sh: a missing kirocrew fails preflight', { skip: demoBusy() }, (t) => {
+  const r = record(t, { PATH: stubPath(t, ['kirocrew']) });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /showcase: preflight: kirocrew not found/);
+  assert.equal(existsSync('/tmp/kirokit-demo'), false);
+});
+
+test('record.sh: a missing age key fails preflight naming its path', { skip: demoBusy() || !hasChrome || !hasKiroIDE }, (t) => {
   const r = record(t, { PATH: stubPath(t), SOPS_AGE_KEY_FILE: '/nonexistent/keys.txt' });
   assert.equal(r.status, 1);
   assert.match(r.stderr, /showcase: preflight: SOPS age key not found at \/nonexistent\/keys.txt/);
 });
 
-test('record.sh: a second run leaves a live run\'s folder alone', { skip: demoBusy() || !hasChrome }, async (t) => {
+test('record.sh: a second run leaves a live run\'s folder alone', { skip: demoBusy() || !hasChrome || !hasKiroIDE }, async (t) => {
   if (!(await portFree(34115)) || !(await portFree(5173))) return t.skip('a dev server port is in use');
   const dir = scratch(t);
   const key = file(dir, 'keys.txt', 'not a key\n');
@@ -434,7 +586,7 @@ test('record.sh: a second run leaves a live run\'s folder alone', { skip: demoBu
 // The run-ownership guard must only refuse a live run: a folder left by a run
 // that has ended (crashed, or kept with --keep) is replaced, and once this run
 // owns it, a later failure still removes it.
-test('record.sh: a dead run\'s folder is taken over and removed when the run fails', { skip: demoBusy() || !hasChrome }, async (t) => {
+test('record.sh: a dead run\'s folder is taken over and removed when the run fails', { skip: demoBusy() || !hasChrome || !hasKiroIDE }, async (t) => {
   if (!(await portFree(34115)) || !(await portFree(5173))) return t.skip('a dev server port is in use');
   const dir = scratch(t);
   const key = file(dir, 'keys.txt', 'not a key\n');
@@ -453,7 +605,7 @@ test('record.sh: a dead run\'s folder is taken over and removed when the run fai
   assert.equal(existsSync('/tmp/kirokit-demo'), false);
 });
 
-test('record.sh: a busy dev-server port fails preflight', { skip: demoBusy() || !hasChrome }, async (t) => {
+test('record.sh: a busy dev-server port fails preflight', { skip: demoBusy() || !hasChrome || !hasKiroIDE }, async (t) => {
   if (!(await portFree(34115))) return t.skip('port 34115 is in use');
   const dir = scratch(t);
   const key = file(dir, 'keys.txt', 'not a key\n');
@@ -467,6 +619,6 @@ test('record.sh: a busy dev-server port fails preflight', { skip: demoBusy() || 
     }, (err, stdout, stderr) => resolve({ status: err ? err.code : 0, stderr })));
   });
   assert.equal(r.status, 1);
-  assert.match(r.stderr, /showcase: preflight: port 34115 is busy: close the running wails dev first/);
+  assert.match(r.stderr, /showcase: preflight: port 34115 is busy: close the running wails dev or kirocrew gateway first/);
   assert.equal(existsSync('/tmp/kirokit-demo'), false);
 });

@@ -8,7 +8,7 @@
 - `desktop/` — the Wails desktop app: its own Go module (`desktop/go.mod`), `desktop/frontend/` (vite + xterm.js, tested with `node --test`); `task desktop:test` runs it
 - Ships for macOS, Linux and Windows (amd64, arm64). Per-OS code lives in build-tagged `*_unix.go`/`*_windows.go` pairs (`desktop/terminal`, `desktop/procgroup_*`, `internal/dirlink`) or in functions taking the OS name (`desktop/platform.go`), so every branch is tested on any machine
 - `scripts/linux-docker.sh <command>` — runs a command in a container mirroring CI's Ubuntu runner (also builds the Windows setup programs with `env GOOS=windows task desktop:build`)
-- `scripts/showcase/` — `task showcase` re-records the README showcase (`assets/kirokit-showcase.gif` and `.mp4`) from the real CLI and app; see CONTRIBUTING "Showcase video"
+- `scripts/showcase/` — `task showcase` re-records the README showcase (`assets/kirokit-showcase.gif` and `.mp4`) from the real CLI, Kiro IDE, kirocrew and app; see CONTRIBUTING "Showcase video"
 - `teams/<team>/` — template sources (`*.tmpl`, double extension); `global/steerings/` — shared steerings; `env/mcp-versions.yaml` — central MCP version pins
 - `testdata/golden/<team>/` — committed expected output; compared byte-for-byte
 
