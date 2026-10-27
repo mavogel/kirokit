@@ -1,7 +1,7 @@
 team: platform-team
 # The team owner, a GitHub handle (@user or @org/team), owns every agent and
 # skill unless `owners` names someone else. See "Role agents and feedback" in
-# the README for `owners` and `feedback`.
+# docs/agents-and-skills.md for `owners` and `feedback`.
 owner: "@mavogel"
 globalSteerings:
   - security-baseline
@@ -9,7 +9,8 @@ globalSteerings:
 # External skills vendored from a git repository, pinned to a ref. Uncomment,
 # run `kirokit skills fetch platform-team`, review the vendored files under
 # teams/platform-team/external/, then `kirokit update platform-team`. Every
-# agent of the team then gets the skill. See "External Skills" in the README.
+# agent of the team then gets the skill. See "External Skills" in
+# docs/agents-and-skills.md.
 #
 # externalSkills:
 #   - source: https://github.com/anthropics/skills.git

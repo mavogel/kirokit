@@ -70,15 +70,16 @@ On a Mac with Docker or OrbStack, `scripts/linux-docker.sh <command>` runs a com
 | Path | Contents |
 |------|----------|
 | `cmd/kirokit/` | cobra commands |
-| `internal/` | the implementation: `render`, `golden`, `install`, `manifest`, `externalskills`, `sopswrap`, `mcpversions`, `kiroconfig`, `scaffold` |
+| `internal/` | the implementation: `render`, `quick` (Amazon Quick bundle and ids), `golden`, `install`, `manifest`, `externalskills`, `sopswrap`, `mcpversions`, `kiroconfig`, `scaffold` |
 | `desktop/` | the Wails desktop app (its own Go module, with a vite + xterm.js frontend) |
 | `teams/<team>/` | template sources (`*.tmpl`, double extension) |
 | `global/steerings/` | steerings shared between teams |
 | `env/mcp-versions.yaml` | central MCP server version pins |
-| `testdata/golden/<team>/` | committed expected output |
+| `testdata/golden/<team>/` | committed expected output (`rendered/`, `context.json`, and `quick/` for teams with a Quick bundle) |
+| `docs/*.md` | the user documentation the README links to |
 | `docs/prd/`, `docs/plans/` | product requirements and implementation plans |
 
-The [README](README.md) is the detailed reference for commands, manifests and template functions.
+The [README](README.md) introduces kirokit; the pages under [`docs/`](docs/) are the detailed reference for commands, manifests and template functions.
 
 
 ## Checks
@@ -149,7 +150,7 @@ Mark breaking changes with `!` after the type/scope and explain what users must 
 
 ## Documentation
 
-Update the [README](README.md) in the same pull request when a command, flag, manifest field, or template function changes. Stale docs are a bug.
+Update the [README](README.md) and the affected page under [`docs/`](docs/) in the same pull request when a command, flag, manifest field, or template function changes. Stale docs are a bug. `node scripts/check-doc-links.mjs` checks that every link and anchor between them still resolves.
 
 
 ## Agent assets

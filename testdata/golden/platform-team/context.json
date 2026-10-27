@@ -16,7 +16,7 @@
     "snowflake-mcp": "0.9.1"
   },
   "Global": {
-    "security-baseline": "---\ninclusion: always\n---\n\n# Security Baseline\n\nShared security conventions for every team that opts into this steering.\n\n- Never hardcode credentials, API tokens, or connection strings in agent configs, hooks, or prompts. Route them through this kit's SOPS-based secret injection (see the README's \"Secrets via SOPS\" section).\n- Treat every MCP server integration as least-privilege: request only the scopes an agent actually needs.\n- Review generated or agent-authored code changes before merging; do not grant blanket auto-approval for write or shell tools without a human in the loop.\n"
+    "security-baseline": "---\ninclusion: always\n---\n\n# Security Baseline\n\nShared security conventions for every team that opts into this steering.\n\n- Never hardcode credentials, API tokens, or connection strings in agent configs, hooks, or prompts. Route them through this kit's SOPS-based secret injection (see \"Secrets via SOPS\" in the repository's docs/secrets.md).\n- Treat every MCP server integration as least-privilege: request only the scopes an agent actually needs.\n- Review generated or agent-authored code changes before merging; do not grant blanket auto-approval for write or shell tools without a human in the loop.\n"
   },
   "KiroHome": "/kiro-home"
 }
