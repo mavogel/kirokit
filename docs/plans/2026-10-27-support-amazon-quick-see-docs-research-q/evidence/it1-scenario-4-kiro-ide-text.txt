@@ -1,0 +1,46 @@
+ws
+WS
+Drag a view here to display.
+Agent Focus
+Restricted Mode is intended for safe code browsing. Trust this folder to enable all features.
+ManageLearn More
+ Restricted Mode
+ 0 
+ 0
+ Command sandbox: Off
+ Report issue
+ Autocomplete
+New Session
+Loading
+Artifacts
+0
+Starting cloud session
+Let's build
+Plan, search, or build anything
+Start with a built-in agent
+(optional)
+See all
+Spec
+Structured feature development
+Plan
+Plan-only mode that helps break ideas down into an implementation plan without making any changes
+Bug Fix
+Structured bug-fix workflow: investigate, diagnose, and resolve bugs
+Quick Spec
+Fast spec workflow: clarify, then auto-generate requirements, design, and tasks
+Auto
+Default
+Autopilot
+BUILT-IN
+General coding assistance
+GLOBAL
+customer
+Speaks as product-team's customer persona: goals, frustrations and what a good experience looks like. The persona is an invented example until the team fills it from its own interviews.
+engineer
+Engineer for product-team: turns agreed requirements into designs and code, and reviews designs for deep modules, information hiding and red flags.
+product-owner
+Product owner for product-team: owns the vision and priorities, writes and reviews requirements, and consults the customer, engineer, QA and UX designer agents before deciding.
+qa
+QA engineer for product-team: finds how a requirement, design or change can fail and turns each case into a test with steps and an expected result.
+ux-designer
+UX/UI designer for product-team: describes the user's path, every screen state, the words on screen and accessibility needs, reusing the product's existing patterns.

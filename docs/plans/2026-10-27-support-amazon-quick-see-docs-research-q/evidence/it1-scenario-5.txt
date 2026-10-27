@@ -1,0 +1,32 @@
+$ node scripts/check-doc-links.mjs
+all links resolve (54 checked)
+exit 0
+$ wc -l README.md (before: git show 9bfb355:README.md | wc -l)
+     141
+     359
+$ grep -n "^#" README.md
+5:# kirokit
+7:## One set of team templates for every Kiro tool
+31:## Why kirokit
+77:## First steps
+82:# download the configs onto their newest release; use your team's repository address
+86:# install product-team into a temporary Kiro home
+90:# start its product owner, then type /user to see the user-story skill
+129:## Documentation
+--- headings before (9bfb355) and where each now lives
+## Quickstart -> NOT FOUND
+### using the cli -> NOT FOUND
+### using the desktop app -> NOT FOUND
+## Directory Layout -> docs/configuration.md 
+## manifest.yaml Reference -> docs/configuration.md 
+## Role agents and feedback -> docs/agents-and-skills.md docs/configuration.md docs/desktop-app.md 
+## External Skills -> docs/configuration.md docs/agents-and-skills.md 
+## Central env/mcp-versions.yaml -> docs/configuration.md 
+## Secrets via SOPS -> README.md docs/secrets.md 
+## Testing and verify by rendering upfront -> docs/testing.md 
+## Onboarding a New Team -> docs/configuration.md 
+## Install / Uninstall -> docs/install-and-sync.md 
+### Existing files are backed up -> docs/install-and-sync.md 
+## Setup (initial download) -> docs/install-and-sync.md 
+## Sync (automatic updates) -> docs/install-and-sync.md 
+## Desktop app -> docs/amazon-quick.md README.md docs/desktop-app.md 

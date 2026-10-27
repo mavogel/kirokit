@@ -1,0 +1,54 @@
+$ copy tmp/it1/scenario1/skills/user-story/SKILL.md -> tmp/it1/export/SKILL.md with id as last frontmatter line
+---
+name: user-story
+description: Turn a feature idea into one user story with acceptance criteria a tester can check, open questions and a priority. Use when someone asks for a user story, a requirement, acceptance criteria or a ticket for a feature.
+id: 0123456789abcdef0123456789abcdef
+---
+$ ./kirokit quick ids --quick-ids tmp/it1/ids.yaml tmp/it1/export
+recorded 1 ids in tmp/it1/ids.yaml
+exit 0
+$ cat tmp/it1/ids.yaml; stat mode
+# Amazon Quick skill ids for one Quick account. Written by `kirokit quick ids`; never commit.
+skills:
+  user-story: 0123456789abcdef0123456789abcdef
+600
+$ ./kirokit render --quick product-team --quick-ids tmp/it1/ids.yaml --out tmp/it1/scenario2
+rendered Quick bundle for product-team: 1 skills, 1 agents -> tmp/it1/scenario2
+exit 0
+$ diff tmp/it1/export/SKILL.md tmp/it1/scenario2/skills/user-story/SKILL.md
+exit 0
+$ grep -c 0123456789abcdef0123456789abcdef tmp/it1/scenario2/agents/product-owner.json
+1
+exit 0
+--- probe: zip export of the folder
+recorded 1 ids in tmp/it1/ids-zip.yaml
+exit 0
+--- probe: export without id
+skipped tmp/it1/scenario1/skills/user-story/SKILL.md: no id
+recorded 0 ids in tmp/it1/ids2.yaml
+exit 0
+# Amazon Quick skill ids for one Quick account. Written by `kirokit quick ids`; never commit.
+skills: {}
+--- probe: empty folder
+recorded 0 ids in tmp/it1/ids3.yaml
+exit 0
+--- probe: missing path
+kirokit quick ids: stat tmp/it1/nope: no such file or directory
+exit 1
+lsd: tmp/it1/ids4.yaml: No such file or directory (os error 2).
+
+--- probe: malformed id
+kirokit quick ids: tmp/it1/bad.md: skill "user-story": id "XYZ" is not 32 lowercase hex characters
+exit 1
+ids.yaml unchanged:
+# Amazon Quick skill ids for one Quick account. Written by `kirokit quick ids`; never commit.
+skills:
+  user-story: 0123456789abcdef0123456789abcdef
+--- probe: real Quick exports from docs/research/quick (ids redacted)
+skipped docs/research/quick/SKILL-minimal.md: no id
+recorded 2 ids in tmp/it1/ids-real.yaml
+exit 
+# Amazon Quick skill ids for one Quick account. Written by `kirokit quick ids`; never commit.
+skills:
+  kirokit-dummy-full: <id>
+  kirokit-dummy-minimal: <id>

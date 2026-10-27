@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 11 of 13 tasks · 3 of 5 slices
 
-Building now: started 27 Oct, 15:08, 1 h 10 min so far.
+Built: started 27 Oct, 15:08.
 <!-- /ql:summary -->
 
 ## Slices
@@ -23,7 +23,23 @@ Building now: started 27 Oct, 15:08, 1 h 10 min so far.
 ## Delivered
 
 <!-- ql:delivered -->
-Written when the last task is ticked.
+Delivered 27 Oct, 16:18
+
+**Built** · 3
+- A team renders its Amazon Quick bundle from the same templates · slice 1 · 4 tasks
+- The desktop app exports a team for Quick · slice 3 · 2 tasks
+- Kiro IDE and kirocrew are confirmed, and the README starts with what kirokit is · slice 4 · 3 tasks
+
+**Verified** · 3
+- Project checks passed · 6 of 6 · recorded
+- Security review · done · nothing severe in the change
+- Second opinion · done · 2 findings
+
+**Left** · 4
+- Independent review · Review · not done
+- Fix rounds · Fix · not done
+- Run the two-pass Quick round trip on your own Quick account, because Quick has no API and only you can import · needs you · T6
+- Record the new showcase once Kiro IDE renders again · needs you · T13
 <!-- /ql:delivered -->
 
 ## Decided while building
@@ -57,6 +73,12 @@ Written when the last task is ticked.
 - T12 · 179e6e9 · `node --test scripts/showcase/` · exit 0 · 66.4s
 - T12 · 179e6e9 · `node --test scripts/showcase/` · exit 1 · 67.5s
 - T12 · 179e6e9 · `node --test scripts/showcase/` · exit 0 · 67.7s
+- all · 98b2f8c · `task ci` · exit 0 · 11.1s
+- all · 98b2f8c · `go vet ./...` · exit 0 · 0.2s
+- all · 98b2f8c · `go test ./...` · exit 0 · 8.9s
+- all · 98b2f8c · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
+- all · 98b2f8c · `task desktop:test` · exit 0 · 2.5s
+- all · 98b2f8c · `node --test scripts/showcase/` · reused: nothing changed since it passed at 16:17
 
 ## Known limits
 

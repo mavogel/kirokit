@@ -1,0 +1,16 @@
+=== RUN   TestRenderTeam_PinsByFrontmatterNameInManifestOrder
+--- PASS: TestRenderTeam_PinsByFrontmatterNameInManifestOrder (0.02s)
+=== RUN   TestRenderTeam_FrontmatterClosedAtEndOfFile
+--- PASS: TestRenderTeam_FrontmatterClosedAtEndOfFile (0.01s)
+=== RUN   TestLoadIDs_EmptyOrCommentOnlyFileIsEmpty
+=== RUN   TestLoadIDs_EmptyOrCommentOnlyFileIsEmpty/empty
+=== RUN   TestLoadIDs_EmptyOrCommentOnlyFileIsEmpty/comment_only
+=== RUN   TestLoadIDs_EmptyOrCommentOnlyFileIsEmpty/null_skills
+--- PASS: TestLoadIDs_EmptyOrCommentOnlyFileIsEmpty (0.00s)
+    --- PASS: TestLoadIDs_EmptyOrCommentOnlyFileIsEmpty/empty (0.00s)
+    --- PASS: TestLoadIDs_EmptyOrCommentOnlyFileIsEmpty/comment_only (0.00s)
+    --- PASS: TestLoadIDs_EmptyOrCommentOnlyFileIsEmpty/null_skills (0.00s)
+=== RUN   TestReadExports_ZipWithNestedSkillFolder
+--- PASS: TestReadExports_ZipWithNestedSkillFolder (0.00s)
+PASS
+ok  	github.com/mavogel/kirokit/internal/quick	0.319s

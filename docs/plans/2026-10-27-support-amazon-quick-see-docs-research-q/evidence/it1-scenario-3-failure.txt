@@ -1,0 +1,10 @@
+error beside button: "kirokit render failed: see the kirokit tab below." role=alert
+quick-result shown: 0
+dock rows:
+  Buttons run their kirokit command here. Type your own commands in the zsh tab.
+  ▸ kirokit render --quick product-team --out /tmp/kirokit-it1-review/home/Library/Application Support/kirokit-desktop/
+  quick/product-team
+  kirokit render: product-team: quick: skill "user-story": SKILL.md has no frontmatter; Quick needs name and descriptio
+  n
+  exited with code 1
+buttons enabled again: true
