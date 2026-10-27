@@ -1,0 +1,11 @@
+# P4: an Amazon Quick account to import into (checked 2026-10-27, HEAD 9bfb355)
+Source: docs/research/quick/ (your exports from Quick desktop app_version 1.1.4053, files dated 2026-10-27)
+Server-assigned skill ids seen in your exports (rg -n "^id:" docs/research/quick/*.md):
+  SKILL-minimal-exported.md                    id: 335168ba880c4421a157ed4d6a6aa4f2
+  SKILL-minimal-exported-reimport-override.md  id: 335168ba880c4421a157ed4d6a6aa4f2
+  SKILL-dummy-exported.md                      id: d00863a4b30a4354bb76ba2b11a6efb3
+  SKILL-fixed-export.md                        id: 78e45e5b89f34a9ba5f96a320f826941 (client id e8a2a362... replaced)
+  SKILL-v4.md / SKILL-v5.md                    id: 53b0583a3e1b42d28f9e7fb774d9f7f6
+Agent exports: Daily_Intelligence_Briefing.json, Daily_Intelligence_Briefing-v4.json (skills: ["53b0583a3e1b42d28f9e7fb774d9f7f6"])
+Result: the account exists, you can import and export skills and agents in it, and it is the account the Done means 7 round trip uses.
+Brief note: test skills kirokit-dummy-full, kirokit-dummy-minimal, kirokit-dummy-fixedid are still in that account for you to delete.

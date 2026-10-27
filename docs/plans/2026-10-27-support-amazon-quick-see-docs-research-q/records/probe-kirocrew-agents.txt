@@ -1,0 +1,21 @@
+# probe: kirocrew 0.10.0 gateway on an isolated HOME/KIRO_HOME with product-team installed by kirokit (2026-10-27, HEAD 9bfb355)
+$ KIRO_HOME=<tmp>/home/.kiro kirokit install product-team
+installed product-team into <tmp>/home/.kiro
+$ ls <tmp>/home/.kiro/agents
+customer.json engineer.json product-owner.json qa.json ux-designer.json
+$ HOME=<tmp>/home KIRO_HOME=<tmp>/home/.kiro KIROCREW_HOME=<tmp>/home/.kiro/crew \
+    kirocrew gateway --no-open --no-tunnel --no-crons --port 5599 --json-ready
+KIROCREW_READY:{"port": 5599, "token": "<redacted>", "home": "<tmp>/home/.kiro/crew"}
+dashboard answered HTTP 200 after 5 s
+$ ls <tmp>/home/.kiro/agents   (after the gateway started)
+customer.json engineer.json kirocrew-*.json (13 files) kirocrew.json kirocrew.lock product-owner.json qa.json ux-designer.json
+$ curl "http://127.0.0.1:5599/api/agents/installed?token=<redacted>"   (name, source, kirocrew_owned)
+kirocrew kirocrew true
+customer builtin false
+engineer builtin false
+kirocrew-conductor builtin true
+... (12 more kirocrew-* rows, all kirocrew_owned true)
+product-owner builtin false
+qa builtin false
+ux-designer builtin false
+Result: all five kirokit agents are listed as foreign agents; kirocrew wrote its own agent files into the same agents/ folder on start.

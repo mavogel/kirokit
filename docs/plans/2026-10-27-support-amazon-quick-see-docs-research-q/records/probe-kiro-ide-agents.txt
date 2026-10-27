@@ -1,0 +1,19 @@
+# probe: Kiro IDE 1.4.26 driven by playwright-core's Electron driver (2026-10-27, HEAD 9bfb355)
+Setup: product-team installed by kirokit into an isolated KIRO_HOME=<tmp>/home/.kiro;
+fresh --user-data-dir=<tmp>/ide-profile; the person's real HOME (existing Kiro sign-in in
+~/.aws/sso/cache/kiro-auth-token.json); an empty workspace folder.
+Script: playwright-core _electron.launch({ executablePath: '/Applications/Kiro.app/Contents/MacOS/Kiro',
+  args: ['--user-data-dir=<tmp>/ide-profile', '<tmp>/workspace'], env: { ...process.env, KIRO_HOME } })
+
+Findings:
+1. With HOME also set to a throwaway folder, the IDE opens on its "Sign in" screen (no agents reachable).
+2. A user-data-dir under the long session scratch path fails at start: "listen EINVAL ... /ide-profile/1.4.-main.sock"
+   (Unix socket path too long). A short folder such as /tmp/<name> works.
+3. With the real HOME the IDE is signed in; onboarding shows "Import configuration" with "Skip All".
+   After Skip All the chat panel (a webview frame, URL vscode-webview://.../fake.html) shows "Let's build".
+4. Clicking the "Default" agent selector in that frame lists, as text:
+   BUILT-IN Default, Spec, Quick Spec, Bug Fix, Plan
+   GLOBAL customer, engineer, product-owner, qa, ux-designer   (each with its kirokit description)
+   So all five kirokit agents load from the isolated KIRO_HOME.
+5. The window also shows "Restricted Mode" for the untrusted workspace and the plan usage line "Kiro Free 27.6 / 50".
+Screenshot after Skip All: probe-kiro-ide-agents.png
