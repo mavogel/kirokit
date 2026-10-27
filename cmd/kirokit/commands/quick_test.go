@@ -2,6 +2,7 @@ package commands
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -134,6 +135,80 @@ func TestRenderQuick_MalformedIDsFileFails(t *testing.T) {
 	writeTree(t, repo, map[string]string{"quick-ids.yaml": "skills:\n  story: nope\n"})
 	if _, err := runRoot(t, "render", "--quick", "q", "--out", t.TempDir()); err == nil || !strings.Contains(err.Error(), "32 lowercase hex") {
 		t.Errorf("err = %v, want the malformed id named", err)
+	}
+}
+
+// A skill exported from Quick goes through quick ids into the repository's
+// ids file, and the next render writes the id back unchanged.
+func TestQuickIDs_RecordsExportsForTheNextRender(t *testing.T) {
+	repo := quickRepo(t)
+	first := filepath.Join(t.TempDir(), "first")
+	if _, err := runRoot(t, "render", "--quick", "q", "--out", first); err != nil {
+		t.Fatal(err)
+	}
+	rendered := readFile(t, filepath.Join(first, "skills", "story", "SKILL.md"))
+	exportDir := t.TempDir()
+	export := strings.Replace(rendered, "\n---\n", "\nid: "+quickID+"\n---\n", 1)
+	writeTree(t, exportDir, map[string]string{"story/SKILL.md": export, "other/SKILL.md": "---\nname: other\ndescription: d\n---\n"})
+
+	got, err := runRoot(t, "quick", "ids", exportDir)
+	if err != nil {
+		t.Fatalf("quick ids: %v\n%s", err, got)
+	}
+	idsFile := filepath.Join(repo, "quick-ids.yaml")
+	if !strings.Contains(got, "recorded 1 ids in "+idsFile) || !strings.Contains(got, "skipped "+filepath.Join(exportDir, "other", "SKILL.md")+": no id") {
+		t.Errorf("output = %q", got)
+	}
+
+	second := filepath.Join(t.TempDir(), "second")
+	got, err = runRoot(t, "render", "--quick", "q", "--out", second)
+	if err != nil || strings.Contains(got, "warning:") {
+		t.Fatalf("second render: %v\n%s", err, got)
+	}
+	if again := readFile(t, filepath.Join(second, "skills", "story", "SKILL.md")); again != export {
+		t.Errorf("second-pass SKILL.md =\n%s\nwant the export\n%s", again, export)
+	}
+	if agent := readFile(t, filepath.Join(second, "agents", "po.json")); !strings.Contains(agent, quickID) {
+		t.Errorf("agent does not pin the id:\n%s", agent)
+	}
+}
+
+func TestQuickIDs_MergesIntoTheFlagFileAndKeepsOtherNames(t *testing.T) {
+	quickRepo(t)
+	idsFile := filepath.Join(t.TempDir(), "ids.yaml")
+	writeTree(t, filepath.Dir(idsFile), map[string]string{"ids.yaml": "skills:\n  kept: " + quickIDOther + "\n  story: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"})
+	export := filepath.Join(t.TempDir(), "SKILL.md")
+	writeTree(t, filepath.Dir(export), map[string]string{"SKILL.md": "---\nname: story\ndescription: d\nid: " + quickID + "\n---\n"})
+
+	if _, err := runRoot(t, "quick", "ids", "--quick-ids", idsFile, export); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := readFile(t, idsFile), "skills:\n  kept: "+quickIDOther+"\n  story: "+quickID+"\n"; !strings.HasSuffix(got, want) {
+		t.Errorf("ids file =\n%s\nwant it to end with\n%s", got, want)
+	}
+}
+
+func TestQuickIDs_NeedsAPathAndWritesNothingOnError(t *testing.T) {
+	repo := quickRepo(t)
+	if _, err := runRoot(t, "quick", "ids"); err == nil {
+		t.Error("quick ids without a path succeeded")
+	}
+	bad := filepath.Join(t.TempDir(), "SKILL.md")
+	writeTree(t, filepath.Dir(bad), map[string]string{"SKILL.md": "---\nname: story\ndescription: d\nid: XYZ\n---\n"})
+	if _, err := runRoot(t, "quick", "ids", bad); err == nil {
+		t.Error("quick ids with a malformed id succeeded")
+	}
+	if _, err := os.Stat(filepath.Join(repo, "quick-ids.yaml")); err == nil {
+		t.Error("a failed quick ids wrote the ids file")
+	}
+}
+
+// The ids file is per account and must never be committed.
+func TestQuickIDs_FileIsGitignored(t *testing.T) {
+	repo := thisRepo(t)
+	out, err := exec.Command("git", "-C", repo, "check-ignore", "-q", "quick-ids.yaml").CombinedOutput()
+	if err != nil {
+		t.Errorf("quick-ids.yaml is not ignored at the repository root: %v %s", err, out)
 	}
 }
 
