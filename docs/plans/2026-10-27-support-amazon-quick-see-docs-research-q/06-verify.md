@@ -3,18 +3,16 @@
 ## Summary
 
 <!-- ql:summary -->
-6 of 7 points assessed · 5 passed
+6 of 7 points assessed · 5 passed · 1 fix round
 
-Independent review failed; the recorded findings need attention.
+Unverified after 2 judge runs: 9 items remain unresolved. No acceptance recorded.
 <!-- /ql:summary -->
 
 ## Open items
 
 <!-- ql:open-items -->
-- **Failed:** Point 6 · A new showcase GIF and video show the current product · The new showcase GIF and video were never recorded. `assets/kirokit-showcase.gif` and `.mp4` are unchanged by this build. The video still shows the old `kirokit install platform-team` story, with no `render --quick`, Kiro IDE or kirocrew scene (T13 is open), while the README's alt text already describes the new recording,
-- **Unverified:** The Quick round trip was not run, because it needs your Quick account (Done means 7 is yours to confirm, and T6 is open). Its inputs hold: scenario 2 shows the second-pass skill equals an export carrying the id, and the agent pins that id
-- **Unverified:** The Quick docs describe unconfirmed Quick behaviour as fact. `docs/amazon-quick.md` step 5 says a reimport overwrites the agent and keeps the pinned skill, but the Plan lists both as unconfirmed assumptions until your round trip (T6) runs
-- **Unverified:** The official app capture could not be taken. `qualitylayer evidence shot` for `team-quick-bundle/index.html#teams-quick` returned `unavailable: Unsafe, changed or oversized regular file`, even without clicks. The Teams pictures are this review's own Playwright captures of the running app
+- **Failed:** Point 6 · A new showcase GIF and video show the current product · The new showcase GIF and video are still not recorded. `assets/kirokit-showcase.gif` and `.mp4` are unchanged by this build (last changed by the earlier showcase PR #19), the MP4 is the 36.4 s platform-team recording, and the README's alt text describes a recording that does not exist yet (T13 open),
+- **Unverified:** The Quick round trip was not run, because it needs your Quick account (done 7, T6). Its inputs still hold: scenario 2 shows the second-pass skill equals an export carrying the id, and the agent pins that id
 - **Need:** T6 · Run the two-pass Quick round trip on your own Quick account, because Quick has no API and only you can import · queued for Review
 - **Need:** T13 · Record the new showcase once Kiro IDE renders again · queued for Review
 - **Only you can confirm:** The import in your Quick account
@@ -38,8 +36,8 @@ Independent review failed; the recorded findings need attention.
   - Result: done · 2 findings fixed
   - Why it runs here: Runs because the change crosses a trust boundary: reads files exported from Amazon Quick (, folders, ) that the person passes on the command line; it only parses them in memory and writes, the Plan says it is risky: amazon Quick is an outside system with no API: its import rules come from experiments on one account (research brief), and agent overwrite and slice 5 is marked risky.
 - **Fix rounds** · the build session
-  - State: waiting
-  - Result: not yet
+  - State: done
+  - Result: done · 1 round
 <!-- /ql:lanes -->
 
 ## Done means, checked
@@ -47,19 +45,20 @@ Independent review failed; the recorded findings need attention.
 <!-- ql:proof -->
 | Done means | Proof | |
 |---|---|---|
-| 1. A team's chosen skills and agents render into an importable Quick bundle | `render --quick product-team` writes `skills/user-story/SKILL.md` and `agents/product-owner.json`. Name, description and `system_prompt` come from the Kiro agent; welcome message and starter prompts come from `manifest.yaml`. The agent's ten keys match Quick's own export (`docs/research/quick/Daily_Intelligence_Briefing.json`) in name and order. In the running app, Export for Quick rendered the same bundle into `<data>/quick/product-team` and opened the folder once,,. | passed |
-| 2. Quick skill ids survive a reimport | `quick ids` read a `SKILL.md`, a folder and a `.zip` export into a gitignored, mode-600 ids file. The next render wrote the id line back (the export equals the rendered file) and pinned the id in the agent's `skills`. | passed |
-| 3. Quick output is checked like the Kiro output | `testdata/golden/product-team/quick/` is compared byte for byte by `go test ./...` and `./kirokit test` (every team `ok`), using the made-up ids in `testdata/golden/quick-ids.yaml`. `golden_test.go` covers drift and a stray `quick/` folder. | passed |
-| 4. Kiro IDE and kirocrew use what `kirokit install` puts in `KIRO_HOME` | After `kirokit install product-team` into a fresh `KIRO_HOME`, `kiro-cli agent list`, Kiro IDE 1.4.26's agent picker (under GLOBAL) and kirocrew 0.10.0's `/api/agents/installed` each list customer, engineer, product-owner, qa and ux-designer. The README's "Works with" says what each tool picks up, including the IDE's `KIRO_HOME` rules,. | passed |
-| 5. The README opens with a new, short intro that names every supported Kiro tool and Quick | The README opens with the logo, a pitch naming Kiro CLI, Kiro IDE, kirocrew and Amazon Quick, the GIF and install, all before any reference material. It has 141 lines (359 before). Every moved section has a `docs/` page, and `check-doc-links` resolves all 54 links. | passed |
-| 6. A new showcase GIF and video show the current product | The new showcase GIF and video were never recorded. `assets/kirokit-showcase.gif` and `.mp4` are unchanged by this build. The video still shows the old `kirokit install platform-team` story, with no `render --quick`, Kiro IDE or kirocrew scene (T13 is open), while the README's alt text already describes the new recording,. | failed |
-| 7. The Quick round trip works on a real account | Did the rendered user-story skill and product-owner agent import into your Quick account, and does a re-exported skill equal the rendered file apart from its `id:` line? Not run here, because it needs your Quick account. Run the two-pass flow in `docs/amazon-quick.md` and save the exports in the task's records folder under quick-roundtrip. | yours to confirm |
+| 1. A team's chosen skills and agents render into an importable Quick bundle | Rerun on the judged tree, `render --quick product-team` writes `skills/user-story/SKILL.md` and `agents/product-owner.json`, and the skill equals the committed Quick golden apart from its id line. The app half is carried from iteration 1: `desktop/` is unchanged and the bundle it renders for product-team is unchanged (no vendored script, no shared name),,. | passed |
+| 2. Quick skill ids survive a reimport | `quick ids` recorded the id into a mode-600, gitignored file; the second render's skill equals the export byte for byte and the agent's `skills` holds the id. | passed |
+| 3. Quick output is checked like the Kiro output | `./kirokit test` prints `ok` for every team, and a fresh bundle equals `testdata/golden/product-team/quick/` with the id line removed. | passed |
+| 4. Kiro IDE and kirocrew use what `kirokit install` puts in `KIRO_HOME` | Carried from iteration 1 for Kiro IDE and kirocrew; the install path does not import `internal/quick` and nothing it installs changed. Kiro CLI was rerun on a fresh `KIRO_HOME` and lists the five product-team agents,,. | passed |
+| 5. The README opens with a new, short intro that names every supported Kiro tool and Quick | `check-doc-links` prints `all links resolve (54 checked)` after this round's docs edit; the README is unchanged at 141 lines, intro, GIF and install first, docs index linking all seven pages. | passed |
+| 6. A new showcase GIF and video show the current product | The new showcase GIF and video are still not recorded. `assets/kirokit-showcase.gif` and `.mp4` are unchanged by this build (last changed by the earlier showcase PR #19), the MP4 is the 36.4 s platform-team recording, and the README's alt text describes a recording that does not exist yet (T13 open),. | failed |
+| 7. The Quick round trip works on a real account | Did the rendered user-story skill and product-owner agent import into your Quick account, and does a re-exported skill equal the rendered file apart from its `id:` line? Not run here, because it needs your Quick account, and no exports exist yet. Run the two-pass flow in `docs/amazon-quick.md` and save the exports there. | yours to confirm |
 <!-- /ql:proof -->
 
 ## Fix rounds
 
 <!-- ql:fix-rounds -->
 - Round 1 · 5 points still open
+- Round 2 · 5 points still open
 <!-- /ql:fix-rounds -->
 
 ## Second opinion
@@ -163,6 +162,8 @@ Independent review failed; the recorded findings need attention.
 **Result:** fail
 
 ### Iteration 2
+
+**Revision:** f7f1d05ddeabdfd51c58bf18b2b83657ca8bb1a5d833926b0d261a71ab2f83e7
 
 **Assignment:** 03bd675b-8956-4f89-ac60-9b1a02f97e33
 **Judge:** fresh helper

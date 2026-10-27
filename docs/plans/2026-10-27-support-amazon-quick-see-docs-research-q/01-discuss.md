@@ -7,9 +7,9 @@ depth: light
 level: engineering
 ui: true
 overrides: []
-stage: verify
-iterations: 1
-verification_failures: 1
+stage: review
+iterations: 2
+verification_failures: 2
 gate: null
 created: 1793107388975
 startup_owner: 0bb4ab9c6cb024b3
@@ -22,7 +22,7 @@ review_basis: 65fa65de7534f75025638d586c6fbf7cf36546ac5fc8d11b6ef59a2448372c53
 branch: feat/support-amazon-quick-see-docs
 base: 9bfb355bc8dae4d2813236764bee22f18102d3f9
 base_ref: main
-judge_runs: 1
+judge_runs: 2
 ---
 
 # Support Quick, Kiro IDE and kirocrew; README refresh
