@@ -75,7 +75,7 @@ The README is now intro, video, why, install, first steps, "Works with" and a do
 ## Built, slice by slice
 
 <!-- ql:slices -->
-5 slices · 13 tasks · 12 commits · 61 files · +3715 −457
+5 slices · 13 tasks · 13 commits · 61 files · +3715 −457
 
 **Slice 1 · A team renders its Amazon Quick bundle from the same templates** · T1, T2, T3, T4 · 22 files · +1834 −24
 
@@ -166,7 +166,7 @@ The README is now intro, video, why, install, first steps, "Works with" and a do
 - **4. Kiro IDE and kirocrew use what `kirokit install` puts in `KIRO_HOME`.** Scenario 4: One install, three Kiro tools, after slice 4 · passed · `evidence/it2-oracle.txt`
 - **5. The README opens with a new, short intro that names every supported Kiro tool and Quick.** Scenario 5: The README is short and every link resolves, after slice 4 · passed · `evidence/it2-scenario-5.txt`
 - **6. A new showcase GIF and video show the current product.** Scenario 6: The new showcase, after slice 5 · failed · `evidence/it2-scenario-6.txt`
-- **7. The Quick round trip works on a real account.** Only you can confirm: the import in your Quick account · waits for your confirmation
+- **7. The Quick round trip works on a real account.** Only you can confirm: the import in your Quick account · confirmed by you: Confirmed in the App
 <!-- /ql:proof -->
 
 ## Deliberately not changed
@@ -189,7 +189,7 @@ The README is now intro, video, why, install, first steps, "Works with" and a do
 ## How it was verified
 
 <!-- ql:checked -->
-No acceptance recorded; 9 items remain unverified for Review. Lanes that ran: Security review, Project checks, Code review, Second opinion and Fix rounds.
+Taken as it stood with 9 items still open; lanes that ran: Security review, Project checks, Code review, Second opinion and Fix rounds.
 <!-- /ql:checked -->
 
 ## Try it yourself

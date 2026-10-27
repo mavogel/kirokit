@@ -77,7 +77,7 @@ The README is now intro, video, why, install, first steps, "Works with" and a do
 ## Built, slice by slice
 
 <!-- ql:slices -->
-5 slices · 13 tasks · 12 commits · 61 files · +3715 −457
+5 slices · 13 tasks · 13 commits · 61 files · +3715 −457
 
 **Slice 1 · A team renders its Amazon Quick bundle from the same templates** · T1, T2, T3, T4 · 22 files · +1834 −24
 
@@ -168,7 +168,7 @@ The README is now intro, video, why, install, first steps, "Works with" and a do
 - **4. Kiro IDE and kirocrew use what `kirokit install` puts in `KIRO_HOME`.** Scenario 4: One install, three Kiro tools, after slice 4 · passed · `evidence/it2-oracle.txt`
 - **5. The README opens with a new, short intro that names every supported Kiro tool and Quick.** Scenario 5: The README is short and every link resolves, after slice 4 · passed · `evidence/it2-scenario-5.txt`
 - **6. A new showcase GIF and video show the current product.** Scenario 6: The new showcase, after slice 5 · failed · `evidence/it2-scenario-6.txt`
-- **7. The Quick round trip works on a real account.** Only you can confirm: the import in your Quick account · waits for your confirmation
+- **7. The Quick round trip works on a real account.** Only you can confirm: the import in your Quick account · confirmed by you: Confirmed in the App
 <!-- /ql:proof -->
 
 ## Deliberately not changed
@@ -191,7 +191,7 @@ The README is now intro, video, why, install, first steps, "Works with" and a do
 ## How it was verified
 
 <!-- ql:checked -->
-No acceptance recorded; 9 items remain unverified for Review. Lanes that ran: Security review, Project checks, Code review, Second opinion and Fix rounds.
+Taken as it stood with 9 items still open; lanes that ran: Security review, Project checks, Code review, Second opinion and Fix rounds.
 <!-- /ql:checked -->
 
 ## Try it yourself
@@ -230,7 +230,7 @@ No acceptance recorded; 9 items remain unverified for Review. Lanes that ran: Se
 ## Accepted with open items
 
 <!-- ql:accepted -->
-No acceptance recorded. These items remain unverified for Review:
+The author accepted this build as it stood, without another judge run. What was left open:
 
 - T6: Run the two-pass Quick round trip on your own Quick account, because Quick has no API and only you can import. Steps: import tmp/quick-pass1 (skill From folder, agent From file); export the skill into the task's records/quick-roundtrip folder; run kirokit quick ids on that folder and render again into tmp/quick-pass2; reimport both and confirm the overwrite; export the skill and agent again into records/quick-roundtrip as user-story-reexport.md and product-owner-reexport.json.
 - T13: Record the new showcase once Kiro IDE renders again. Kiro IDE 1.4.26 shows only a blank window on this Mac, also on your own profile after a restart, so its scene cannot be recorded now. When Kiro shows its normal window, run task showcase from the repository root; it publishes assets/kirokit-showcase.gif and .mp4 only after its privacy, size and length checks pass.
@@ -272,11 +272,11 @@ No acceptance recorded. These items remain unverified for Review:
 ## Settled with you
 
 <!-- ql:review-items -->
-- Still awaiting your confirmation: The import in your Quick account.
+- The import in your Quick account: confirmed · 27 Oct, 17:32
 <!-- /ql:review-items -->
 
 ## Ship
 
 <!-- ql:ship -->
-Not shipped yet. Branch `feat/support-amazon-quick-see-docs`.
+Approved · 27 Oct, 17:45. Branch `feat/support-amazon-quick-see-docs`.
 <!-- /ql:ship -->

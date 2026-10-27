@@ -7,7 +7,7 @@ depth: light
 level: engineering
 ui: true
 overrides: []
-stage: review
+stage: shipped
 iterations: 2
 verification_failures: 2
 gate: null
@@ -15,7 +15,7 @@ created: 1793107388975
 startup_owner: 0bb4ab9c6cb024b3
 layout: seven
 profile: full
-status: approved
+status: verified
 approved: true
 review_digest: 20495fed3b72b17390eb79baa9eb7326c5f4411882b1d483c99626ea4bd06b95
 review_basis: 65fa65de7534f75025638d586c6fbf7cf36546ac5fc8d11b6ef59a2448372c53
@@ -23,6 +23,10 @@ branch: feat/support-amazon-quick-see-docs
 base: 9bfb355bc8dae4d2813236764bee22f18102d3f9
 base_ref: main
 judge_runs: 2
+shipped: 2026-10-27
+commits: ["88f1977","243c637","6bed554","62f4623","179e6e9","527a888","98b2f8c","f266d08","9b6ff3b","93753a4","a6805ce","19996e9","01221a6"]
+touched: [".gitignore","AGENTS.md","CONTRIBUTING.md","README.md","cmd/kirokit/","desktop/app.go","desktop/catalog.go","desktop/frontend/","desktop/platform.go","desktop/quick.go","desktop/quick_test.go","docs/agents-and-skills.md"]
+slices: 5
 ---
 
 # Support Quick, Kiro IDE and kirocrew; README refresh

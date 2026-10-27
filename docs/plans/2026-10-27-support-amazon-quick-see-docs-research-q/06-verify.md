@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 6 of 7 points assessed · 5 passed · 1 fix round
 
-Unverified after 2 judge runs: 9 items remain unresolved. No acceptance recorded.
+Taken as it stood after 2 rounds: 9 items left open.
 <!-- /ql:summary -->
 
 ## Open items
@@ -15,7 +15,7 @@ Unverified after 2 judge runs: 9 items remain unresolved. No acceptance recorded
 - **Unverified:** The Quick round trip was not run, because it needs your Quick account (done 7, T6). Its inputs still hold: scenario 2 shows the second-pass skill equals an export carrying the id, and the agent pins that id
 - **Need:** T6 · Run the two-pass Quick round trip on your own Quick account, because Quick has no API and only you can import · queued for Review
 - **Need:** T13 · Record the new showcase once Kiro IDE renders again · queued for Review
-- **Only you can confirm:** The import in your Quick account
+- **Only you can confirm:** The import in your Quick account · confirmed · 27 Oct, 17:32
 <!-- /ql:open-items -->
 
 ## How it is checked
@@ -51,7 +51,7 @@ Unverified after 2 judge runs: 9 items remain unresolved. No acceptance recorded
 | 4. Kiro IDE and kirocrew use what `kirokit install` puts in `KIRO_HOME` | Carried from iteration 1 for Kiro IDE and kirocrew; the install path does not import `internal/quick` and nothing it installs changed. Kiro CLI was rerun on a fresh `KIRO_HOME` and lists the five product-team agents,,. | passed |
 | 5. The README opens with a new, short intro that names every supported Kiro tool and Quick | `check-doc-links` prints `all links resolve (54 checked)` after this round's docs edit; the README is unchanged at 141 lines, intro, GIF and install first, docs index linking all seven pages. | passed |
 | 6. A new showcase GIF and video show the current product | The new showcase GIF and video are still not recorded. `assets/kirokit-showcase.gif` and `.mp4` are unchanged by this build (last changed by the earlier showcase PR #19), the MP4 is the 36.4 s platform-team recording, and the README's alt text describes a recording that does not exist yet (T13 open),. | failed |
-| 7. The Quick round trip works on a real account | Did the rendered user-story skill and product-owner agent import into your Quick account, and does a re-exported skill equal the rendered file apart from its `id:` line? Not run here, because it needs your Quick account, and no exports exist yet. Run the two-pass flow in `docs/amazon-quick.md` and save the exports there. | yours to confirm |
+| 7. The Quick round trip works on a real account | Did the rendered user-story skill and product-owner agent import into your Quick account, and does a re-exported skill equal the rendered file apart from its `id:` line? Not run here, because it needs your Quick account, and no exports exist yet. Run the two-pass flow in `docs/amazon-quick.md` and save the exports there. | confirmed by you |
 <!-- /ql:proof -->
 
 ## Fix rounds

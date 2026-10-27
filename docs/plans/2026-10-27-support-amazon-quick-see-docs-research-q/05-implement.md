@@ -36,9 +36,8 @@ Delivered 27 Oct, 16:18
 - Second opinion · done · 2 findings fixed
 - Independent review of the Done means points · 5 of 7 proved
 
-**Left** · 5
+**Left** · 4
 - Done means 6: A new showcase GIF and video show the current product · failed
-- Done means 7: The Quick round trip works on a real account · yours to confirm in Review
 - Independent review · failed
 - Run the two-pass Quick round trip on your own Quick account, because Quick has no API and only you can import · needs you · T6
 - Record the new showcase once Kiro IDE renders again · needs you · T13
