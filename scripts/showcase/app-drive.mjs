@@ -1,7 +1,8 @@
 // Clicks the showcase app story in the real desktop UI (Wails dev mode serves
 // it at http://localhost:34115) and records it with headless Chrome:
-//   Clone the config repository, Install platform-team, Install in the setup
-//   dialog, wait for the "installed" badge.
+//   Clone the config repository, Continue on its version step (Newest
+//   release), Install platform-team, Install in the setup dialog, wait for the
+//   "installed" badge.
 //
 // Writes to <outdir>:
 //   app.webm        the recording (1180x760)
@@ -74,6 +75,14 @@ try {
   step = 'clone';
   mark('clone');
   await page.locator('#clone-form button[type=submit]').click();
+
+  // After the clone the setup page asks which version to use, with Newest
+  // release preselected; Continue keeps it.
+  step = 'version';
+  const proceed = page.locator('#version-form button[type=submit]:not([disabled])');
+  await proceed.waitFor({ timeout: 120_000 });
+  await sleep(800);
+  await proceed.click();
 
   step = 'teams';
   const install = page.locator(`button[data-action="install"][data-team="${TEAM}"]`);
