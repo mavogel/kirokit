@@ -157,6 +157,11 @@ func RenderTeamWith(teamsRoot, team, globalRoot, envVersionsPath, outDir string,
 // renameDir is replaced in tests.
 var renameDir = os.Rename
 
+// Publish moves tmpDir into place at outDir the way RenderTeam publishes its
+// own output: an existing outDir that would change is moved to a timestamped
+// backup first. tmpDir must sit beside outDir (same file system).
+func Publish(tmpDir, outDir string) error { return publish(tmpDir, outDir) }
+
 // publish makes outDir hold exactly the rendered tree. An existing outDir
 // whose content would change is first moved to a timestamped backup beside it
 // (see backup.MoveAside), so nothing in it is lost; one that already matches is

@@ -3,6 +3,7 @@
 package manifest
 
 import (
+	"bytes"
 	"fmt"
 	"maps"
 	"net/url"
@@ -26,6 +27,84 @@ type Manifest struct {
 	Feedback        Feedback        `yaml:"feedback" json:",omitzero"`
 	GlobalSteerings []string        `yaml:"globalSteerings"`
 	ExternalSkills  []ExternalSkill `yaml:"externalSkills" json:",omitempty"`
+	// Quick lists what the team's Amazon Quick bundle holds; nil means the
+	// team has no bundle. Load decodes it strictly.
+	Quick *Quick `yaml:"quick" json:"quick,omitempty"`
+}
+
+// Quick is the manifest's quick section: the skills and agents rendered by
+// `kirokit render --quick`. Everything not listed stays Kiro-only.
+type Quick struct {
+	Skills []string     `yaml:"skills" json:"skills,omitempty"`
+	Agents []QuickAgent `yaml:"agents" json:"agents,omitempty"`
+}
+
+// QuickAgent is one Kiro agent of the team exported for Quick. Its name,
+// description and prompt come from the Kiro agent; these are the Quick-only
+// fields. Skills are the skills pinned to the agent in Quick, each also listed
+// in Quick.Skills.
+type QuickAgent struct {
+	Name           string   `yaml:"name" json:"name"`
+	WelcomeMessage string   `yaml:"welcomeMessage" json:"welcomeMessage,omitempty"`
+	StarterPrompts []string `yaml:"starterPrompts" json:"starterPrompts,omitempty"`
+	Skills         []string `yaml:"skills" json:"skills,omitempty"`
+}
+
+// decodeQuick decodes the quick section of data a second time with unknown
+// keys refused, because a typo there would silently drop content from the
+// bundle, and rejects duplicate names. The rest of the manifest stays lenient.
+func decodeQuick(data []byte) (*Quick, error) {
+	var raw struct {
+		Quick yaml.Node `yaml:"quick"`
+	}
+	if err := yaml.Unmarshal(data, &raw); err != nil {
+		return nil, err
+	}
+	if raw.Quick.Kind == 0 || raw.Quick.Tag == "!!null" {
+		return nil, nil
+	}
+	node, err := yaml.Marshal(&raw.Quick)
+	if err != nil {
+		return nil, fmt.Errorf("quick: %w", err)
+	}
+	dec := yaml.NewDecoder(bytes.NewReader(node))
+	dec.KnownFields(true)
+	var q Quick
+	if err := dec.Decode(&q); err != nil {
+		return nil, fmt.Errorf("quick: %w", err)
+	}
+	if err := uniqueNames("quick.skills", "skill", q.Skills); err != nil {
+		return nil, err
+	}
+	agents := make([]string, len(q.Agents))
+	for i, a := range q.Agents {
+		if strings.TrimSpace(a.Name) == "" {
+			return nil, fmt.Errorf("quick.agents[%d]: missing required field \"name\"", i)
+		}
+		if err := uniqueNames(fmt.Sprintf("quick.agents[%d].skills", i), "skill", a.Skills); err != nil {
+			return nil, err
+		}
+		agents[i] = a.Name
+	}
+	if err := uniqueNames("quick.agents", "agent", agents); err != nil {
+		return nil, err
+	}
+	return &q, nil
+}
+
+// uniqueNames fails on an empty or repeated name in a quick list.
+func uniqueNames(field, kind string, names []string) error {
+	seen := make(map[string]bool, len(names))
+	for _, n := range names {
+		if strings.TrimSpace(n) == "" {
+			return fmt.Errorf("%s: empty %s name", field, kind)
+		}
+		if seen[n] {
+			return fmt.Errorf("%s: duplicate %s %q", field, kind, n)
+		}
+		seen[n] = true
+	}
+	return nil
 }
 
 // Owners overrides the team owner for single agents and skills, by name.
@@ -166,6 +245,9 @@ func Load(path string) (*Manifest, error) {
 		return nil, fmt.Errorf("manifest: %s: %w", path, err)
 	}
 	m.ExternalSkills = expanded
+	if m.Quick, err = decodeQuick(data); err != nil {
+		return nil, fmt.Errorf("manifest: %s: %w", path, err)
+	}
 	return &m, nil
 }
 

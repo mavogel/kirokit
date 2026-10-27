@@ -17,3 +17,17 @@ feedback:
   github: mavogel/kirokit
 
 globalSteerings: []
+
+# The Amazon Quick bundle (`kirokit render --quick product-team`): only the
+# skills and agents listed here are exported. An agent's name, description and
+# prompt come from its Kiro agent; the welcome message, starter prompts and the
+# skills pinned to it in Quick are set here. See docs/amazon-quick.md.
+quick:
+  skills: [user-story]
+  agents:
+    - name: product-owner
+      welcomeMessage: "What should we build next? Describe a feature and I will turn it into a user story."
+      starterPrompts:
+        - "Write a user story for exporting a report as CSV"
+        - "Review these requirements for gaps"
+      skills: [user-story]

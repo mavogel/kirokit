@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -396,5 +397,81 @@ func TestLoad_OwnerHandleBoundariesAndEmptyOverride(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("Load(%q) err = %v, want it to contain %q", c.yaml, err, c.want)
 		}
+	}
+}
+
+func TestLoad_QuickSectionIsParsedInOrder(t *testing.T) {
+	path := writeFixture(t, `team: product-team
+globalSteerings: []
+quick:
+  skills: [user-story, analyze-session]
+  agents:
+    - name: product-owner
+      welcomeMessage: "What should we build next?"
+      starterPrompts: ["Write a user story", "Review my requirements"]
+      skills: [user-story]
+    - name: qa
+`)
+	m, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if m.Quick == nil {
+		t.Fatal("Quick = nil, want the parsed section")
+	}
+	if got := strings.Join(m.Quick.Skills, ","); got != "user-story,analyze-session" {
+		t.Errorf("Quick.Skills = %q", got)
+	}
+	if len(m.Quick.Agents) != 2 {
+		t.Fatalf("Quick.Agents = %v, want two agents", m.Quick.Agents)
+	}
+	po := m.Quick.Agents[0]
+	if po.Name != "product-owner" || po.WelcomeMessage != "What should we build next?" ||
+		strings.Join(po.StarterPrompts, "|") != "Write a user story|Review my requirements" ||
+		strings.Join(po.Skills, ",") != "user-story" {
+		t.Errorf("Quick.Agents[0] = %+v", po)
+	}
+	if qa := m.Quick.Agents[1]; qa.Name != "qa" || qa.WelcomeMessage != "" || qa.StarterPrompts != nil || qa.Skills != nil {
+		t.Errorf("Quick.Agents[1] = %+v, want only a name", qa)
+	}
+}
+
+func TestLoad_NoQuickSectionStaysOutOfTheJSON(t *testing.T) {
+	m, err := Load(writeFixture(t, "team: data-team\nglobalSteerings: []\n"))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if m.Quick != nil {
+		t.Errorf("Quick = %+v, want nil", m.Quick)
+	}
+	data, err := json.Marshal(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(strings.ToLower(string(data)), "quick") {
+		t.Errorf("JSON = %s, want no quick key", data)
+	}
+}
+
+// A typo under quick would otherwise drop content from the bundle silently.
+func TestLoad_QuickSectionRejectsTyposAndDuplicates(t *testing.T) {
+	for name, tc := range map[string]struct{ quick, want string }{
+		"unknown agent key":  {"quick:\n  agents:\n    - name: po\n      welcome: hi\n", "welcome"},
+		"unknown top key":    {"quick:\n  skill: [a]\n", "skill"},
+		"duplicate agent":    {"quick:\n  agents:\n    - name: po\n    - name: po\n", `duplicate agent "po"`},
+		"duplicate skill":    {"quick:\n  skills: [a, a]\n", `duplicate skill "a"`},
+		"agent without name": {"quick:\n  agents:\n    - welcomeMessage: hi\n", "name"},
+		"empty skill name":   {"quick:\n  skills: [\"\"]\n", "skill"},
+		"duplicate pin":      {"quick:\n  skills: [a]\n  agents:\n    - name: po\n      skills: [a, a]\n", `duplicate skill "a"`},
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, err := Load(writeFixture(t, "team: t\nglobalSteerings: []\n"+tc.quick))
+			if err == nil {
+				t.Fatal("Load succeeded, want an error")
+			}
+			if !strings.Contains(err.Error(), "quick") || !strings.Contains(err.Error(), tc.want) {
+				t.Errorf("error = %q, want it to name quick and %q", err, tc.want)
+			}
+		})
 	}
 }
