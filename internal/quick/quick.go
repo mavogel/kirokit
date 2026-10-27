@@ -85,11 +85,18 @@ func RenderTeam(teamsRoot, team, globalRoot, envVersionsPath, outDir string, opt
 
 	var res Result
 	skillNames := make(map[string]string, len(q.Skills)) // skill folder -> frontmatter name
+	folderOf := make(map[string]string, len(q.Skills))   // frontmatter name -> skill folder
 	for _, dir := range q.Skills {
 		name, hasID, err := writeSkill(kiroTree, tmpDir, dir, opts.IDs)
 		if err != nil {
 			return Result{}, fmt.Errorf("quick: skill %q: %w", dir, err)
 		}
+		// Quick matches skills by name: two folders with one name would
+		// overwrite each other on import and share one id.
+		if other, taken := folderOf[name]; taken {
+			return Result{}, fmt.Errorf("quick: skills %q and %q share the name %q; Quick matches skills by name", other, dir, name)
+		}
+		folderOf[name] = dir
 		skillNames[dir] = name
 		if !hasID {
 			res.MissingIDs = append(res.MissingIDs, name)
@@ -144,6 +151,10 @@ func writeSkill(kiroTree, bundle, dir string, ids map[string]string) (name strin
 		if err != nil {
 			return err
 		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
 		content, err := os.ReadFile(p)
 		if err != nil {
 			return err
@@ -155,7 +166,15 @@ func writeSkill(kiroTree, bundle, dir string, ids map[string]string) (name strin
 		if err := os.MkdirAll(filepath.Dir(out), 0o755); err != nil {
 			return err
 		}
-		return os.WriteFile(out, content, 0o600)
+		// Keep the owner-execute bit a vendored script has in the Kiro tree.
+		perm := os.FileMode(0o600)
+		if info.Mode().Perm()&0o100 != 0 {
+			perm = 0o700
+		}
+		if err := os.WriteFile(out, content, perm); err != nil {
+			return err
+		}
+		return os.Chmod(out, perm)
 	})
 	return meta.Name, hasID, err
 }

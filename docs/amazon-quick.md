@@ -32,7 +32,7 @@ quick:
   agents/product-owner.json       # Quick's agent format
 ```
 
-- **Skills** are the exact files Kiro gets, so they need `name` and `description` frontmatter (Quick needs both; render fails without them). With a known id, `id: <id>` is added as the last frontmatter line, where Quick writes it on export. An `id:` line the template already carries is dropped: ids belong to one Quick account and come only from the ids file.
+- **Skills** are the exact files Kiro gets (a vendored script keeps its execute bit), so they need `name` and `description` frontmatter (Quick needs both; render fails without them). With a known id, `id: <id>` is added as the last frontmatter line, where Quick writes it on export. An `id:` line the template already carries is dropped: ids belong to one Quick account and come only from the ids file.
 - **Agents** take `name`, `description` and the prompt (an inline `prompt`, or the rendered file a `file://` prompt points to) from the Kiro agent. `welcome_message`, `starter_prompts` and the pinned `skills` come from the manifest; `capabilities`, `connectors`, `spaces` and `files` stay empty. A prompt over 50,000 characters (Quick's limit) or a `file://` prompt outside the rendered tree fails the render.
 - **Prompts are not rewritten for Quick.** A prompt that mentions Kiro-only abilities (subagents, MCP tools, `/feedback`) keeps that text, and steerings stay Kiro-only.
 - **No MCP servers and no secrets.** Quick agents attach only shared account connectors, which an admin sets up in Quick; nothing from `mcpServers` or SOPS reaches the bundle.
@@ -47,7 +47,7 @@ kirokit quick ids <export>...                 # record the ids Quick assigned, f
 ```
 
 - `render --quick` prints `rendered Quick bundle for <team>: N skills, M agents -> <dir>` and, for each skill without an id yet, `warning: no Quick id for skill <name> yet (first import); run kirokit quick ids after importing` on stderr. Missing ids are normal before the first import and never fail the render.
-- A named team without a `quick` section fails with `team <team> lists nothing for Quick`; without a team such teams are skipped with a note. A listed skill or agent the team does not have, or a pinned skill missing from `quick.skills`, fails the render naming it.
+- A named team without a `quick` section fails with `team <team> lists nothing for Quick`; without a team such teams are skipped with a note. A listed skill or agent the team does not have, a pinned skill missing from `quick.skills`, or two listed skills with the same frontmatter `name` (Quick would merge them into one) fails the render naming it.
 - `--out` is replaced the way `render` replaces it: an existing folder whose content would change is kept as a `.backup` beside it.
 - `quick ids` takes exported `SKILL.md` files (any `.md` file given directly), `.zip` exports, or folders, which it searches for `SKILL.md` files and `.zip` files. It reads each export's frontmatter `name` and `id`, updates those names in the ids file, keeps the others, and prints `recorded <n> ids in <file>` and `skipped <path>: no id` per export without one. Two different ids for one name, or an id that is not 32 lowercase hex characters, fails and writes nothing. Zips are read in memory (at most 256 entries and 1 MiB per `SKILL.md`).
 - The desktop app's **Export for Quick** button runs the same render ([Desktop app](desktop-app.md)).
@@ -73,7 +73,7 @@ skills:
 2. **Import in Quick:** Customize > Skills > Create > **From folder**, one skill folder at a time (`skills/user-story`). Then Customize > Agents > Create > **From file** with `agents/product-owner.json`. Quick assigns the skill ids.
 3. **Record the ids:** export each skill from Quick (owner only) and run `kirokit quick ids <the exported files or their folder>`.
 4. **Render again:** the same `render --quick` now writes each skill's `id:` line and lists the ids in the agents' `skills`.
-5. **Reimport** the skills and the agent and confirm Quick's overwrite prompt ("already exists and will be overwritten"). The skill keeps its id, and the agent keeps the pinned skill.
+5. **Reimport** the skills and the agent and confirm Quick's overwrite prompt ("already exists and will be overwritten"). A skill reimported with its `id:` line keeps its id; that was seen in Quick. That the agent is overwritten in place and keeps its pinned skill has not been confirmed in Quick yet, so check the agent's skills after the reimport.
 
 To check a skill, export it from Quick and compare it with the rendered file: Quick's export equals the imported file byte for byte, so `diff <export>/SKILL.md <out>/skills/<name>/SKILL.md` prints nothing once the ids are in.
 

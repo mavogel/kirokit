@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/mavogel/kirokit/internal/externalskills"
+	"github.com/mavogel/kirokit/internal/testutil"
 )
 
 const (
@@ -202,6 +203,35 @@ func TestRenderTeam_VendoredSkillIsCopiedWhole(t *testing.T) {
 	}
 }
 
+// The bundle keeps a vendored script's owner-execute bit, as the Kiro render does.
+func TestRenderTeam_VendoredScriptStaysExecutable(t *testing.T) {
+	testutil.SkipWithoutExecBits(t)
+	f := newTeam(t, "externalSkills:\n  - source: https://example.com/r.git\n    ref: v1\n    paths: [skills/vend]\nquick:\n  skills: [vend]\n", nil)
+	vendDir := filepath.Join(f.teamsRoot, "t", "external", "skills", "vend")
+	writeFiles(t, vendDir, map[string]string{
+		"SKILL.md":       "---\nname: vend\ndescription: Vendored.\n---\nRun scripts/run.sh.\n",
+		"scripts/run.sh": "#!/bin/sh\necho ok\n",
+	})
+	if err := os.Chmod(filepath.Join(vendDir, "scripts", "run.sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeLock(t, f, "vend")
+
+	out, _, err := f.render(t, nil)
+	if err != nil {
+		t.Fatalf("RenderTeam: %v", err)
+	}
+	for file, want := range map[string]os.FileMode{"scripts/run.sh": 0o700, "SKILL.md": 0o600} {
+		info, err := os.Stat(filepath.Join(out, "skills", "vend", filepath.FromSlash(file)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := info.Mode().Perm(); got != want {
+			t.Errorf("%s mode = %v, want %v", file, got, want)
+		}
+	}
+}
+
 func TestRenderTeam_ReplacesAnIDTheSkillAlreadyCarries(t *testing.T) {
 	f := newTeam(t, "quick:\n  skills: [other]\n", map[string]string{
 		"teams/t/skills/other/SKILL.md.tmpl": "---\nname: other\nid: " + idOther + "\ndescription: Another skill.\n---\nBody.\n",
@@ -237,6 +267,8 @@ func TestRenderTeam_Errors(t *testing.T) {
 		"absolute prompt":     {"quick:\n  agents:\n    - name: filer\n", map[string]string{"teams/t/agents/filer/agent.json.tmpl": `{"name": "filer", "description": "d", "prompt": "file:///etc/passwd", "tools": []}`}, nil, "leaves the rendered tree"},
 		"prompt too long":     {"quick:\n  agents:\n    - name: po\n", map[string]string{"teams/t/agents/po/agent.json.tmpl": `{"name": "po", "description": "d", "prompt": "` + long + `", "tools": []}`}, nil, "50000"},
 		"malformed id":        {quickPO, nil, map[string]string{"user-story": "ABC"}, "32 lowercase hex"},
+		// Quick matches skills by name, so two folders with one name would overwrite each other.
+		"two folders, one name": {"quick:\n  skills: [user-story, other]\n", map[string]string{"teams/t/skills/other/SKILL.md.tmpl": "---\nname: user-story\ndescription: Copy.\n---\nBody.\n"}, nil, `skills "user-story" and "other" share the name "user-story"`},
 	} {
 		t.Run(name, func(t *testing.T) {
 			f := newTeam(t, tc.quick, tc.extra)
