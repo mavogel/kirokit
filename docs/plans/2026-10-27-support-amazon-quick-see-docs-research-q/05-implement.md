@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 11 of 13 tasks · 3 of 5 slices
 
-Built: started 27 Oct, 15:08.
+Building now: started 27 Oct, 15:08, 1 h 29 min so far.
 <!-- /ql:summary -->
 
 ## Slices
@@ -30,13 +30,16 @@ Delivered 27 Oct, 16:18
 - The desktop app exports a team for Quick · slice 3 · 2 tasks
 - Kiro IDE and kirocrew are confirmed, and the README starts with what kirokit is · slice 4 · 3 tasks
 
-**Verified** · 3
+**Verified** · 4
 - Project checks passed · 6 of 6 · recorded
 - Security review · done · nothing severe in the change
-- Second opinion · done · 2 findings
+- Second opinion · done · 2 findings · 2 fixs awaiting checks
+- Independent review of the Done means points · 5 of 7 proved
 
-**Left** · 4
-- Independent review · Review · not done
+**Left** · 6
+- Done means 6: A new showcase GIF and video show the current product · failed
+- Done means 7: The Quick round trip works on a real account · yours to confirm in Review
+- Independent review · failed
 - Fix rounds · Fix · not done
 - Run the two-pass Quick round trip on your own Quick account, because Quick has no API and only you can import · needs you · T6
 - Record the new showcase once Kiro IDE renders again · needs you · T13
@@ -55,6 +58,7 @@ Delivered 27 Oct, 16:18
 - Slice 5 · The first full recording hung in the Kiro IDE scene (a blank window, then a close that never returned) and was stopped at your request; `ide-drive.mjs` now bounds every wait, gives up after `KIROKIT_IDE_DEADLINE` seconds (default 300) and kills its Kiro, and retries once on a fresh profile when the chat panel never appears; a test drives it with a Kiro that never starts; nothing you approved changes.
 - Slice 5 · `record.sh` now installs playwright-core's own ffmpeg after `npm ci`: since the playwright-core 1.64.1 update (#22) the recorder needed `ffmpeg-1013`, which this Mac's cache did not have, so no video scene could record; nothing you approved changes.
 - The Plan · Outline cards kept current while building, no user decision changed: T4 and T7 Files and verify commands match the files that changed (generated goldens listed, desktop tests moved to T7, desktop/app.go added); T5 and T10 Test first describe the evidence actually used (an in-test export instead of docs/research, mutations in a throwaway worktree); T10 adds testdata/golden/platform-team/context.json; T12 adds AGENTS.md (showcase line).
+- The Plan · Verification round 1 was recorded while 4 files changed, 4 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -100,6 +104,7 @@ Delivered 27 Oct, 16:18
 - T12 (tactical): `record.sh` now installs playwright-core's own ffmpeg after `npm ci`: since the playwright-core 1.64.1 update (#22) the recorder needed `ffmpeg-1013`, which this Mac's cache did not have, so no video scene could record; nothing you approved changes.
 - T13: not recorded. Kiro IDE 1.4.26 shows only a blank window on this Mac, also on your own profile after a restart, so the approved IDE scene cannot be recorded now; it is a need for Review (run `task showcase` once Kiro renders again) rather than a cut scene, which would change what you approved.
 - Plan (amended): Outline cards kept current while building, no user decision changed: T4 and T7 Files and verify commands match the files that changed (generated goldens listed, desktop tests moved to T7, desktop/app.go added); T5 and T10 Test first describe the evidence actually used (an in-test export instead of docs/research, mutations in a throwaway worktree); T10 adds testdata/golden/platform-team/context.json; T12 adds AGENTS.md (showcase line).
+- Plan (tactical): after verification round 1 judged 98b2f8c, four files changed: the reviewer's own added test (`internal/quick/review_test.go`), and the fix for Codex's two findings (`internal/quick/quick.go`, `internal/quick/quick_test.go`, `docs/amazon-quick.md`, in 9b6ff3b). The fix changes Quick render behaviour, so a second fresh reviewer rechecks it rather than round 1's verdicts being kept for it; nothing you approved changes.
 
 ## Plan amended
 
