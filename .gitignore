@@ -1,6 +1,8 @@
 /dist/
 /kirokit
 /tmp/
+# Amazon Quick skill ids belong to one Quick account (kirokit quick ids)
+/quick-ids.yaml
 .claude/*
 !.claude/rules/
 !.claude/skills/

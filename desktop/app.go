@@ -17,6 +17,9 @@ type App struct {
 
 	// captureFn reads the login environment; tests replace it.
 	captureFn func() EnvCapture
+	// startFn starts a program without waiting (OpenFolder); nil starts it
+	// for real, tests replace it.
+	startFn func(name string, args ...string) error
 
 	mu       sync.Mutex
 	env      EnvCapture

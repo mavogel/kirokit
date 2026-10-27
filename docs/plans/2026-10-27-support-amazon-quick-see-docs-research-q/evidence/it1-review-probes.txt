@@ -1,0 +1,50 @@
+--- manifest:
+team: t
+globalSteerings: []
+quick:
+  agents:
+    - name: po
+      welcome: hi
+$ KIROKIT_REPO=tmp/it1/repo ./kirokit render --quick t --out tmp/it1/repo-out
+kirokit render: t: manifest: ~/Developer/projects/kirokit/tmp/it1/repo/teams/t/manifest.yaml: quick: yaml: unmarshal errors:
+  line 3: field welcome not found in type manifest.QuickAgent
+exit 1
+--- manifest:
+team: t
+globalSteerings: []
+quick:
+  agents:
+    - name: po
+    - name: po
+$ KIROKIT_REPO=tmp/it1/repo ./kirokit render --quick t --out tmp/it1/repo-out
+kirokit render: t: manifest: ~/Developer/projects/kirokit/tmp/it1/repo/teams/t/manifest.yaml: quick.agents: duplicate agent "po"
+exit 1
+--- manifest:
+team: t
+globalSteerings: []
+quick:
+  skills: [a, a]
+$ KIROKIT_REPO=tmp/it1/repo ./kirokit render --quick t --out tmp/it1/repo-out
+kirokit render: t: manifest: ~/Developer/projects/kirokit/tmp/it1/repo/teams/t/manifest.yaml: quick.skills: duplicate skill "a"
+exit 1
+--- manifest:
+team: t
+globalSteerings: []
+quik:
+  agents: []
+$ KIROKIT_REPO=tmp/it1/repo ./kirokit render --quick t --out tmp/it1/repo-out
+kirokit render: t: team t lists nothing for Quick
+exit 1
+--- checks.sh limits
+4:#   checks.sh size <gif> <mp4>        GIF at most 10 MB, MP4 at most 6 MB
+5:#   checks.sh length <media>...       each 30 to 90 seconds long
+55:    awk "BEGIN { exit !($seconds >= 30 && $seconds <= 90) }" \
+56:      || fail length "$file is $seconds s (needs 30 to 90 s)"
+--- stale "30 to 60" / "60 s" mentions
+--- T9 verify
+1
+--- dependency files touched
+(none listed = unchanged)
+--- T6 verify
+lsd: docs/plans/2026-10-27-support-amazon-quick-see-docs-research-q/records/quick-roundtrip: No such file or directory (os error 2).
+

@@ -1,8 +1,9 @@
 // Renders the showcase's still images with headless Chrome (this ffmpeg has no
 // text filter) and computes when each caption shows.
 //
-// Reads <outdir>/cli.cast and <outdir>/app-marks.json; writes to <outdir>:
-//   cap-1.png to cap-4.png 1280x96 captions on a transparent background
+// Reads <outdir>/cli.cast, ide-marks.json, crew-marks.json and app-marks.json;
+// writes to <outdir>:
+//   cap-1.png to cap-7.png 1280x96 captions on a transparent background
 //   title.png, end.png     1280x896 opening and closing cards
 //   frame.png              1180x760 rounded frame laid over each clip
 //   captions.txt           every word the images show, for the privacy check
@@ -25,13 +26,18 @@ if (!outdir) {
 const IDLE_LIMIT = 3;
 const LAST_FRAME = 2;
 
+// In order: three over the CLI clip, one each over the Kiro IDE and kirocrew
+// clips, two over the app clip.
 const CAPTIONS = [
   "Install your team's Kiro config",
   "Kiro starts with the team's agent and skills",
+  'Or export it for Amazon Quick',
+  'Kiro IDE lists the same agents',
+  'So does kirocrew',
   'Or click: clone the config repo',
   'Install the team, see every command',
 ];
-const TITLE = ['kirokit', "Your team's Kiro CLI config, installed in one step"];
+const TITLE = ['kirokit', 'One set of team templates for every Kiro tool'];
 const END = [
   'Get started',
   'brew install --cask mavogel/tap/kirokit',
@@ -69,18 +75,33 @@ function castCues(cast, texts) {
   return { found, duration: t + LAST_FRAME };
 }
 
-const cast = await input('cli.cast');
-const marks = JSON.parse(await input('app-marks.json'));
-for (const key of ['welcome', 'clone', 'teams', 'install', 'end']) {
-  if (typeof marks[key] !== 'number') {
-    console.error(`caption: app-marks.json has no "${key}"`);
-    process.exit(1);
+async function marksOf(name, keys) {
+  const marks = JSON.parse(await input(name));
+  for (const key of keys) {
+    if (typeof marks[key] !== 'number') {
+      console.error(`caption: ${name} has no "${key}"`);
+      process.exit(1);
+    }
   }
+  return marks;
 }
 
-const cli = castCues(cast, ['installed platform-team', 'Session ended']);
-// Caption 2 takes over once the install line has been on screen a moment.
-const cap2 = cli.found['installed platform-team'] + 1.2;
+const cast = await input('cli.cast');
+const marks = await marksOf('app-marks.json', ['welcome', 'clone', 'teams', 'install', 'end']);
+const ide = await marksOf('ide-marks.json', ['opened', 'picker', 'agents', 'end']);
+const crew = await marksOf('crew-marks.json', ['opened', 'picker', 'agents', 'end']);
+
+const cli = castCues(cast, ['installed product-team', 'Session ended', 'rendered Quick bundle for product-team']);
+// Caption 2 takes over once the install line has been on screen a moment, and
+// caption 3 once the Kiro session has ended and the Quick render is typed.
+const cap2 = cli.found['installed product-team'] + 1.2;
+const cap3 = cli.found['Session ended'] + 0.5;
+
+// The IDE and kirocrew clips start once the window is up (at most 2.5 s
+// before the agent picker opens) and keep the agent list to the end.
+const clipCut = (m) => ({ t0: Math.max(m.opened, m.picker - 2.5), t1: m.end });
+const ideCut = clipCut(ide);
+const crewCut = clipCut(crew);
 
 // The app clip keeps the welcome page from just before it settles, cuts the
 // clone wait down to 1.5 s, and keeps everything from just before the teams show.
@@ -89,20 +110,31 @@ const appA1 = marks.clone + 1.5;
 const appB0 = Math.max(appA1, marks.teams - 1.0);
 const appB1 = marks.end;
 const appDuration = appA1 - appA0 + (appB1 - appB0);
-const cap4 = appA1 - appA0 + (marks.install - 0.3 - appB0);
+const cap7 = appA1 - appA0 + (marks.install - 0.3 - appB0);
 
 const fmt = (n) => n.toFixed(2);
 const cues = {
   CLI_DURATION: cli.duration,
   CAP2_AT: cap2,
+  CAP3_AT: cap3,
+  IDE_T0: ideCut.t0,
+  IDE_T1: ideCut.t1,
+  IDE_DURATION: ideCut.t1 - ideCut.t0,
+  CREW_T0: crewCut.t0,
+  CREW_T1: crewCut.t1,
+  CREW_DURATION: crewCut.t1 - crewCut.t0,
   APP_A0: appA0,
   APP_A1: appA1,
   APP_B0: appB0,
   APP_B1: appB1,
   APP_DURATION: appDuration,
-  CAP4_AT: cap4,
+  CAP7_AT: cap7,
 };
-const shortest = Math.min(cap2, cli.duration - cap2, cap4, appDuration - cap4);
+const shortest = Math.min(
+  cap2, cap3 - cap2, cli.duration - cap3,
+  cues.IDE_DURATION, cues.CREW_DURATION,
+  cap7, appDuration - cap7,
+);
 if (shortest < 2.5) {
   console.error(`caption: a caption would show only ${fmt(shortest)} s (at least 2.5 s)`);
   process.exit(1);
@@ -173,4 +205,4 @@ try {
 
 await writeFile(join(outdir, 'captions.txt'), `${[...CAPTIONS, ...TITLE, ...END].join('\n')}\n`);
 await writeFile(join(outdir, 'cues.env'), Object.entries(cues).map(([k, v]) => `${k}=${fmt(v)}\n`).join(''));
-console.log(`caption: ${pages.length} images, CLI ${fmt(cli.duration)} s, app ${fmt(appDuration)} s`);
+console.log(`caption: ${pages.length} images, CLI ${fmt(cli.duration)} s, IDE ${fmt(cues.IDE_DURATION)} s, kirocrew ${fmt(cues.CREW_DURATION)} s, app ${fmt(appDuration)} s`);

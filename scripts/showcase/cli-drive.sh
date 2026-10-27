@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Types the showcase CLI story into a running tmux session, one character at a
 # time, and waits for each screen text before the next step:
-#   kirokit install platform-team, kiro-cli chat, trust, /jir, Esc, /quit
+#   kirokit install product-team, kiro-cli chat --agent product-owner, trust,
+#   /user, Esc, /quit, kirokit render --quick product-team, ls -R quick
 #
 # It never presses Enter on a chat message, so nothing reaches the model.
+# record.sh cuts the cast after the bundle listing's SKILL.md line.
 # Usage: cli-drive.sh <tmux-socket> <session>
 set -euo pipefail
 
@@ -39,12 +41,12 @@ waitfor() {
 # capture-pane drops trailing spaces, so the "$ " prompt reads as "$".
 waitfor '$'
 sleep 0.8
-typeit 'kirokit install platform-team'
+typeit 'kirokit install product-team'
 key Enter
-waitfor 'installed platform-team'
+waitfor 'installed product-team'
 sleep 1.5
 
-typeit 'kiro-cli chat --agent devops --v3'
+typeit 'kiro-cli chat --agent product-owner --v3'
 key Enter
 waitfor 'Trust this workspace'
 sleep 1
@@ -52,8 +54,8 @@ key Enter
 waitfor 'ask a question'
 sleep 1
 
-typeit '/jir'
-waitfor 'jira-search'
+typeit '/user'
+waitfor 'user-story'
 sleep 3.5
 
 key Escape
@@ -62,5 +64,17 @@ typeit '/quit'
 key Enter
 waitfor 'Session ended'
 sleep 1
+
+typeit 'clear'
+key Enter
+sleep 0.3
+typeit 'kirokit render --quick product-team --out quick'
+key Enter
+waitfor 'rendered Quick bundle for product-team'
+sleep 1.5
+typeit 'ls -R quick'
+key Enter
+waitfor 'SKILL.md'
+sleep 3
 typeit 'exit'
 key Enter

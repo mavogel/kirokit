@@ -3,7 +3,7 @@ import logoUrl from '../../../assets/logo.svg';
 import { createSidebar, PAGES } from './sidebar.js';
 import * as api from './api.js';
 import { initSettings, updateArgs } from './pages/settings.js';
-import { initTeams } from './pages/teams.js';
+import { initTeams, quickArgs, quickRuns } from './pages/teams.js';
 import { initAgents } from './pages/agents.js';
 import { initInstall, syncArgs, uninstallArgs } from './pages/install.js';
 import { initSkills } from './pages/skills.js';
@@ -40,6 +40,8 @@ const view = {
   checkout: noCheckout,
   switching: '', // where a version switch was started: 'settings' or 'welcome'
   refError: null, // { where, message } of the last failed switch
+  exporting: '', // the team whose Export for Quick is running
+  quick: {}, // team -> { dir, skills, agents } of its last export
 };
 const setup = () => view.loaded && showWelcome(view);
 
@@ -95,6 +97,49 @@ async function installTeam(team) {
   if (plan.kind === 'replace' && !(await dialogs.confirmReplace(team, plan.installed))) return;
   if (!(await dialogs.confirmSetup(team, () => api.prerequisites(team)))) return;
   await runCommand(['install', team], 'install:' + team);
+}
+
+// Export for Quick renders the team's Quick bundle in the kirokit tab; when
+// that run ends well the card shows what it holds and the folder opens once.
+const quickRun = quickRuns();
+
+async function exportQuick(team) {
+  const where = 'quick:' + team;
+  view.actionError = null;
+  try {
+    const id = await api.run(quickArgs(team, await api.quickDir(team)));
+    if (id > lastExit) view.running = true;
+    view.exporting = team;
+    const done = quickRun.started(team, id);
+    if (done) await quickDone(done);
+  } catch (e) {
+    view.actionError = { where, message: message(e) };
+  }
+  draw();
+}
+
+async function quickDone({ team, ok }) {
+  view.exporting = '';
+  if (!ok) {
+    view.actionError = { where: 'quick:' + team, message: 'kirokit render failed: see the kirokit tab below.' };
+    return;
+  }
+  try {
+    view.quick = { ...view.quick, [team]: await api.quickBundle(team) };
+    await api.openFolder(team);
+  } catch (e) {
+    view.actionError = { where: 'quick:' + team, message: message(e) };
+  }
+}
+
+async function showQuickFolder(team) {
+  view.actionError = null;
+  try {
+    await api.openFolder(team);
+  } catch (e) {
+    view.actionError = { where: 'quick:' + team, message: message(e) };
+  }
+  draw();
 }
 
 // Opens the prefilled GitHub issue for an agent or skill in the browser. A
@@ -182,7 +227,7 @@ const paint = [
       } else switchVersion(pick, 'welcome');
     },
   ),
-  initTeams(document.getElementById('teams-grid'), installTeam),
+  initTeams(document.getElementById('teams-grid'), installTeam, exportQuick, showQuickFolder),
   initAgents(document.getElementById('page-agents'), giveFeedback),
   initInstall(document.getElementById('page-install'), (action, team) =>
     runCommand(action === 'sync' ? syncArgs(team, view.ref) : uninstallArgs(team), action + ':' + team)),
@@ -252,9 +297,11 @@ api.on('term:kirokit', ({ id }) => {
   }
 });
 // A command that ends may have synced a new team or pin or installed one.
-api.on('term:kirokit:exit', ({ id }) => {
+api.on('term:kirokit:exit', async ({ id, code }) => {
   lastExit = Math.max(lastExit, id);
   view.running = false;
+  const done = quickRun.exited(id, code);
+  if (done) await quickDone(done);
   refresh();
 });
 api.on('clone:done', ({ ok, error }) => {

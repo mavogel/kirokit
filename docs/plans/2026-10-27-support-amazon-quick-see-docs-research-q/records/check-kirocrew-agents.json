@@ -1,0 +1,101 @@
+{
+  "kirocrew": "0.10.0",
+  "kiro_home": "/tmp/kirokit-ide-check/kiro",
+  "agents": [
+    {
+      "name": "kirocrew",
+      "source": "kirocrew",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "customer",
+      "source": "builtin",
+      "kirocrew_owned": false
+    },
+    {
+      "name": "engineer",
+      "source": "builtin",
+      "kirocrew_owned": false
+    },
+    {
+      "name": "kirocrew-conductor",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-dashboard-author",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-dashboard-manager",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-guest",
+      "source": "kirocrew",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-heartbeat",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-knowledge",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-ledger-conductor",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-lite",
+      "source": "kirocrew",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-pipeline-conductor",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-research",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-security-conductor",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-team-lead",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "kirocrew-worker",
+      "source": "builtin",
+      "kirocrew_owned": true
+    },
+    {
+      "name": "product-owner",
+      "source": "builtin",
+      "kirocrew_owned": false
+    },
+    {
+      "name": "qa",
+      "source": "builtin",
+      "kirocrew_owned": false
+    },
+    {
+      "name": "ux-designer",
+      "source": "builtin",
+      "kirocrew_owned": false
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+# tree: a6805ce8c12984eb01e6a1cdb840933e80f44ad5
+$ node scripts/check-doc-links.mjs
+all links resolve (54 checked)
+exit 0
+$ wc -l README.md
+     141 README.md
+--- docs/amazon-quick.md step 5 after the fix
+76:5. **Reimport** the skills and the agent and confirm Quick's overwrite prompt ("already exists and will be overwritten"). A skill reimported with its `id:` line keeps its id; that was seen in Quick. That the agent is overwritten in place and keeps its pinned skill has not been confirmed in Quick yet, so check the agent's skills after the reimport.
+--- docs index in README
+73:You also need [Kiro CLI](https://kiro.dev/docs/cli/installation/) (macOS, Linux with glibc 2.34+ or musl, Windows 11). Teams whose MCP servers use secrets, such as the example `platform-team`, also need `sops` and a key that decrypts their secrets file ([Secrets via SOPS](docs/secrets.md)).
+96:**In the desktop app**, enter your team's repository address on first launch (for the examples, `https://github.com/mavogel/kirokit.git`) and press **Clone**. On **Teams**, press **Install** on your team: the app shows what it needs first, then runs `kirokit install <team>` in its terminal dock. [Desktop app](docs/desktop-app.md) has every page.
+104:[Amazon Quick](docs/amazon-quick.md) explains the import and how `kirokit quick ids` keeps skill ids across reimports. In the app, **Export for Quick** on the team does the same.
+133:| [Configuration](docs/configuration.md) | Directory layout, the `manifest.yaml` reference, central MCP versions, onboarding a new team |
+134:| [Agents and skills](docs/agents-and-skills.md) | The example role agents, owners and `/feedback`, vendored external skills |
+135:| [Secrets via SOPS](docs/secrets.md) | Encrypted secrets per agent, keys per team, Windows and remote MCP servers |
+136:| [Install, setup and sync](docs/install-and-sync.md) | `install`, `uninstall`, backups, `setup`, `sync` and scheduled updates |
+137:| [Testing](docs/testing.md) | `render`, `test` and `update` with the golden files |
+138:| [Desktop app](docs/desktop-app.md) | Releases, data folder and every page of the app |
+139:| [Amazon Quick](docs/amazon-quick.md) | The Quick bundle, the ids file and the two-pass import |

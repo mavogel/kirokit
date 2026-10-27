@@ -1,0 +1,53 @@
+# tree: 98b2f8ccb798ee271c9b55eb356c55df8860d5d7 (+ uncommitted docs/plans and internal/quick/review_test.go only)
+?? docs/research/
+?? internal/quick/review_test.go
+$ task build
+task: [build] go build -o kirokit ./cmd/kirokit
+exit 0
+$ env KIROKIT_QUICK_IDS=/nonexistent ./kirokit render --quick product-team --out tmp/it1/scenario1
+rendered Quick bundle for product-team: 1 skills, 1 agents -> tmp/it1/scenario1
+warning: no Quick id for skill user-story yet (first import); run kirokit quick ids after importing
+exit 0
+$ find tmp/it1/scenario1 -type f
+tmp/it1/scenario1/agents/product-owner.json
+tmp/it1/scenario1/skills/user-story/SKILL.md
+$ ./kirokit render --quick data-team --out tmp/it1/scenario1-data
+kirokit render: data-team: team data-team lists nothing for Quick
+exit 1
+lsd: tmp/it1/scenario1-data: No such file or directory (os error 2).
+
+$ ./kirokit test
+data-team: ok
+platform-team: ok
+product-team: ok
+exit 0
+--- probe: render --quick with no team
+data-team: lists nothing for Quick, skipped
+platform-team: lists nothing for Quick, skipped
+rendered Quick bundle for product-team: 1 skills, 1 agents -> tmp/it1/all/product-team
+warning: no Quick id for skill user-story yet (first import); run kirokit quick ids after importing
+exit 0
+tmp/it1/all/product-team/agents/product-owner.json
+tmp/it1/all/product-team/skills/user-story/SKILL.md
+--- probe: render --quick without --out
+kirokit render: --out is required
+exit 1
+--- probe: unknown team
+kirokit render: nope: manifest: read teams/nope/manifest.yaml: open teams/nope/manifest.yaml: no such file or directory
+exit 1
+--- probe: --quick-ids pointing at a directory
+kirokit render: quick: read ids file: read tmp: is a directory
+exit 1
+--- diff against committed quick golden (ignoring id lines)
+diff exit 0
+--- agent json
+{
+  "name": "product-owner",
+  "description": "Product owner for product-team: owns the vision and priorities, writes and reviews requirements, and consults the customer, engineer, QA and UX designer agents before deciding.",
+  "system_prompt": "You are the product owner of this team. You own the product vision, decide what is built next and why, and write and review requirements.\n\nBefore you decide, consult the other roles through the subagent tool: ask the customer agent how a real user would react, the engineer agent whether it is feasible and how big it is, the qa agent how it could fail, and the ux-designer agent how it should feel to use. Quote what each one answered and say which answer changed your decision.\n\nWhen you review requirements, check that they fit the product vision, are complete (no missing user, state or error case), have acceptance criteria a tester can check (WHEN ... THEN ...), and are prioritised (must, should, could). List each gap with the requirement it belongs to and a concrete fix.\n\nAnswer in plain language a non-engineer can follow. When the person is unhappy with you or another agent, tell them they can type /feedback.",
+  "welcome_message": "What should we build next? Describe a feature and I will turn it into a user story.",
+  "starter_prompts": [
+    "Write a user story for exporting a report as CSV",
+    "Review these requirements for gaps"
+['name', 'description', 'system_prompt', 'welcome_message', 'starter_prompts', 'capabilities', 'connectors', 'skills', 'spaces', 'files']
+skills []

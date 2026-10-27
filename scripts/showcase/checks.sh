@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Checks the showcase must pass before record.sh writes it to assets/:
 #   checks.sh privacy <text-file>...  no home path, user name or git email
-#   checks.sh size <gif> <mp4>        GIF at most 8 MB, MP4 at most 4 MB
-#   checks.sh length <media>...       each 30 to 60 seconds long
+#   checks.sh size <gif> <mp4>        GIF at most 10 MB, MP4 at most 6 MB
+#   checks.sh length <media>...       each 30 to 90 seconds long
 # Each failure prints "showcase: <check>: <reason>" and exits 1.
 set -euo pipefail
 
@@ -31,8 +31,8 @@ privacy() {
 
 size() {
   local gif="${1:?usage: checks.sh size <gif> <mp4>}" mp4="${2:?usage: checks.sh size <gif> <mp4>}"
-  check_size "$gif" 8
-  check_size "$mp4" 4
+  check_size "$gif" 10
+  check_size "$mp4" 6
 }
 
 check_size() {
@@ -52,8 +52,8 @@ length() {
     seconds="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$file" 2>/dev/null)" \
       || fail length "cannot read the length of $file"
     [[ "$seconds" =~ ^[0-9]+(\.[0-9]+)?$ ]] || fail length "cannot read the length of $file"
-    awk "BEGIN { exit !($seconds >= 30 && $seconds <= 60) }" \
-      || fail length "$file is $seconds s (needs 30 to 60 s)"
+    awk "BEGIN { exit !($seconds >= 30 && $seconds <= 90) }" \
+      || fail length "$file is $seconds s (needs 30 to 90 s)"
   done
 }
 

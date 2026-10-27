@@ -1,0 +1,20 @@
+console error: Failed to load resource: the server responded with a status of 404 (Not Found)
+step1 product-team: quick button=1 note=""
+step1 data-team: quick button=0 note="No Quick export: this team lists no skills or agents for Quick."
+step1 platform-team: quick button=0 note="No Quick export: this team lists no skills or agents for Quick."
+step1 button accessible name: "Export for Quick" title="Render the team's skills and agents for Amazon Quick and open the folder" disabled=false
+step2 focused element: <button class="btn" data-action="quick" data-team="product-team" title="Render the team's skills and agents for Amazon Q
+step2 while running (52 ms): data-team:Install:true, platform-team:Install:true, product-team:Install:true, product-team:Exporting…:true
+step3 result: "Quick bundle ready: 1 skill, 1 agent. / Show folder / /tmp/kirokit-it1-review/home/Library/Application Support/kirokit-desktop/quick/product-team"
+step3 role=status
+step2 dock rows:
+  ▸ kirokit render --quick product-team --out /tmp/kirokit-it1-re
+  view/home/Library/Application Support/kirokit-desktop/quick/pro
+  duct-team
+  rendered Quick bundle for product-team: 1 skills, 1 agents -> /
+  tmp/kirokit-it1-review/home/Library/Application Support/kirokit
+  -desktop/quick/product-team
+  warning: no Quick id for skill user-story yet (first import); r
+  un kirokit quick ids after importing
+step3 after run: data-team:Install:false, platform-team:Install:false, product-team:Install:false, product-team:Export for Quick:false
+clicked Show folder

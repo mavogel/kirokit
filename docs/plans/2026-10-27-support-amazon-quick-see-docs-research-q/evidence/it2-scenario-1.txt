@@ -1,0 +1,40 @@
+# tree: a6805ce8c12984eb01e6a1cdb840933e80f44ad5 (judged commit; only docs/plans and untracked docs/research differ)
+$ task build
+task: [build] go build -o kirokit ./cmd/kirokit
+exit 0
+$ env KIROKIT_QUICK_IDS=/nonexistent ./kirokit render --quick product-team --out tmp/it2/scenario1
+rendered Quick bundle for product-team: 1 skills, 1 agents -> tmp/it2/scenario1
+warning: no Quick id for skill user-story yet (first import); run kirokit quick ids after importing
+exit 0
+$ rtk proxy find tmp/it2/scenario1 -type f
+tmp/it2/scenario1/agents/product-owner.json
+tmp/it2/scenario1/skills/user-story/SKILL.md
+$ ./kirokit render --quick data-team --out tmp/it2/scenario1-data
+kirokit render: data-team: team data-team lists nothing for Quick
+exit 1
+$ test -e tmp/it2/scenario1-data
+exit 1 (1 = nothing written)
+$ ./kirokit test
+data-team: ok
+platform-team: ok
+product-team: ok
+exit 0
+--- probe: modes in the bundle
+-rw------- tmp/it2/scenario1/skills/user-story/SKILL.md
+-rw------- tmp/it2/scenario1/agents/product-owner.json
+--- probe: render --quick with no team
+$ ./kirokit render --quick --out tmp/it2/all
+data-team: lists nothing for Quick, skipped
+platform-team: lists nothing for Quick, skipped
+rendered Quick bundle for product-team: 1 skills, 1 agents -> tmp/it2/all/product-team
+warning: no Quick id for skill user-story yet (first import); run kirokit quick ids after importing
+exit 0
+--- probe: empty team name
+$ ./kirokit render --quick  --out tmp/it2/empty
+data-team: lists nothing for Quick, skipped
+platform-team: lists nothing for Quick, skipped
+rendered Quick bundle for product-team: 1 skills, 1 agents -> tmp/it2/empty/product-team
+warning: no Quick id for skill user-story yet (first import); run kirokit quick ids after importing
+exit 0
+--- probe: quick golden vs fresh render (id lines removed)
+diff exit 0

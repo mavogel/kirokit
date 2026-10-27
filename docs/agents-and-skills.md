@@ -1,0 +1,42 @@
+# Agents and skills
+
+The example role agents and their feedback loop, and skills vendored from other git repositories. Back to the [README](../README.md).
+
+## Role agents and feedback
+
+`product-team` is an example of the whole team working through Kiro, not only engineers: five role agents that ask each other before answering, review gates for Kiro's spec workflow, an owner for every agent and skill, and a way for anyone to send feedback to that owner.
+
+```bash
+kirokit install product-team
+kiro-cli chat --agent product-owner     # "Ask the customer agent what frustrates them about onboarding."
+```
+
+- **Role agents:** `product-owner`, `engineer`, `customer`, `qa` and `ux-designer`. Each has `subagent` in `tools` and may call the other four (`toolsSettings.subagent.availableAgents`). Calling one of the four that cannot write files runs without a prompt; calling the `engineer` (which can write files and run commands) asks first. In Kiro CLI v3 `trustedAgents` alone still prompts, so each agent also carries a permission rule whose `match` names the agents: `{ "capability": "subagent", "match": ["customer", "qa", "ux-designer"], "effect": "allow" }`. Render fails when `availableAgents`, `trustedAgents` or such a rule names something that is neither a glob nor an agent of the same team, since Kiro accepts any name there. The personas are examples to replace; the `customer` one is invented until you fill it from your own interviews.
+- **Spec review gates:** the steering `spec-review-gates` (`inclusion: always`, in every role agent's `resources`) tells the agent writing a spec to ask `product-owner` to review `requirements.md` (vision fit, completeness, testable acceptance criteria, priorities) and `engineer` to review `design.md` (deep modules, information hiding, red flags) before the next phase. Try it with `kiro-cli chat --agent engineer --mode spec`. A steering instructs the agent; it cannot force the review.
+- **Owners:** `owner`, `owners.agents.<name>` and `owners.skills.<name>` in `manifest.yaml` (see the [reference](configuration.md#manifestyaml-reference)). Write a GitHub handle, so an issue that @-mentions it notifies them. Templates read the table with `{{ range owners }}{{ .Kind }} {{ .Name }} {{ .Owner }} {{ .FromTeam }}{{ end }}` (`Kind` is `agent` or `skill`, `Owner` is empty when nobody is named, `FromTeam` marks the team owner) and the repository with `{{ feedbackRepo }}`, which fails the render when `feedback.github` is not set.
+- **`/feedback` in Kiro:** `teams/product-team/prompts/feedback.md.tmpl` becomes `/feedback [what went wrong]`. The agent picks the agent or skill from the chat (or asks), drafts a title and a body that @-mentions its owner, and prints a link to `https://github.com/<feedback.github>/issues/new?…` with the labels `feedback`, `team:<team>` and `agent:<name>` or `skill:<name>`. Nothing is sent: the person opens the link, edits and submits. GitHub applies the labels only for people who may triage that repository; title and body name the team and item for everyone. To give another team `/feedback`, copy the prompt into its `prompts/` and set `feedback.github` in its manifest.
+- **Feedback in the desktop app:** the Agents and Skills pages show each owner (*team owner* under an inherited one, *No owner* when there is none) and a **Feedback** button that opens the same kind of prefilled issue in the browser. A team without `feedback.github` shows its buttons off, with the reason under the table. The app opens nothing but a `https://github.com/<owner>/<repo>/issues/new?…` address.
+- **`analyze-session`:** a skill every role agent has. Ask "Analyze my last session" (or give an id from `/session-id`); the agent reads `$KIRO_HOME/sessions/<hash>/sess_<id>/` (`session.json`, `messages.jsonl`) with file reads only, looks for denied or failed tools, repeated permission prompts and lookups, unused skills, corrections and heavy context use, and reports recommendations (a hook, a steering, a permission, a sharper prompt) grouped by owner. It then offers one prefilled issue per owner in the `/feedback` format. Each role agent allows loading this skill without a prompt (`{ "capability": "skill", "match": ["analyze-session"], "effect": "allow" }`).
+- **`user-story`:** a skill of `product-owner` (type `/user` in its chat). It turns a feature idea into one user story with WHEN/THEN acceptance criteria, open questions and a priority. It is also the example skill of the team's [Amazon Quick bundle](amazon-quick.md), with `product-owner` as the example Quick agent.
+
+## External Skills
+
+Vendor skills from other git repos (e.g. [anthropics/skills](https://github.com/anthropics/skills)), pinned by `ref`. An entry vendors the skill directories listed in `paths` from one repo; use `all: true` when each path is a directory of skills.
+
+```bash
+kirokit skills fetch <team>      # no team = every team declaring external skills
+kirokit update <team>            # refresh goldens, review and commit the diff
+```
+
+- `skills fetch` resolves `ref` to a commit with the local `git`, copies the directory byte for byte to `teams/<team>/external/skills/<name>/`, and records source, ref, commit and content hash in `teams/<team>/external/skills.lock.yaml`. Commit both. It is the only networked step; `render`, `test`, `install`, `sync` are offline and need no credentials. If any entry fails, nothing changes.
+- Render/install places files at `$KIRO_HOME/skills/<name>/` and adds `skill://$KIRO_HOME/skills/<name>/SKILL.md` to every agent's `resources`. Executable bits are kept. Vendored files bypass the template engine (`*.tmpl` and `{{ }}` arrive intact), which also makes them the simplest way to ship an Amazon Quick skill that uses Quick's `{{input}}` placeholders.
+- **Execute bits on Windows:** the lock lists each skill's executable files under `executables` (from git's own file modes), and the content hash covers them. Windows keeps no execute bit, so there `render` and `install` check the hash with that list; a lock written before `executables` existed must be fetched again (`kirokit skills fetch <team>`, on any system) before a skill with scripts verifies on Windows.
+- **`paths`:** required; one entry per repo and `ref` covers every listed path, and each skill is named after its path's last element. Two paths ending in the same name are a duplicate-name error. `name` needs a single path.
+- **`all: true`:** each path in `paths` is a directory of skills; each immediate subdirectory with a `SKILL.md` is vendored, others ignored; `exclude` skips directories (single path only); `name` cannot be combined with `all`. Each skill has its own lock entry (`from` names the collection) and `skill://` resource. New upstream skills appear only on re-fetch at a newer `ref`; a longer `exclude` removes skills on re-fetch. An `exclude` naming a nonexistent directory is an error.
+- **Update:** change `ref` (or re-run `fetch` to advance a branch ref), run `skills fetch`, review the vendored diff. Dropped files are removed.
+- **No tags upstream:** `anthropics/skills` has none; pin a commit SHA or follow a branch. The lock records the exact commit regardless.
+- **Drift is an error:** if `manifest.yaml`, the lock and the vendored files disagree (hand edit, changed `ref` without re-fetch, directory with no entry), `render`, `test`, `install`, `sync` fail naming the skill. Never edit `teams/<team>/external/**`.
+- **Name collisions:** an external skill named like a team `skills/<name>` or another external skill is an error (also at fetch); set `name` on a single-path entry or `exclude` it from the collection.
+- **Private sources:** SSH URL with an agent, or HTTPS with a git credential helper (`gh auth setup-git`). No credentials are stored; a `source` containing credentials is rejected. Allowed `source`: `https`, `http`, `ssh`, `git`, `file` URL, scp-style address, or local path. Rejected: leading `-` (option), `ext::` (transport helper), and a `ref` starting with `-` or containing whitespace. Only the person running `skills fetch` needs access; on auth failure the error names the source and nothing is written.
+- **Symlinks** inside a skill are rejected; `SKILL.md` must be at the skill root.
+- **Licences:** source licence files (e.g. `LICENSE.txt`) are vendored with the skill. Check redistribution terms, especially with `all: true`; some `anthropics/skills` entries carry restrictive terms, so `exclude` or review them.

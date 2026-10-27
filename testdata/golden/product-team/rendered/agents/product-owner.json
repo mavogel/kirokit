@@ -13,12 +13,13 @@
     "rules": [
       { "capability": "fs_read", "match": ["**"], "effect": "allow" },
       { "capability": "subagent", "match": ["customer", "qa", "ux-designer"], "effect": "allow" },
-      { "capability": "skill", "match": ["analyze-session"], "effect": "allow" }
+      { "capability": "skill", "match": ["analyze-session", "user-story"], "effect": "allow" }
     ]
   },
   "resources": [
     "file:///kiro-home/steering/spec-review-gates.md",
     "skill:///kiro-home/skills/analyze-session/SKILL.md",
+    "skill:///kiro-home/skills/user-story/SKILL.md",
     "file://.kiro/steering/**/*.md",
     "skill://.kiro/skills/**/SKILL.md"
   ]

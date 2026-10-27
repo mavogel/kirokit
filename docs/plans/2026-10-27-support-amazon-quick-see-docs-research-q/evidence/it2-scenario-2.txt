@@ -1,0 +1,44 @@
+# tree: a6805ce8c12984eb01e6a1cdb840933e80f44ad5 (judged commit)
+$ mkdir -p tmp/it2/export; cp tmp/it2/scenario1/skills/user-story/SKILL.md tmp/it2/export/SKILL.md; insert id as last frontmatter line
+---
+name: user-story
+description: Turn a feature idea into one user story with acceptance criteria a tester can check, open questions and a priority. Use when someone asks for a user story, a requirement, acceptance criteria or a ticket for a feature.
+id: 0123456789abcdef0123456789abcdef
+---
+exit 0
+$ ./kirokit quick ids --quick-ids tmp/it2/ids.yaml tmp/it2/export
+recorded 1 ids in tmp/it2/ids.yaml
+exit 0
+$ cat tmp/it2/ids.yaml
+# Amazon Quick skill ids for one Quick account. Written by `kirokit quick ids`; never commit.
+skills:
+  user-story: 0123456789abcdef0123456789abcdef
+exit 0
+-rw------- tmp/it2/ids.yaml
+$ ./kirokit render --quick product-team --quick-ids tmp/it2/ids.yaml --out tmp/it2/scenario2
+rendered Quick bundle for product-team: 1 skills, 1 agents -> tmp/it2/scenario2
+exit 0
+$ diff tmp/it2/export/SKILL.md tmp/it2/scenario2/skills/user-story/SKILL.md
+exit 0
+$ grep -c 0123456789abcdef0123456789abcdef tmp/it2/scenario2/agents/product-owner.json
+1
+exit 0
+--- probe: export without an id
+$ ./kirokit quick ids --quick-ids tmp/it2/ids.yaml tmp/it2/noid/SKILL.md
+skipped tmp/it2/noid/SKILL.md: no id
+recorded 0 ids in tmp/it2/ids.yaml
+exit 0
+--- probe: malformed id leaves the ids file unchanged
+$ ./kirokit quick ids --quick-ids tmp/it2/ids.yaml tmp/it2/bad
+kirokit quick ids: tmp/it2/bad/SKILL.md: skill "user-story": id "ABC" is not 32 lowercase hex characters
+exit 1
+$ cmp tmp/it2/ids.before tmp/it2/ids.yaml
+exit 0
+--- probe: no paths
+$ ./kirokit quick ids --quick-ids tmp/it2/ids.yaml
+requires at least 1 arg(s), only received 0
+exit 1
+--- probe: git ignores the default ids file
+$ git check-ignore quick-ids.yaml
+quick-ids.yaml
+exit 0

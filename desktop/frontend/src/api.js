@@ -26,6 +26,13 @@ export const prerequisites = (team) => app().Prerequisites(team);
 // Runs kirokit with args in the kirokit tab and resolves to the run id.
 export const run = (args) => app().Run(args);
 
+// Where Export for Quick renders a team's bundle (<app data>/quick/<team>),
+// what that bundle holds ({ dir, skills, agents }), and showing it in the
+// file manager. Each takes only the team name; Go builds the path.
+export const quickDir = (team) => app().QuickDir(team);
+export const quickBundle = (team) => app().QuickBundle(team);
+export const openFolder = (team) => app().OpenFolder(team);
+
 // Clones the repository at address and syncs to its newest release; resolves
 // when the clone starts, rejects with the reason an address was refused.
 // clone:done reports the end.

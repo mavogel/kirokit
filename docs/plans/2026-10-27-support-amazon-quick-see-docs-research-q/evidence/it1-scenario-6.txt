@@ -1,0 +1,8 @@
+$ git log -1 --format="%h %ad %s" -- assets/kirokit-showcase.mp4 assets/kirokit-showcase.gif
+847d3e6 Sun Oct 25 12:59:41 2026 +0100 docs: showcase video of kirokit CLI and app for the README (#19)
+$ git diff --stat 9bfb355 98b2f8c -- assets/
+(empty = unchanged by this build)
+$ scripts/showcase/checks.sh length assets/kirokit-showcase.mp4
+exit 0
+$ ffprobe duration
+36.433333

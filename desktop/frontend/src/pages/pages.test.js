@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { teamsView } from './teams.js';
+import { teamsView, quickArgs, quickRuns } from './teams.js';
 import { agentsView } from './agents.js';
 import { installView, syncArgs, uninstallArgs } from './install.js';
 import { updateArgs, updateLabel, saveAndMaybeClone, initSettings } from './settings.js';
@@ -460,6 +460,60 @@ test('Feedback builds the issue for the pressed item from the catalog', () => {
   assert.match(url.searchParams.get('body'), /\*\*Owner:\*\* @nick/);
   assert.throws(() => feedbackFor(owned, { team: 'alpha', kind: 'skill', name: 'gone' }), /gone is no longer in alpha/);
   assert.throws(() => feedbackFor(owned, { team: 'gamma', kind: 'agent', name: 'g1' }), /gamma names no feedback repository/);
+});
+
+const quickView = {
+  ...ready,
+  catalog: { ...catalog, teams: [{ ...catalog.teams[0], quick: true }, catalog.teams[1]] },
+};
+
+test('Export for Quick runs render --quick into the given folder', () => {
+  assert.deepEqual(quickArgs('alpha', '/data/quick/alpha'), ['render', '--quick', 'alpha', '--out', '/data/quick/alpha']);
+});
+
+test('Only a team that lists Quick content has Export for Quick; the others say why', () => {
+  const [alpha, beta] = teamsView(quickView).split('</article>');
+  assert.match(alpha, /<button class="btn" data-action="quick" data-team="alpha"[^>]*>Export for Quick<\/button>/);
+  assert.doesNotMatch(alpha, /No Quick export/);
+  assert.doesNotMatch(beta, /data-action="quick"/);
+  assert.match(beta, /No Quick export: this team lists no skills or agents for Quick\./);
+});
+
+test('While a command runs Export for Quick is disabled, and says it is exporting for its own team', () => {
+  const html = teamsView({ ...quickView, running: true, exporting: 'alpha' });
+  assert.match(html, /data-action="quick" data-team="alpha"[^>]* disabled>Exporting…<\/button>/);
+  const other = teamsView({ ...quickView, running: true, exporting: '' });
+  assert.match(other, /data-action="quick" data-team="alpha"[^>]* disabled>Export for Quick<\/button>/);
+});
+
+test('A finished export shows the counts, the folder and Show folder', () => {
+  const one = teamsView({ ...quickView, quick: { alpha: { dir: '/data/quick/<alpha>', skills: 1, agents: 1 } } });
+  assert.match(one, /role="status"><span>Quick bundle ready: <b>1<\/b> skill, <b>1<\/b> agent\.<\/span>/);
+  assert.match(one, /<button class="link-btn" type="button" data-action="quick-folder" data-team="alpha">Show folder<\/button>/);
+  assert.match(one, /<span class="path">\/data\/quick\/&lt;alpha&gt;<\/span>/);
+  const many = teamsView({ ...quickView, quick: { alpha: { dir: '/d', skills: 2, agents: 0 } } });
+  assert.match(many, /<b>2<\/b> skills, <b>0<\/b> agents\./);
+  assert.doesNotMatch(teamsView(quickView), /Quick bundle ready/);
+});
+
+test('A failed export shows its error beside the button', () => {
+  const html = teamsView({ ...quickView, actionError: { where: 'quick:alpha', message: 'kirokit render failed: see the kirokit tab below.' } });
+  const [alpha] = html.split('</article>');
+  assert.match(alpha, /Export for Quick<\/button><span class="error" role="alert">kirokit render failed: see the kirokit tab below\.<\/span>/);
+});
+
+test('The Quick result comes only from the exit of the run that was started', () => {
+  const runs = quickRuns();
+  assert.equal(runs.exited(4, 0), null); // some other command
+  assert.equal(runs.started('alpha', 5), null);
+  assert.equal(runs.exited(6, 0), null);
+  assert.deepEqual(runs.exited(5, 1), { team: 'alpha', ok: false });
+  assert.equal(runs.exited(5, 0), null); // taken once
+
+  // A fast command can end before its id arrives.
+  const fast = quickRuns();
+  assert.equal(fast.exited(9, 0), null);
+  assert.deepEqual(fast.started('beta', 9), { team: 'beta', ok: true });
 });
 
 test('No page source names a sample team', () => {

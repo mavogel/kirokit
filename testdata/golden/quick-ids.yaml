@@ -1,0 +1,5 @@
+# Fixture ids for the Quick bundle goldens (testdata/golden/<team>/quick/).
+# Made up, never a real Quick account's ids: the golden harness reads only this
+# file, so goldens are the same on every machine.
+skills:
+  user-story: 00000000000000000000000000000001

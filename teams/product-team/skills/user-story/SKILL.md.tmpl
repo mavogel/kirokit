@@ -1,0 +1,47 @@
+---
+name: user-story
+description: Turn a feature idea into one user story with acceptance criteria a tester can check, open questions and a priority. Use when someone asks for a user story, a requirement, acceptance criteria or a ticket for a feature.
+---
+
+# Write a user story
+
+Turn one feature idea into a user story the {{ .Team.Team }} can build and test. Write it, then check it, then hand it over. Change no file and send nothing.
+
+## Step 1: Understand the idea
+
+- Who uses the feature, what they want to get done, and why it matters to them.
+- What happens today without it.
+- Ask one short question when the user or the goal is missing. Make no other assumptions silently: list them in Step 3.
+
+## Step 2: Write the story
+
+Use exactly this shape:
+
+```markdown
+### <short title>
+
+**As a** <user>, **I want** <capability> **so that** <benefit>.
+
+**Acceptance criteria**
+1. WHEN <situation> THEN <observable result>
+2. ...
+
+**Out of scope:** <what this story does not cover>
+**Priority:** must | should | could, with one sentence why
+```
+
+- Three to seven acceptance criteria. Each one names a situation and a result a tester can see, including at least one error or empty case.
+- Plain language a non-engineer can follow; no implementation details.
+
+## Step 3: Check it
+
+Before you answer, check the story against this list and fix what fails:
+
+- Does every criterion have a WHEN and a THEN a tester could check?
+- Is there a criterion for a failure, an empty state or a missing permission?
+- Is the story small enough to finish in one iteration? If not, split it and say how.
+- Are your assumptions listed under **Open questions**?
+
+## Step 4: Hand it over
+
+Reply with the story, then **Open questions** (or "none"), then one line naming who should review it next: the customer for value, the engineer for size, QA for testability or the UX designer for the flow.

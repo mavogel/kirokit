@@ -1,0 +1,12 @@
+# tree: a6805ce8c12984eb01e6a1cdb840933e80f44ad5
+$ git log --oneline -1 -- assets/kirokit-showcase.mp4 assets/kirokit-showcase.gif
+847d3e6 docs: showcase video of kirokit CLI and app for the README (#19)
+$ git diff --stat 9bfb355bc8dae4d2813236764bee22f18102d3f9..HEAD -- assets/
+(empty = assets unchanged by this build)
+$ scripts/showcase/checks.sh length assets/kirokit-showcase.mp4
+exit 0
+$ ffprobe duration
+36.433333
+$ grep -n showcase README.md
+20:<a href="assets/kirokit-showcase.mp4"><img src="assets/kirokit-showcase.gif" width="800" alt="kirokit showcase: kirokit install product-team in a terminal and kiro-cli chat with the product-owner agent listing the user-story skill, kirokit render --quick writing the Amazon Quick bundle, Kiro IDE and kirocrew listing the same five agents, then the desktop app cloning the config repository and installing a team from a button"></a>
+22:<sub>Sharper version: <a href="assets/kirokit-showcase.mp4">kirokit-showcase.mp4</a></sub>

@@ -17,6 +17,7 @@ Turn one past chat into concrete improvements to this team's harness, and route 
 | agent | `qa` | @mavogel (team owner) |
 | agent | `ux-designer` | @mavogel (team owner) |
 | skill | `analyze-session` | @mavogel (team owner) |
+| skill | `user-story` | @mavogel (team owner) |
 
 Steerings, hooks and prompts belong to the team owner (@mavogel).
 

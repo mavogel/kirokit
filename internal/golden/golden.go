@@ -7,12 +7,15 @@ package golden
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
+	"github.com/mavogel/kirokit/internal/quick"
 	"github.com/mavogel/kirokit/internal/render"
 )
 
@@ -27,11 +30,12 @@ type Inputs struct {
 // Compare renders team and diffs it against testdata/golden/<team>/. An
 // empty result means the team's committed goldens are up to date.
 func Compare(in Inputs, team string) ([]string, error) {
-	renderedDir, contextJSON, cleanup, err := renderForGolden(in, team)
+	r, err := renderForGolden(in, team)
 	if err != nil {
 		return nil, err
 	}
-	defer cleanup()
+	defer r.cleanup()
+	renderedDir, contextJSON := r.renderedDir, r.contextJSON
 
 	goldenTeamDir := filepath.Join(in.GoldenRoot, team)
 	goldenRenderedDir := filepath.Join(goldenTeamDir, "rendered")
@@ -40,6 +44,15 @@ func Compare(in Inputs, team string) ([]string, error) {
 	diffs, err := diffDirs(renderedDir, goldenRenderedDir)
 	if err != nil {
 		return nil, err
+	}
+	// The Quick bundle is compared the same way; a team without a quick
+	// section is compared with an empty folder, so a stray quick/ golden fails.
+	quickDiffs, err := diffDirs(r.quickDir, filepath.Join(goldenTeamDir, quickGoldenDir))
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range quickDiffs {
+		diffs = append(diffs, prefixPath(d, quickGoldenDir+"/"))
 	}
 
 	goldenContext, err := os.ReadFile(goldenContextPath)
@@ -58,14 +71,16 @@ func Compare(in Inputs, team string) ([]string, error) {
 
 // Update renders team and overwrites its committed golden fixtures.
 func Update(in Inputs, team string) error {
-	renderedDir, contextJSON, cleanup, err := renderForGolden(in, team)
+	r, err := renderForGolden(in, team)
 	if err != nil {
 		return err
 	}
-	defer cleanup()
+	defer r.cleanup()
+	renderedDir, contextJSON := r.renderedDir, r.contextJSON
 
 	goldenTeamDir := filepath.Join(in.GoldenRoot, team)
 	goldenRenderedDir := filepath.Join(goldenTeamDir, "rendered")
+	goldenQuickDir := filepath.Join(goldenTeamDir, quickGoldenDir)
 	goldenContextPath := filepath.Join(goldenTeamDir, "context.json")
 
 	if err := os.RemoveAll(goldenRenderedDir); err != nil {
@@ -73,6 +88,14 @@ func Update(in Inputs, team string) error {
 	}
 	if err := copyDir(renderedDir, goldenRenderedDir); err != nil {
 		return fmt.Errorf("golden: %w", err)
+	}
+	if err := os.RemoveAll(goldenQuickDir); err != nil {
+		return fmt.Errorf("golden: %w", err)
+	}
+	if r.hasQuick {
+		if err := copyDir(r.quickDir, goldenQuickDir); err != nil {
+			return fmt.Errorf("golden: %w", err)
+		}
 	}
 	if err := os.MkdirAll(goldenTeamDir, 0o755); err != nil {
 		return fmt.Errorf("golden: %w", err)
@@ -83,33 +106,78 @@ func Update(in Inputs, team string) error {
 	return nil
 }
 
+// quickGoldenDir holds a team's Quick bundle golden beside rendered/.
+const quickGoldenDir = "quick"
+
+// QuickIDsFixture is the committed ids file Quick goldens render with, under
+// the golden root; a real account's ids are never read by the harness.
+const QuickIDsFixture = "quick-ids.yaml"
+
+// goldenRender is one team rendered for comparison. quickDir is an empty
+// folder when the team has no quick section (hasQuick false).
+type goldenRender struct {
+	renderedDir, quickDir string
+	hasQuick              bool
+	contextJSON           []byte
+	cleanup               func()
+}
+
 // renderForGolden renders team into a scratch directory (using the fixed
-// KiroHome sentinel, per render.DefaultKiroHomeSentinel) and marshals its
-// resolved context. The caller must call cleanup once done with
-// renderedDir.
-func renderForGolden(in Inputs, team string) (renderedDir string, contextJSON []byte, cleanup func(), err error) {
+// KiroHome sentinel, per render.DefaultKiroHomeSentinel), renders its Quick
+// bundle with the fixture ids, and marshals its resolved context. The caller
+// must call cleanup once done with the result.
+func renderForGolden(in Inputs, team string) (goldenRender, error) {
 	ctx, err := render.BuildContext(in.TeamsRoot, team, in.GlobalRoot, in.EnvVersionsPath, "")
 	if err != nil {
-		return "", nil, func() {}, err
+		return goldenRender{}, err
 	}
-	contextJSON, err = json.MarshalIndent(ctx, "", "  ")
+	contextJSON, err := json.MarshalIndent(ctx, "", "  ")
 	if err != nil {
-		return "", nil, func() {}, fmt.Errorf("golden: marshal context: %w", err)
+		return goldenRender{}, fmt.Errorf("golden: marshal context: %w", err)
 	}
 	contextJSON = append(contextJSON, '\n')
 
 	scratch, err := os.MkdirTemp("", "kirokit-golden-*")
 	if err != nil {
-		return "", nil, func() {}, fmt.Errorf("golden: %w", err)
+		return goldenRender{}, fmt.Errorf("golden: %w", err)
 	}
-	cleanup = func() { _ = os.RemoveAll(scratch) }
+	r := goldenRender{
+		renderedDir: filepath.Join(scratch, "rendered"),
+		quickDir:    filepath.Join(scratch, quickGoldenDir),
+		contextJSON: contextJSON,
+		cleanup:     func() { _ = os.RemoveAll(scratch) },
+	}
+	if err := render.RenderTeam(in.TeamsRoot, team, in.GlobalRoot, in.EnvVersionsPath, r.renderedDir, ""); err != nil {
+		r.cleanup()
+		return goldenRender{}, err
+	}
 
-	renderedDir = filepath.Join(scratch, "rendered")
-	if err := render.RenderTeam(in.TeamsRoot, team, in.GlobalRoot, in.EnvVersionsPath, renderedDir, ""); err != nil {
-		cleanup()
-		return "", nil, func() {}, err
+	ids, err := quick.LoadIDs(filepath.Join(in.GoldenRoot, QuickIDsFixture))
+	if err != nil {
+		r.cleanup()
+		return goldenRender{}, fmt.Errorf("golden: %w", err)
 	}
-	return renderedDir, contextJSON, cleanup, nil
+	_, err = quick.RenderTeam(in.TeamsRoot, team, in.GlobalRoot, in.EnvVersionsPath, r.quickDir, quick.Options{IDs: ids})
+	switch {
+	case errors.Is(err, quick.ErrNoQuick):
+		err = os.MkdirAll(r.quickDir, 0o755)
+	case err == nil:
+		r.hasQuick = true
+	}
+	if err != nil {
+		r.cleanup()
+		return goldenRender{}, err
+	}
+	return r, nil
+}
+
+// prefixPath puts prefix before the file path that ends a diffDirs line.
+func prefixPath(diff, prefix string) string {
+	i := strings.LastIndex(diff, ": ")
+	if i < 0 {
+		return diff
+	}
+	return diff[:i+2] + prefix + diff[i+2:]
 }
 
 // diffDirs compares two rendered output trees file-by-file, byte-for-byte.

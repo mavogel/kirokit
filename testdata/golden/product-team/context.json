@@ -10,7 +10,25 @@
     "Feedback": {
       "GitHub": "mavogel/kirokit"
     },
-    "GlobalSteerings": []
+    "GlobalSteerings": [],
+    "quick": {
+      "skills": [
+        "user-story"
+      ],
+      "agents": [
+        {
+          "name": "product-owner",
+          "welcomeMessage": "What should we build next? Describe a feature and I will turn it into a user story.",
+          "starterPrompts": [
+            "Write a user story for exporting a report as CSV",
+            "Review these requirements for gaps"
+          ],
+          "skills": [
+            "user-story"
+          ]
+        }
+      ]
+    }
   },
   "Env": {
     "confluence-mcp": "2.1.0",

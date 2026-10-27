@@ -1,0 +1,67 @@
+$ env KIRO_HOME=/tmp/kirokit-it1-ide/kiro ./kirokit install product-team
+installed product-team into /tmp/kirokit-it1-ide/kiro
+exit 0
+$ ls /tmp/kirokit-it1-ide/kiro/agents /tmp/kirokit-it1-ide/kiro/skills
+customer.json
+engineer.json
+product-owner.json
+qa.json
+ux-designer.json
+analyze-session
+user-story
+$ env KIRO_HOME=/tmp/kirokit-it1-ide/kiro kiro-cli agent list
+Workspace: ~/Developer/projects/kirokit/.kiro/agents
+Global:    /tmp/kirokit-it1-ide/kiro/agents
+
+* kiro_default     (Built-in)    Default agent
+  customer         Global        Speaks as product-team's customer persona:
+                                  goals, frustrations and what a good experience
+                                  looks like. The persona is an invented example
+                                  until the team fills it from its own
+                                  interviews.
+  engineer         Global        Engineer for product-team: turns agreed
+                                  requirements into designs and code, and
+                                  reviews designs for deep modules, information
+                                  hiding and red flags.
+  kiro_help        (Built-in)    Help agent that answers questions about Kiro
+                                  CLI features using documentation
+  kiro_planner     (Built-in)    Specialized planning agent that helps break
+                                  down ideas into implementation plans
+  product-owner    Global        Product owner for product-team: owns the vision
+                                  and priorities, writes and reviews
+                                  requirements, and consults the customer,
+                                  engineer, QA and UX designer agents before
+                                  deciding.
+  qa               Global        QA engineer for product-team: finds how a
+                                  requirement, design or change can fail and
+                                  turns each case into a test with steps and an
+                                  expected result.
+  ux-designer      Global        UX/UI designer for product-team: describes the
+                                  user's path, every screen state, the words on
+                                  screen and accessibility needs, reusing the
+                                  product's existing patterns.
+exit 0
+
+$ HOME=/tmp/kirokit-it1-ide/crew-home KIRO_HOME=/tmp/kirokit-it1-ide/kiro kirocrew gateway --no-open --no-tunnel --no-crons --port 34117 --json-ready   (token redacted)
+KIROCREW_READY:{"port": 34117, "token": "<redacted>", "pid": 68948, "home": "/private/tmp/kirokit-it1-ide/crew-home/crew"}
+$ curl http://127.0.0.1:34117/api/agents/installed?token=<redacted>  (name source kirocrew_owned)
+kirocrew kirocrew True
+customer builtin False
+engineer builtin False
+kirocrew-conductor builtin True
+kirocrew-dashboard-author builtin True
+kirocrew-dashboard-manager builtin True
+kirocrew-guest kirocrew True
+kirocrew-heartbeat builtin True
+kirocrew-knowledge builtin True
+kirocrew-ledger-conductor builtin True
+kirocrew-lite kirocrew True
+kirocrew-pipeline-conductor builtin True
+kirocrew-research builtin True
+kirocrew-security-conductor builtin True
+kirocrew-team-lead builtin True
+kirocrew-worker builtin True
+product-owner builtin False
+qa builtin False
+ux-designer builtin False
+all five product-team agents listed: True

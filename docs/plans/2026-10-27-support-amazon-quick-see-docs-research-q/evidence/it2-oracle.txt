@@ -1,0 +1,36 @@
+# tree: a6805ce8c12984eb01e6a1cdb840933e80f44ad5
+$ env KIRO_HOME=/tmp/kirokit-it2-oracle/kiro ./kirokit install product-team
+installed product-team into /tmp/kirokit-it2-oracle/kiro
+exit 0
+$ env KIRO_HOME=/tmp/kirokit-it2-oracle/kiro kiro-cli agent list
+[38;5;244mWorkspace: [0m~/Developer/projects/kirokit/.kiro/agents
+[38;5;244mGlobal:    [0m/tmp/kirokit-it2-oracle/kiro/agents
+
+* kiro_default     [38;5;244m(Built-in)[0m    Default agent
+  customer         Global        Speaks as product-team's customer persona:
+                                  goals, frustrations and what a good experience
+                                  looks like. The persona is an invented example
+                                  until the team fills it from its own
+                                  interviews.
+  engineer         Global        Engineer for product-team: turns agreed
+                                  requirements into designs and code, and
+                                  reviews designs for deep modules, information
+                                  hiding and red flags.
+  kiro_help        [38;5;244m(Built-in)[0m    Help agent that answers questions about Kiro
+                                  CLI features using documentation
+  kiro_planner     [38;5;244m(Built-in)[0m    Specialized planning agent that helps break
+                                  down ideas into implementation plans
+  product-owner    Global        Product owner for product-team: owns the vision
+                                  and priorities, writes and reviews
+                                  requirements, and consults the customer,
+                                  engineer, QA and UX designer agents before
+                                  deciding.
+  qa               Global        QA engineer for product-team: finds how a
+                                  requirement, design or change can fail and
+                                  turns each case into a test with steps and an
+                                  expected result.
+  ux-designer      Global        UX/UI designer for product-team: describes the
+                                  user's path, every screen state, the words on
+                                  screen and accessibility needs, reusing the
+                                  product's existing patterns.
+exit 0

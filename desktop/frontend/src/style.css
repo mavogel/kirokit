@@ -120,6 +120,9 @@ td.num { font-variant-numeric: tabular-nums; }
 .field .hint { color: var(--muted); font-size: 13px; }
 .field .error { color: var(--warn); font-size: 13px; }
 .actions .error, .row-actions .error { color: var(--warn); font-size: 13px; align-self: center; }
+.quick-result { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; padding: 8px 10px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; }
+.quick-result .path { font: 12px/1.4 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.link-btn { min-height: 24px; border: 0; padding: 0; background: none; color: var(--accent-ink); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .actions { align-items: center; flex-wrap: wrap; }
 .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .welcome { max-width: 520px; }
