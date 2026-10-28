@@ -2,7 +2,7 @@
 # have for kirokit (Go, Node, Task, sops, WebKitGTK 4.1 for the desktop app,
 # xvfb for its smoke start), plus NSIS and 7-Zip to build and list the Windows
 # installer from Linux.
-FROM node:22-bookworm AS node
+FROM node:26-bookworm AS node
 
 FROM golang:1.27-bookworm
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
