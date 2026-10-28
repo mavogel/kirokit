@@ -6,10 +6,10 @@
   },
   "Env": {
     "confluence-mcp": "2.1.0",
-    "context7-mcp": "4.4.2",
+    "context7-mcp": "4.4.4",
     "example-mcp": "1.0.0",
     "jira-mcp": "1.4.2",
-    "mcp-remote": "0.15.1",
+    "mcp-remote": "0.15.2",
     "pipeline-mcp": "3.0.0",
     "snowflake-mcp": "0.9.1"
   },
