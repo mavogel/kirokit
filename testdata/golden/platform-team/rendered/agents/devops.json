@@ -24,12 +24,12 @@
   "mcpServers": {
     "atlassian": {
       "command": "sops",
-      "args": ["exec-env","/kiro-home/kirokit-secrets/platform-team/devops/secrets.enc.yaml","npx -y mcp-remote@0.15.1 https://mcp.atlassian.com/v2/mcp --header 'Authorization:${ATLASSIAN_AUTH}'"],
+      "args": ["exec-env","/kiro-home/kirokit-secrets/platform-team/devops/secrets.enc.yaml","npx -y mcp-remote@0.15.2 https://mcp.atlassian.com/v2/mcp --header 'Authorization:${ATLASSIAN_AUTH}'"],
       "timeout": 60000
     },
     "context7": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@4.4.2"],
+      "args": ["-y", "@upstash/context7-mcp@4.4.4"],
       "timeout": 60000
     }
   }
