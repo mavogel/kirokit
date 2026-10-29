@@ -5,7 +5,7 @@
 
 - `cmd/kirokit/` — cobra commands (`render`, `test`, `update`, `install`, `uninstall`, `sync`, `skills`, `onboard`)
 - `internal/` — `externalskills` (vendored git skills: lock, verify, fetch), `render` (templates + funcs), `quick` (Amazon Quick bundle for `render --quick`, `quick ids`), `golden` (golden-file harness), `install`/`manifest` (install + uninstall tracking), `sopswrap`, `mcpversions`, `kiroconfig` (agent config validation), `scaffold` (`onboard` starter layout)
-- `desktop/` — the Wails desktop app: its own Go module (`desktop/go.mod`), `desktop/frontend/` (vite + xterm.js, tested with `node --test`); `task desktop:test` runs it
+- `desktop/` — the Wails v3 desktop app: its own Go module (`desktop/go.mod`, which pins the `wails3` CLI as a tool), `desktop/frontend/` (vite + xterm.js, tested with `node --test`; `src/api.js` is the only module that reaches Go), Wails' task files in `desktop/Taskfile.yml` and `desktop/build/`; `task desktop:test` runs it. `scripts/desktop-build.sh` stages Wails' output under the names CI and GoReleaser read (`desktop/build/bin/`)
 - Ships for macOS, Linux and Windows (amd64, arm64). Per-OS code lives in build-tagged `*_unix.go`/`*_windows.go` pairs (`desktop/terminal`, `desktop/procgroup_*`, `internal/dirlink`) or in functions taking the OS name (`desktop/platform.go`), so every branch is tested on any machine
 - `scripts/linux-docker.sh <command>` — runs a command in a container mirroring CI's Ubuntu runner (also builds the Windows setup programs with `env GOOS=windows task desktop:build`)
 - `scripts/showcase/` — `task showcase` re-records the README showcase (`assets/kirokit-showcase.gif` and `.mp4`) from the real CLI, Kiro IDE, kirocrew and app; see CONTRIBUTING "Showcase video"

@@ -28,9 +28,10 @@ test('A skill is labelled as a skill, and an item without owner mentions nobody'
   assert.doesNotMatch(got.body, /Owner|@/);
 });
 
-// Wails' BrowserOpenURL (v2.17, internal/frontend/utils/urlValidator.go)
-// refuses an address holding any of these characters, so the address must
-// percent-encode them, including the ones encodeURIComponent leaves alone.
+// Wails v3's Browser.OpenURL (pkg/application/urlvalidator.go) refuses an
+// address holding ; | ` $ \ < > or whitespace; Wails v2.17 also refused
+// * { } [ ] ( ) ~ !. The address percent-encodes all of them, including the ones
+// encodeURIComponent leaves alone, so issue addresses stay as they were.
 const WAILS_REFUSES = /[;|`$\\<>*{}[\]()~! \t\n\r]/;
 
 test('The address passes the browser opener: no shell metacharacters survive encoding', () => {

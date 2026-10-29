@@ -60,9 +60,9 @@ task build
 
 Run `kirokit` from the repository root: it resolves `teams/`, `global/` and `env/` relative to the working directory, or relative to `KIROKIT_REPO` when that is set.
 
-The CLI builds and tests on macOS, Linux and Windows alike. For the desktop app on Linux, install `libgtk-3-dev` and `libwebkit2gtk-4.1-dev` (Debian/Ubuntu names); on Windows, install [NSIS](https://nsis.sourceforge.io) (`makensis`) and run the tasks from Git Bash. The repository's `.gitattributes` checks every text file out with LF, so goldens, lock hashes and SOPS files stay byte-exact on Windows; keep it that way.
+The CLI builds and tests on macOS, Linux and Windows alike. For the desktop app on Linux, install `libgtk-4-dev` and `libwebkitgtk-6.0-dev` (Debian/Ubuntu names; Wails v3 needs GTK 4.14, so Ubuntu 24.04 or Debian 13 or later); on Windows, install [NSIS](https://nsis.sourceforge.io) (`makensis`) and run the tasks from Git Bash. The repository's `.gitattributes` checks every text file out with LF, so goldens, lock hashes and SOPS files stay byte-exact on Windows; keep it that way.
 
-On a Mac with Docker or OrbStack, `scripts/linux-docker.sh <command>` runs a command in a container that mirrors CI's Ubuntu runner (Go, Node, Task, sops, WebKitGTK 4.1, NSIS), for example `scripts/linux-docker.sh task desktop:test` or `scripts/linux-docker.sh env GOOS=windows task desktop:build` (which builds the Windows setup programs). `LINUX_DOCKER_ARCH=amd64` picks amd64 on Apple silicon.
+On a Mac with Docker or OrbStack, `scripts/linux-docker.sh <command>` runs a command in an Ubuntu 24.04 container that mirrors CI's Ubuntu runner (Go, Node, Task, sops, GTK 4 / WebKitGTK 6.0, NSIS), for example `scripts/linux-docker.sh task desktop:test` or `scripts/linux-docker.sh env GOOS=windows task desktop:build` (which builds the Windows setup programs). `LINUX_DOCKER_ARCH=amd64` picks amd64 on Apple silicon. WebKitGTK 6.0 always sandboxes the page with bubblewrap, which Docker's defaults forbid, so start the built Linux app as a regular user in a container run with `--security-opt seccomp=unconfined --security-opt systempaths=unconfined`, as the Desktop workflow's `linux-distros` job does.
 
 
 ## Repository layout
@@ -71,7 +71,7 @@ On a Mac with Docker or OrbStack, `scripts/linux-docker.sh <command>` runs a com
 |------|----------|
 | `cmd/kirokit/` | cobra commands |
 | `internal/` | the implementation: `render`, `quick` (Amazon Quick bundle and ids), `golden`, `install`, `manifest`, `externalskills`, `sopswrap`, `mcpversions`, `kiroconfig`, `scaffold` |
-| `desktop/` | the Wails desktop app (its own Go module, with a vite + xterm.js frontend) |
+| `desktop/` | the Wails v3 desktop app (its own Go module, with a vite + xterm.js frontend; `desktop/Taskfile.yml` and `desktop/build/` hold Wails' build and packaging files) |
 | `teams/<team>/` | template sources (`*.tmpl`, double extension) |
 | `global/steerings/` | steerings shared between teams |
 | `env/mcp-versions.yaml` | central MCP server version pins |
@@ -95,7 +95,7 @@ task ci             # build + vet + lint + test, matching .github/workflows/ci.y
 task desktop:test   # desktop frontend build + node tests, then vet and test the desktop module
 ```
 
-CI runs build, vet and tests on Ubuntu, Windows and macOS (lint and `node scripts/sync-agent-assets.mjs --check` on Ubuntu), with sops installed and `KIROKIT_REQUIRE_SOPS=1`, so the SOPS launch test (`cmd/kirokit/commands/install_sops_test.go`) runs everywhere; locally it skips without `sops`. The Desktop workflow runs `task desktop:test`, `task desktop:build` and a smoke start (`KIROKIT_DESKTOP_SMOKE=1` makes the app quit once its page has loaded) on all three, and with the GoReleaser Pro key also each system's part of the release as a snapshot. `task ci` must pass before you open a pull request. If you touch `desktop/`, run `task desktop:test` as well. Tests that need a Unix shell, zsh or execute bits skip on Windows; give a Windows counterpart where the behaviour exists there.
+CI runs build, vet and tests on Ubuntu, Windows and macOS (lint and `node scripts/sync-agent-assets.mjs --check` on Ubuntu), with sops installed and `KIROKIT_REQUIRE_SOPS=1`, so the SOPS launch test (`cmd/kirokit/commands/install_sops_test.go`) runs everywhere; locally it skips without `sops`. The Desktop workflow runs `task desktop:test`, `task desktop:build` and a smoke start (`KIROKIT_DESKTOP_SMOKE=1` makes the app quit once its page has loaded and answered a call to Go) on all three, starts the Linux app on each supported distribution (`linux-distros`), installs the new Windows setup program over the last release's and checks it replaced it, and with the GoReleaser Pro key also runs each system's part of the release as a snapshot. `task ci` must pass before you open a pull request. If you touch `desktop/`, run `task desktop:test` as well. Tests that need a Unix shell, zsh or execute bits skip on Windows; give a Windows counterpart where the behaviour exists there.
 
 Add or extend tests for changed behaviour. For bug fixes, a test that fails before your change and passes after it is the best evidence.
 
@@ -108,7 +108,7 @@ brew install tmux asciinema agg ffmpeg node
 task showcase   # scripts/showcase/record.sh; --keep leaves /tmp/kirokit-demo for inspection
 ```
 
-It also needs Google Chrome and Kiro IDE in `/Applications`, `kirocrew` on `PATH`, a signed-in `kiro-cli`, the SOPS age key at its default location (or `SOPS_AGE_KEY_FILE`), network access to github.com, and free ports 34115, 5173 and 34117 (no `task desktop:dev` or kirocrew gateway running). The CLI scene installs `product-team` into the demo Kiro home and renders its Quick bundle; Kiro IDE then opens a window on a fresh profile with that Kiro home and your existing Kiro sign-in, and kirocrew runs its gateway on a throwaway home that links to kiro-cli's sign-in folder. The run types into a real Kiro session but never sends a chat message. It refuses to write `assets/` if the recorded text shows your home path, user name or git email, if the GIF exceeds 10 MB or the MP4 6 MB, or if the cut falls outside 30 to 90 seconds.
+It also needs Google Chrome and Kiro IDE in `/Applications`, `kirocrew` on `PATH`, a signed-in `kiro-cli`, the SOPS age key at its default location (or `SOPS_AGE_KEY_FILE`), network access to github.com, and free ports 34115 and 34117 (no kirokit app server or kirocrew gateway running). The app scene runs a Wails server build of the app (`scripts/showcase/app-server.sh`) that listens on 127.0.0.1:34115 only, and drives it in headless Chrome. The CLI scene installs `product-team` into the demo Kiro home and renders its Quick bundle; Kiro IDE then opens a window on a fresh profile with that Kiro home and your existing Kiro sign-in, and kirocrew runs its gateway on a throwaway home that links to kiro-cli's sign-in folder. The run types into a real Kiro session but never sends a chat message. It refuses to write `assets/` if the recorded text shows your home path, user name or git email, if the GIF exceeds 10 MB or the MP4 6 MB, or if the cut falls outside 30 to 90 seconds.
 
 `node --test scripts/showcase/` tests the recorder's own checks, caption timing and error paths without recording anything (about 40 s; the tests that need tmux, ffmpeg, Chrome or Kiro IDE skip without them).
 
