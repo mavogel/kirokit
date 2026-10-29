@@ -1,0 +1,16 @@
+Debian 12 (bookworm) cannot build kirokit-desktop on Wails v3.0.0 — measured 2026-10-29
+Container: scripts/linux-docker.sh with base golang:1.27-bookworm and libgtk-4-dev libwebkitgtk-6.0-dev
+
+$ pkg-config --modversion gtk4 webkitgtk-6.0
+4.8.3
+2.50.6
+
+$ task desktop:build   (first compiler errors)
+/go/pkg/mod/github.com/wailsapp/wails/v3@v3.0.0/pkg/application/linux_cgo.go:1975:5: could not determine what C.add_file_filter refers to
+/go/pkg/mod/github.com/wailsapp/wails/v3@v3.0.0/pkg/application/linux_cgo.go:785:25: could not determine what C.gdk_monitor_get_scale refers to
+/go/pkg/mod/github.com/wailsapp/wails/v3@v3.0.0/pkg/application/linux_cgo.go:1412:5: could not determine what C.gtk_css_provider_load_from_string refers to
+/go/pkg/mod/github.com/wailsapp/wails/v3@v3.0.0/pkg/application/linux_cgo.go:1998:4: could not determine what C.gtk_file_dialog_set_accept_label refers to
+/go/pkg/mod/github.com/wailsapp/wails/v3@v3.0.0/pkg/application/linux_cgo.go:1991:4: could not determine what C.gtk_file_dialog_set_initial_folder refers to
+/go/pkg/mod/github.com/wailsapp/wails/v3@v3.0.0/pkg/application/linux_cgo.go:1984:4: could not determine what C.gtk_file_dialog_set_initial_name refers to
+
+Wails v3.0.0's GTK 4 code calls gtk_file_dialog_* (GTK 4.10), gtk_css_provider_load_from_string (4.12) and gdk_monitor_get_scale (4.14), so it needs GTK 4.14 or later. Debian 12 has GTK 4.8: debian:12 is dropped from the supported list and the distro check.

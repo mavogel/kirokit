@@ -1,0 +1,17 @@
+Linux app on Wails v3 — Ubuntu 24.04 container (scripts/linux-docker.Dockerfile), arm64, 2026-10-29
+
+4.14.5
+2.52.6
+built desktop/build/bin/kirokit-desktop for linux/arm64 (version 0.8.1-7-gc2eacbd-dirty)
+	libwebkitgtk-6.0.so.4 => /lib/aarch64-linux-gnu/libwebkitgtk-6.0.so.4
+	libgtk-4.so.1 => /lib/aarch64-linux-gnu/libgtk-4.so.1
+
+Smoke start as root in the default container: SIGTRAP after
+  bwrap: Creating new namespace failed: Operation not permitted
+  ** ERROR **: Connection: failed to receive credentials
+WebKitGTK 6.0 always runs its web process in a bubblewrap sandbox. Docker's default seccomp profile and masked /proc
+forbid that sandbox, and as root bwrap needs CAP_SYS_ADMIN. A desktop session has neither limit.
+
+$ docker run --rm --security-opt seccomp=unconfined --security-opt systempaths=unconfined -v $PWD:/src:ro kirokit-linux-check \
+    bash -c 'useradd -m tester && su tester -c "cd && KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a /src/desktop/build/bin/kirokit-desktop"'
+smoke exit 0 after 1s

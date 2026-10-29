@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 14 of 14 tasks · 6 of 6 slices
 
-Building now: started 29 Oct, 08:01, 46 min so far.
+Built: started 29 Oct, 08:01.
 <!-- /ql:summary -->
 
 ## Slices
@@ -24,7 +24,26 @@ Building now: started 29 Oct, 08:01, 46 min so far.
 ## Delivered
 
 <!-- ql:delivered -->
-Written when the last task is ticked.
+Delivered 29 Oct, 08:49
+
+**Built** · 6
+- The app starts and works on Wails v3 on macOS · slice 1 · 3 tasks
+- The app has a native menu on every system · slice 2 · 2 tasks
+- Linux on GTK 4 and Windows setup programs build with Wails v3 · slice 3 · 2 tasks
+- CI and the release build, smoke-start and check the v3 app on every system · slice 4 · 2 tasks
+- Developer commands and the showcase work on Wails v3 · slice 5 · 2 tasks
+- 1 more slices · 6 of 6 built
+
+**Verified** · 3
+- Project checks passed · 6 of 6 · recorded
+- Security review · done · nothing severe in the change
+- Second opinion · done · 1 finding
+
+**Left** · 4
+- Independent review · Review · not done
+- Fix rounds · Fix · not done
+- Open each menu of the built macOS app (desktop/build/bin/kirokit.app) and check: kirokit (About, Settings…, Services, Hide, Hide Others, Show All, Quit), Edit, Window, Help (kirokit documentation, Report a problem with kirokit…); ⌘, opens Settings; Help entries open the docs page and the new-issue form · needs you · T5
+- Push this branch and open its pull request so the Desktop workflow runs (Ubuntu 24.04, Windows, macOS smoke starts, the linux-distros job and the Windows install-over-last-release check), then run the Release workflow by hand as a dry run · needs you · T8
 <!-- /ql:delivered -->
 
 ## Decided while building
@@ -42,6 +61,7 @@ Written when the last task is ticked.
 - Slice 5 · `task desktop:dev` failed twice before it worked, and both causes are fixed: a universal `desktop/bin/kirokit` left by `task desktop:build` cannot be overwritten by Go (`scripts/desktop-build.sh` now removes `desktop/bin/` once it has staged its output), and vite bound only `[::1]:9245` while Wails' dev proxy dials `127.0.0.1` (the dev task now passes `--host 127.0.0.1`). The dev window then showed the Teams page from the test clone (records/macos-desktop-dev.png); nothing you approved changes.
 - Slice 5 · `task desktop:dev` builds the pinned `wails3` into `desktop/build/dev-bin/tools/` (already gitignored) and puts it first on `PATH`; the staged release app in `desktop/build/bin/` now uses its own bundled CLI even when started from `desktop/`, since `wails3 dev` no longer runs from there; nothing you approved changes.
 - Slice 5 · `app-server.sh` also fails when the port's listener is another process (it checks the listener's pid, not only its address), so a stray server on 34115 cannot pass for the app; its server build was driven in headless Chrome to the first-launch page with no page errors; nothing you approved changes.
+- Slice 5 · T10's Files add desktop/build/Taskfile.yml (vite binds 127.0.0.1, which Wails' dev proxy dials) and scripts/desktop-build.sh (removes Wails' intermediate desktop/bin after staging, since Go cannot overwrite the universal binary there when wails3 dev builds). The 'Decided while outlining' note on menu:settings now says main.js checks setup() itself: sidebar.select does not refuse while the first-launch page shows.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -61,6 +81,12 @@ Written when the last task is ticked.
 - T12 · f61b5e7 · `node scripts/check-doc-links.mjs && node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.3s
 - T13 · f61b5e7 · `cd desktop/frontend && node --test src/pages/feedback.test.js` · exit 0 · 0.3s
 - T14 · f61b5e7 · `! git grep -nE 'wailsapp/wails/v2|window\.go\b|window\.runtime|go tool wails |wails dev|wails build' -- ':!docs/plans/' && task ci && task desktop:test` · exit 0 · 41.6s
+- all · a4dbabc · `task desktop:test` · exit 0 · 10.2s
+- all · a4dbabc · `task ci` · exit 0 · 9.8s
+- all · a4dbabc · `node --test scripts/showcase/` · exit 0 · 76.9s
+- all · a4dbabc · `task desktop:build` · exit 0 · 9.4s
+- all · a4dbabc · `node scripts/check-doc-links.mjs` · exit 0 · 0.1s
+- all · a4dbabc · `node scripts/sync-agent-assets.mjs --check` · exit 0 · 0.1s
 
 ## Known limits
 
@@ -86,6 +112,7 @@ Written when the last task is ticked.
 - T10 (tactical): `task desktop:dev` failed twice before it worked, and both causes are fixed: a universal `desktop/bin/kirokit` left by `task desktop:build` cannot be overwritten by Go (`scripts/desktop-build.sh` now removes `desktop/bin/` once it has staged its output), and vite bound only `[::1]:9245` while Wails' dev proxy dials `127.0.0.1` (the dev task now passes `--host 127.0.0.1`). The dev window then showed the Teams page from the test clone (records/macos-desktop-dev.png); nothing you approved changes.
 - T10 (tactical): `task desktop:dev` builds the pinned `wails3` into `desktop/build/dev-bin/tools/` (already gitignored) and puts it first on `PATH`; the staged release app in `desktop/build/bin/` now uses its own bundled CLI even when started from `desktop/`, since `wails3 dev` no longer runs from there; nothing you approved changes.
 - T11 (tactical): `app-server.sh` also fails when the port's listener is another process (it checks the listener's pid, not only its address), so a stray server on 34115 cannot pass for the app; its server build was driven in headless Chrome to the first-launch page with no page errors; nothing you approved changes.
+- T10 (amended): T10's Files add desktop/build/Taskfile.yml (vite binds 127.0.0.1, which Wails' dev proxy dials) and scripts/desktop-build.sh (removes Wails' intermediate desktop/bin after staging, since Go cannot overwrite the universal binary there when wails3 dev builds). The 'Decided while outlining' note on menu:settings now says main.js checks setup() itself: sidebar.select does not refuse while the first-launch page shows.
 
 ## Plan amended
 
@@ -94,5 +121,11 @@ Written when the last task is ticked.
 T6's smoke start runs as a regular user in a container with seccomp and /proc unconfined: WebKitGTK 6.0 always sandboxes its web process with bubblewrap, which Docker's defaults forbid (records/linux-ubuntu2404-smoke.txt). The Linux container moves to Ubuntu 24.04 because Wails v3 needs GTK 4.14 and Debian 12 has 4.8 (records/linux-debian12-gtk4.txt); debian:12 leaves the distro list as the Plan's measure-and-drop rule says (records/linux-distro-smoke.txt).
 
 Why: the first Linux build in the old Debian 12 container failed to compile (`gtk_file_dialog_*`, `gtk_css_provider_load_from_string`, `gdk_monitor_get_scale`: GTK 4.10–4.14 APIs), and the Ubuntu 24.04 build then fails on Debian 12 with `undefined symbol: gdk_monitor_get_scale`. Ubuntu 24.04 (GTK 4.14.5) is therefore both the oldest system the app runs on and the release's build host, as the Plan's Assumptions expected (Ubuntu 24.04+ and Debian 13). The smoke start as root in a default container crashes with `bwrap: Creating new namespace failed` and then `Can't mount proc`, because WebKitGTK 6.0 cannot turn its sandbox off; running as a regular user with seccomp and `/proc` unconfined (what a desktop session has) passes in 1 s with the sandbox on. Disabling WebKit's sandbox was not used. The CI distro job uses the same container settings.
+
+Amended by the agent on 2026-10-29; changed 04-outline.md.
+
+### T10 · amended
+
+T10's Files add desktop/build/Taskfile.yml (vite binds 127.0.0.1, which Wails' dev proxy dials) and scripts/desktop-build.sh (removes Wails' intermediate desktop/bin after staging, since Go cannot overwrite the universal binary there when wails3 dev builds). The 'Decided while outlining' note on menu:settings now says main.js checks setup() itself: sidebar.select does not refuse while the first-launch page shows.
 
 Amended by the agent on 2026-10-29; changed 04-outline.md.

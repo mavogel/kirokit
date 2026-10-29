@@ -1,0 +1,12 @@
+$ goreleaser check
+  • checking                                  path=.goreleaser.yaml
+  • 1 configuration file(s) validated
+  • thanks for using GoReleaser Pro!
+$ actionlint desktop.yaml release.yaml
+/opt/homebrew/bin/actionlint
+actionlint exit=0
+$ yq deps the linux-distros job reads
+libgtk-4-1 libwebkitgtk-6.0-4
+$ gh release view (latest) windows setup asset
+v0.8.1
+kirokit-desktop_0.8.1_windows_amd64-setup.exe

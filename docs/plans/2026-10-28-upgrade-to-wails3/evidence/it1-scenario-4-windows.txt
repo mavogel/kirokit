@@ -1,0 +1,35 @@
+$ scripts/linux-docker.sh env GOOS=windows task desktop:build  (scratch clone at a4dbabc) -> exit 0
+built desktop/build/bin/installers (version 0.8.1-12-ga4dbabc):
+kirokit-desktop_0.8.1-12-ga4dbabc_windows_amd64-setup.exe
+kirokit-desktop_0.8.1-12-ga4dbabc_windows_arm64-setup.exe
+
+desktop/build/bin/cli/windows_amd64/kirokit.exe
+desktop/build/bin/cli/windows_arm64/kirokit.exe
+desktop/build/bin/installers/kirokit-desktop_0.8.1-12-ga4dbabc_windows_amd64-setup.exe
+desktop/build/bin/installers/kirokit-desktop_0.8.1-12-ga4dbabc_windows_arm64-setup.exe
+desktop/build/bin/kirokit-desktop-amd64.exe
+desktop/build/bin/kirokit-desktop-arm64.exe
+desktop/build/bin/kirokit-desktop-amd64.exe:     PE32+ executable (GUI) x86-64, for MS Windows
+desktop/build/bin/kirokit-desktop-arm64.exe:     PE32+ executable (GUI) Aarch64, for MS Windows
+desktop/build/bin/cli/windows_amd64/kirokit.exe: PE32+ executable (console) x86-64, for MS Windows
+desktop/build/bin/cli/windows_arm64/kirokit.exe: PE32+ executable (console) Aarch64, for MS Windows
+== 7z l kirokit-desktop_0.8.1-12-ga4dbabc_windows_amd64-setup.exe
+Listing archive: /src/desktop/build/bin/installers/kirokit-desktop_0.8.1-12-ga4dbabc_windows_amd64-setup.exe
+Path = /src/desktop/build/bin/installers/kirokit-desktop_0.8.1-12-ga4dbabc_windows_amd64-setup.exe
+2026-10-29 08:07:12 .....                   1694774  $PLUGINSDIR/webview2bootstrapper/MicrosoftEdgeWebview2Setup.exe
+2026-10-29 08:07:12 .....                   4783348  kirokit-desktop.exe
+2026-10-29 08:07:12 .....                   2573630  bin/kirokit.exe
+                    .....                     38032  uninstall.exe
+sha app  : 9627a1de0d8efa13 vs build 9627a1de0d8efa13
+sha cli  : 4b4d53f8517a8263 vs build 4b4d53f8517a8263
+== 7z l kirokit-desktop_0.8.1-12-ga4dbabc_windows_arm64-setup.exe
+Listing archive: /src/desktop/build/bin/installers/kirokit-desktop_0.8.1-12-ga4dbabc_windows_arm64-setup.exe
+Path = /src/desktop/build/bin/installers/kirokit-desktop_0.8.1-12-ga4dbabc_windows_arm64-setup.exe
+2026-10-29 08:07:12 .....                   1694774  $PLUGINSDIR/webview2bootstrapper/MicrosoftEdgeWebview2Setup.exe
+2026-10-29 08:07:16 .....                   4296055  kirokit-desktop.exe
+2026-10-29 08:07:16 .....                   2276862  bin/kirokit.exe
+                    .....                     38032  uninstall.exe
+sha app  : dbe9459179ff897d vs build dbe9459179ff897d
+sha cli  : b1d7c60a019cd53d vs build b1d7c60a019cd53d
+== makensis -PPO identity (amd64)
+InstallDir "$PROGRAMFILES64\mavogel\kirokit"

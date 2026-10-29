@@ -1,0 +1,45 @@
+Scenario 2 · Independent review, iteration 1 · tree a4dbabc (no code changes in the checkout)
+
+Step 1 on the built native app (desktop/build/bin/kirokit.app, HOME=<scratch>/home.Mb73):
+  window opened on the first-launch page "Set up kirokit" — evidence/it1-scenario-2-step-1.png
+  menu bar while it was frontmost: kirokit · Edit · Window · Help — evidence/it1-menu-bar.png
+  System Events refused menu inspection and synthetic clicks ("osascript is not allowed assistive access", -1719),
+  so steps 2-7 were driven in headless-free Chrome (chrome-devtools, isolated context) against the same page and
+  Go code through the loopback server build: scripts/showcase/app-server.sh <scratch>/srv <scratch>/h2 (pid 14012,
+  127.0.0.1:34115, throwaway HOME, dev CLI desktop/build/dev-bin/kirokit built from this tree).
+
+Probe past the script: Clone with an empty address
+  -> POST /wails/runtime main.App.Clone [""] -> 422 {"message":"Use an https, ssh or file address, git@host:path, or an absolute path","kind":"RuntimeError"}
+  -> page shows that sentence under the address field (aria invalid=true). Go's error text reaches the page unchanged.
+
+Step 2: Clone https://github.com/mavogel/kirokit, Newest release
+  kirokit tab streamed git's progress and "kirokit sync --latest-tag ... checked out v0.8.1 at cfa8e94";
+  page moved to the version step and, after Continue, to Teams (3 teams) without a reload — evidence/it1-scenario-2-step-2.png
+Step 3: Install from Teams -> the prerequisites dialog: SOPS found, Kiro CLI found, "Decryption key missing".
+  Not continued: it needs the user's SOPS age key, which was not linked into a throwaway home.
+  Instead, in the zsh tab: `kirokit install data-team; echo INSTALL-EXIT=$?`
+  -> "installed data-team into <scratch>/h2/.kiro", INSTALL-EXIT=0, and data-team's badge changed from
+     "not installed" to "installed" (Last change 29 Oct 2026, 09:02) with no reload (installs:changed).
+Step 4: zsh tab `echo hi-from-$((40+2))` -> hi-from-42 (the shell's arithmetic, so input reached the PTY)
+  `echo SIZE-A $(stty size)` -> "SIZE-A 9 120"; page resized to 900x700; `echo SIZE-B $(stty size)` -> "SIZE-B 9 81"
+  — evidence/it1-scenario-2-step-3-4.png
+Step 5: Settings, Version v0.8.0, Update -> kirokit tab "▸ kirokit sync data-team --branch v0.8.0 / checked out v0.8.0 at 3fd134d /
+  synced data-team"; "In use: tag v0.8.0 at 3fd134d" (ref:done). Back to Newest release, Update ->
+  "In use: newest release v0.8.1 at cfa8e94" — evidence/it1-scenario-2-step-5.png
+Step 6: Export for Quick on product-team -> kirokit tab "rendered Quick bundle for product-team: 1 skills, 1 agents";
+  page "Quick bundle ready: 1 skill, 1 agent." with Show folder; Show folder -> no error, and a Finder window
+  titled <scratch>/h2/Library/Application Support/kirokit-desktop/quick/product-team appeared (CGWindowList).
+Step 7: Agents, "Give feedback on customer" -> POST /wails/runtime object 9 (Browser) OpenURL
+  https://github.com/mavogel/kirokit/issues/new?title=Feedback%3A%20product-team%20agent%20customer&... -> 200 {}; no error on the page.
+
+Console: Wails' "Browser Environment Detected" notice, favicon 404, and the expected 422 above; nothing else.
+Server log: one ERR line, the refused empty Clone above; no panic.
+Server stopped: kill -TERM -- -14012; nothing listens on 34115 afterwards.
+
+Native webview, Go -> page events (pid 21386, the built kirokit.app, HOME=<scratch>/h2 from above):
+  the window opened straight on Teams with the saved clone and settings (data-team installed)
+  — evidence/it1-native-events-before.png
+  from outside the app: kirokit install platform-team (same HOME, KIRO_HOME, KIROKIT_REPO) -> exit 0
+  ("uninstalled data-team ... installed platform-team"); 5 s later, with no input to the app, the window shows
+  data-team "not installed" and platform-team "installed, Last change 09:04" (installs:changed through the
+  native bridge) — evidence/it1-native-events-after.png. App log empty (no errors). Stopped with kill 21386.

@@ -1,0 +1,19 @@
+$ (scratch clone a4dbabc) task desktop:build && scripts/desktop-prebuilt.sh && goreleaser release --snapshot --clean --split   (darwin part) -> exit 0
+dist/darwin/dmg/kirokit-desktop_amd64/kirokit-desktop_0.8.1-SNAPSHOT-a4dbabc_darwin_amd64.dmg
+dist/darwin/dmg/kirokit-desktop_arm64/kirokit-desktop_0.8.1-SNAPSHOT-a4dbabc_darwin_arm64.dmg
+$ hdiutil attach arm64 dmg
+hdiutil: WARNING: 'hdiutil attach -nobrowse -readonly -mountpoint ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse --readOnly --mountPoint ...' instead.
+/private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/96b202a8-c0a2-4e01-baf6-713320cda957/scratchpad/mnt.H624
+/private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/96b202a8-c0a2-4e01-baf6-713320cda957/scratchpad/mnt.H624/kirokit.app
+/private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/96b202a8-c0a2-4e01-baf6-713320cda957/scratchpad/mnt.H624/Applications
+x86_64 arm64
+bin
+iconfile.icns
+bundled CLI: kirokit 12.4.0
+/private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/96b202a8-c0a2-4e01-baf6-713320cda957/scratchpad/mnt.H624/kirokit.app: code has no resources but signature indicates they must be present
+$ smoke start of the app inside the DMG
+exit=0
+hdiutil: WARNING: 'hdiutil detach ...' is deprecated. Please use 'diskutil eject ...' instead.
+
+$ same check on the v0.8.1 (Wails v2) release DMG, darwin_arm64
+kirokit.app: code has no resources but signature indicates they must be present  (pre-existing: GoReleaser re-bundles an ad-hoc-signed binary)

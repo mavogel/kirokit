@@ -1,0 +1,27 @@
+$ task desktop:dev   (scratch clone at a4dbabc; HOME=<scratch>/devhome, real Go/npm caches; started in its own session, pid 34227)
+task: [desktop:dev] go build -o desktop/build/dev-bin/kirokit ./cmd/kirokit
+task: [desktop:dev] cd desktop && go build -o build/dev-bin/tools/wails3 github.com/wailsapp/wails/v3/cmd/wails3
+task: [desktop:dev] cd desktop && PATH="$PWD/build/dev-bin/tools:$PATH" wails3 dev -config ./build/config.yml
+task: [darwin:common:install:frontend:deps] npm install
+task: [darwin:build] wails3 tool prepare-macos-output --dir "bin"
+task: [darwin:build] go build -buildvcs=false -gcflags=all="-l" -o "bin/kirokit"
+task: [common:install:frontend:deps] npm install
+task: [common:dev:frontend] npm run dev -- --host 127.0.0.1 --port 9245 --strictPort
+task: [darwin:run] wails3 tool prepare-macos-output --dir "bin"
+task: [darwin:run] test -n "bin" && test -n "kirokit" && rm -rf -- "bin/kirokit.dev.app"
+task: [darwin:run] mkdir -p "bin/kirokit.dev.app/Contents/MacOS"
+task: [darwin:run] mkdir -p "bin/kirokit.dev.app/Contents/Resources"
+task: [darwin:run] cp build/darwin/icons.icns "bin/kirokit.dev.app/Contents/Resources/iconfile.icns"
+task: [darwin:run] cp "bin/kirokit" "bin/kirokit.dev.app/Contents/MacOS"
+task: [darwin:run] cp "build/darwin/Info.dev.plist" "bin/kirokit.dev.app/Contents/Info.plist"
+task: [darwin:run] xattr -cr "bin/kirokit.dev.app"
+task: [darwin:run] codesign --force --deep --sign - "bin/kirokit.dev.app"
+task: [darwin:run] "bin/kirokit.dev.app/Contents/MacOS/kirokit"
+9:10AM INF Build Info: Wails=v3.0.0 Compiler=go1.27.3 -compiler=gc CGO_ENABLED=1 CGO_CXXFLAGS= CGO_LDFLAGS=-mmacosx-version-min=13.0 GOOS=darwin GOARM64=v8.0 -gcflags=all=-l CGO_CFLAGS=-mmacosx-version-min=13.0 CGO_CPPFL
+9:10AM INF AssetServer Info: middleware=true handler=true devServerURL=http://localhost:9245
+9:10AM INF Waiting for frontend dev server to start... url=http://localhost:9245
+9:10AM INF Connected to frontend dev server!
+
+dev app: pid 34487 bin/kirokit.dev.app/Contents/MacOS/kirokit, cwd <clone>/desktop (lsof), so resolveCLIFor puts <clone>/desktop/build/dev-bin/kirokit (built 09:10:06 by the task) first
+window: evidence/it1-desktop-dev.png (first-launch page, throwaway HOME)
+stopped: kill -TERM process groups 34476 34450 34227; nothing left, port 9245 free

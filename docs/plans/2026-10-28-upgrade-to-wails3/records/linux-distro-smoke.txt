@@ -1,0 +1,12 @@
+Distro check of the Linux app (Wails v3, GTK 4 / WebKitGTK 6.0) — arm64, 2026-10-29
+Binary: desktop/build/bin/kirokit-desktop built in the Ubuntu 24.04 container (scripts/linux-docker.Dockerfile).
+Each image: apt-get install libgtk-4-1 libwebkitgtk-6.0-4 xvfb xauth (the .deb's declared dependencies),
+then as a regular user: KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a kirokit-desktop
+(docker run --security-opt seccomp=unconfined --security-opt systempaths=unconfined, see linux-ubuntu2404-smoke.txt)
+
+ubuntu:24.04  smoke exit 0
+ubuntu:26.04  smoke exit 0
+debian:13     smoke exit 0
+debian:12     smoke exit 127 — symbol lookup error: undefined symbol: gdk_monitor_get_scale (GTK 4.8; needs 4.14)
+
+amd64 is measured by the Desktop workflow's distro job in CI.

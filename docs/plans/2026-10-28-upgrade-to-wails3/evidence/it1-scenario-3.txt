@@ -1,0 +1,62 @@
+# github.com/mavogel/kirokit/desktop.test
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/go.o) was built for newer 'macOS' version (13.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000027.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000028.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000029.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000030.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000031.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000032.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000033.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000034.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000035.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000036.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000037.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000038.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000039.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000040.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000041.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000042.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000043.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-3272334650/000044.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+=== RUN   TestMenu_GroupsPerSystem
+=== RUN   TestMenu_GroupsPerSystem/darwin
+=== RUN   TestMenu_GroupsPerSystem/windows
+=== RUN   TestMenu_GroupsPerSystem/linux
+--- PASS: TestMenu_GroupsPerSystem (0.00s)
+    --- PASS: TestMenu_GroupsPerSystem/darwin (0.00s)
+    --- PASS: TestMenu_GroupsPerSystem/windows (0.00s)
+    --- PASS: TestMenu_GroupsPerSystem/linux (0.00s)
+=== RUN   TestMenu_MacAppMenuAndHelp
+--- PASS: TestMenu_MacAppMenuAndHelp (0.00s)
+=== RUN   TestMenu_WindowsAndLinuxFileAndHelp
+=== RUN   TestMenu_WindowsAndLinuxFileAndHelp/windows
+=== RUN   TestMenu_WindowsAndLinuxFileAndHelp/linux
+--- PASS: TestMenu_WindowsAndLinuxFileAndHelp (0.00s)
+    --- PASS: TestMenu_WindowsAndLinuxFileAndHelp/windows (0.00s)
+    --- PASS: TestMenu_WindowsAndLinuxFileAndHelp/linux (0.00s)
+=== RUN   TestMenu_EntriesHaveLabelsActionsAndOneShortcut
+--- PASS: TestMenu_EntriesHaveLabelsActionsAndOneShortcut (0.00s)
+=== RUN   TestMenu_SettingsAsksThePageToOpenSettings
+--- PASS: TestMenu_SettingsAsksThePageToOpenSettings (0.00s)
+=== RUN   TestMenu_HelpOpensTheFixedKirokitAddresses
+--- PASS: TestMenu_HelpOpensTheFixedKirokitAddresses (0.00s)
+=== RUN   TestMenu_OpenFailureIsLogged
+--- PASS: TestMenu_OpenFailureIsLogged (0.00s)
+=== RUN   TestMenu_UnknownActionHasNoHandler
+--- PASS: TestMenu_UnknownActionHasNoHandler (0.00s)
+=== RUN   TestMenu_EveryRoleMapsToAWailsRole
+--- PASS: TestMenu_EveryRoleMapsToAWailsRole (0.00s)
+PASS
+ok  	github.com/mavogel/kirokit/desktop	0.299s
+testing: warning: no tests to run
+PASS
+ok  	github.com/mavogel/kirokit/desktop/terminal	0.227s [no tests to run]
+
+$ GOOS=windows go vet ./... (T5)
+exit=0
+
+Step 2, built macOS app (pid 10837, throwaway HOME): menu bar while frontmost reads  kirokit  Edit  Window  Help  -> evidence/it1-menu-bar.png
+  opening each menu: osascript System Events -> "execution error: osascript is not allowed assistive access. (-1719)"
+Step 3, Cmd+, : CGEvent posted to the app (pid 23497); AXIsProcessTrusted() = false; window stayed on Teams -> evidence/it1-scenario-3-cmd-comma.png
+Steps 4-5 (copy/paste, Help entries) need the same synthetic input: not run.
+Step 6, Linux (container, Xvfb 1280x860, GSK_RENDERER=cairo, regular user): menu bar at the top of the window reads  File  Edit  Window  Help  -> evidence/it1-scenario-3-linux-menu.png

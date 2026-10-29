@@ -1,0 +1,22 @@
+$ scripts/linux-docker.sh task desktop:build  (scratch clone at a4dbabc)
+built desktop/build/bin/kirokit-desktop for linux/arm64 (version 0.8.1-12-ga4dbabc)
+drwxr-xr-x mavogel wheel 128 B  Thu Oct 29 09:05:54 2026 .
+drwxr-xr-x mavogel wheel 288 B  Thu Oct 29 09:05:52 2026 ..
+.rwxr-xr-x mavogel wheel 5.5 MB Thu Oct 29 09:05:54 2026 kirokit
+.rwxr-xr-x mavogel wheel  10 MB Thu Oct 29 09:05:54 2026 kirokit-desktop
+desktop/build/bin/kirokit-desktop: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=9d585360e60e07b0886b9a9a80a909963dc287d7, for GNU/Linux 3.7.0, stripped
+desktop/build/bin/kirokit:         ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, Go BuildID=Er68tU48_fuHVVd0hqtd/0771kdSxH0jfnILHvkzw/4T1jBMc9NF7EOAKWUE_S/97v6TiOVXEcO_gg1RydK, BuildID[sha1]=2af12fceec5869772abdee030e28d1471cbf2df2, stripped
+$ ldd kirokit-desktop | grep gtk/webkit
+	libwebkitgtk-6.0.so.4 => /lib/aarch64-linux-gnu/libwebkitgtk-6.0.so.4 (0x0000ffffae270000)
+	libgtk-4.so.1 => /lib/aarch64-linux-gnu/libgtk-4.so.1 (0x0000ffffad6b0000)
+	libjavascriptcoregtk-6.0.so.1 => /lib/aarch64-linux-gnu/libjavascriptcoregtk-6.0.so.1 (0x0000ffffab4d0000)
+0
+$ smoke start as a regular user (T6 verify command)
+libEGL warning: DRI3 error: Could not get DRI3 device
+libEGL warning: Ensure your X server supports DRI3 to get accelerated rendering
+
+(kirokit-desktop:28): Gtk-WARNING **: 08:06:08.782: Unable to acquire session bus: Failed to execute child process “dbus-launch” (No such file or directory)
+Overriding existing handler for signal 10. Set JSC_SIGNAL_FOR_GC if you want WebKit to use a different signal
+
+** (process:2): WARNING **: 08:06:09.281: Can't connect to a11y bus: Could not connect: No such file or directory
+exit=0 in 1s
