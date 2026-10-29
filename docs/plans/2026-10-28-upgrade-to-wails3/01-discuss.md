@@ -7,10 +7,10 @@ depth: light
 level: engineering
 ui: true
 overrides: []
-stage: verify
-iterations: 0
+stage: review
+iterations: 1
 verification_failures: 0
-gate: null
+gate: review
 created: 1793213936030
 startup_owner: 74d678ebe8123b18
 layout: seven
@@ -22,6 +22,7 @@ review_basis: 6e9e2330c25251f790111e964500f9882ecad656adc2b5487a23cdb263473819
 branch: main
 base: b12c4a00ed9f9bd674f674b57f04554c7f402a1f
 base_ref: main
+judge_runs: 0
 ---
 
 # Upgrade desktop app to Wails v3

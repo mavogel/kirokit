@@ -3,12 +3,19 @@
 ## Summary
 
 <!-- ql:summary -->
-Independent review is running.
+6 of 8 points assessed · 3 passed
+
+Unverified after 1 judge run: 12 items remain unresolved. No acceptance recorded.
 <!-- /ql:summary -->
 
 ## Open items
 
 <!-- ql:open-items -->
+- **Unverified:** Point 5 · Release builds keep their formats and names on all three systems · CI's smoke starts and the Linux packages were not run here. The branch is not pushed (main is 8 commits ahead), so the Desktop and Release workflows never ran on it, and no `.deb`/`.rpm` was packaged. Shown locally: the universal `kirokit.app` (minimum 13.0, CLI inside) in both `kirokit-desktop_<v>_darwin_<arch>.dmg` from a GoReleaser snapshot, with a smoke start exit 0 from the DMG (); `kirokit-desktop` and `kirokit` for Linux with smoke exit 0 (); one `kirokit-desktop_<v>_windows_<arch>-setup.exe` per architecture (). Push the branch and let the Desktop workflow and a Release dry run finish
+- **Unverified:** Point 6 · Existing installs upgrade in place · Installing over the last Windows release runs only in CI, which has not run. The new installer's identity matches v2's in the source (key `mavogelkirokit` under HKLM, 64-bit view, folder `$PROGRAMFILES64\mavogel\kirokit`, `kirokit-desktop.exe`), and `v0.8.1` has a Windows amd64 setup asset for the check to use (). On macOS the data folder is unchanged and the new app opened straight on a saved clone and settings, but no install over the v0.8.1 app was done
+- **Unverified:** Point 7 · The developer commands and the showcase still work · `task showcase` was not run, because it needs your signed-in Kiro IDE and kiro-cli, kirocrew and your SOPS age key. The rest holds: `task desktop:test`, `task desktop:build` and `task ci` receipts pass, and `task desktop:dev` built the pinned `wails3`, started vite and opened the window from `desktop/bin/kirokit.dev.app` with the fresh dev-bin CLI (,). The changed showcase step, `app-server.sh`, served the app on 127.0.0.1:34115 and Chrome drove it end to end (). The docs name `wails3`, the menu, GTK 4 and the measured distros
+- **Unverified:** Renovate can update Wails' Go module and the page's runtime apart. No rule groups `github.com/wailsapp/wails/v3` with `@wailsio/runtime`, so a bump of one alone can break the bridge until a smoke start catches it
+- **Unverified:** The app inside each DMG fails a strict signature check. The v0.8.1 release DMG fails the same way, so this predates the change: GoReleaser re-bundles an ad-hoc-signed binary
 - **Need:** T5 · Open each menu of the built macOS app (desktop/build/bin/kirokit.app) and check: kirokit (About, Settings…, Services, Hide, Hide Others, Show All, Quit), Edit, Window, Help (kirokit documentation, Report a problem with kirokit…); ⌘, opens Settings; Help entries open the docs page and the new-issue form · queued for Review
 - **Need:** T8 · Push this branch and open its pull request so the Desktop workflow runs (Ubuntu 24.04, Windows, macOS smoke starts, the linux-distros job and the Windows install-over-last-release check), then run the Release workflow by hand as a dry run · queued for Review
 - **Only you can confirm:** The menu reads right on each system
@@ -25,35 +32,44 @@ Independent review is running.
 - **Project checks** · QualityLayer itself · no agent
   - State: done
   - Result: done · 6 checks
-- **Independent review** · Claude Code · Opus 5.5 · never saw the build
-  - State: running
-  - Result: not yet
+- **Independent review** · fresh helper
+  - State: fail
+  - Result: failed · 3 of 6 points
 - **Second opinion** · Codex · GPT-6.1 Sol · another vendor
   - State: done
-  - Result: done · 1 finding
+  - Result: done · 1 finding · 1 fix awaiting checks
   - Why it runs here: Runs because the change crosses a trust boundary: one new crossing: the showcase-only server build serves the app's bound methods, including, over HTTP on while runs, Shipped builds keep, the Plan says it is risky: new dependency (Wails v3.0.0 and the npm package replace v2), outside system (the operating systems' packaging: NSIS, app bundles, GTK 4 and slice 3 is marked risky.
 - **Fix rounds** · the build session
-  - State: waiting
-  - Result: not yet
+  - State: done
+  - Result: done · none needed
 <!-- /ql:lanes -->
 
 ## Done means, checked
 
 <!-- ql:proof -->
-Not checked yet.
+| Done means | Proof | |
+|---|---|---|
+| 1. The app runs on Wails v3 with no Wails v2 left | The module graph holds only `github.com/wailsapp/wails/v3 v3.0.0`, no tracked file outside `docs/plans/` names Wails v2, `go tool wails3 version` prints v3.0.0, and the built app's smoke start (which needs the new `smoke:ready`) exits 0 in 1 s,. | passed |
+| 2. Every screen and action works as it does today | Does the app feel the same to use? Every action in scenario 2 worked as before (clone, version step, Teams, both terminals, tag switch, Export for Quick, Open folder, the report link); only you can judge the feel, so use the built app for a while. | yours to confirm |
+| 3. Both terminal tabs stream live and take input as before | The kirokit tab streamed the clone and both `kirokit sync` runs with their ends; the zsh tab ran typed input (`echo hi-from-$((40+2))` → `hi-from-42`) and `stty size` went from 120 to 81 columns after the window shrank. | passed |
+| 4. Live updates still arrive without a reload | ![Install records changing on disk updated the native window with no input (,); a finished clone and both branch/tag switches updated the page by themselves](evidence/it1-native-events-before.png) | passed |
+| 5. Release builds keep their formats and names on all three systems | Environment: CI's smoke starts and the Linux packages were not run here. The branch is not pushed (main is 8 commits ahead), so the Desktop and Release workflows never ran on it, and no `.deb`/`.rpm` was packaged. Shown locally: the universal `kirokit.app` (minimum 13.0, CLI inside) in both `kirokit-desktop_<v>_darwin_<arch>.dmg` from a GoReleaser snapshot, with a smoke start exit 0 from the DMG (); `kirokit-desktop` and `kirokit` for Linux with smoke exit 0 (); one `kirokit-desktop_<v>_windows_<arch>-setup.exe` per architecture (). Push the branch and let the Desktop workflow and a Release dry run finish. | missing |
+| 6. Existing installs upgrade in place | Environment: installing over the last Windows release runs only in CI, which has not run. The new installer's identity matches v2's in the source (key `mavogelkirokit` under HKLM, 64-bit view, folder `$PROGRAMFILES64\mavogel\kirokit`, `kirokit-desktop.exe`), and `v0.8.1` has a Windows amd64 setup asset for the check to use (). On macOS the data folder is unchanged and the new app opened straight on a saved clone and settings, but no install over the v0.8.1 app was done. | missing |
+| 7. The developer commands and the showcase still work | Environment: `task showcase` was not run, because it needs your signed-in Kiro IDE and kiro-cli, kirocrew and your SOPS age key. The rest holds: `task desktop:test`, `task desktop:build` and `task ci` receipts pass, and `task desktop:dev` built the pinned `wails3`, started vite and opened the window from `desktop/bin/kirokit.dev.app` with the fresh dev-bin CLI (,). The changed showcase step, `app-server.sh`, served the app on 127.0.0.1:34115 and Chrome drove it end to end (). The docs name `wails3`, the menu, GTK 4 and the measured distros. | missing |
+| 8. The app has a native menu with the usual entries | ![Does the menu read right on each system? On macOS the menu bar reads kirokit, Edit, Window, Help (); on Linux the window shows File, Edit, Window, Help (). The menus could not be opened here, so open each one on macOS, Windows and Linux, press ⌘, / Ctrl+, and try both Help entries](evidence/it1-menu-bar.png) | yours to confirm |
 <!-- /ql:proof -->
 
 ## Fix rounds
 
 <!-- ql:fix-rounds -->
-None so far.
+- Round 1 · 8 points still open
 <!-- /ql:fix-rounds -->
 
 ## Second opinion
 
 <!-- ql:reviews -->
-**Second opinion · Codex, GPT-6.1 Sol** · asked for 1 change · 1 finding: 0 taken, 0 kept.
-- [.github/workflows/desktop.yaml:100](/Users/mavogel/Developer/projects/kirokit/.github/workflows/desktop.yaml:100): Check `gh release view`’s exit status before treating empty output as no installer. · not answered yet
+**Second opinion · Codex, GPT-6.1 Sol** · asked for 1 change · 1 finding: 1 taken, 0 kept.
+- [.github/workflows/desktop.yaml:100](/Users/mavogel/Developer/projects/kirokit/.github/workflows/desktop.yaml:100): Check `gh release view`’s exit status before treating empty output as no installer. · Taken: the step now asks `gh release list` for the latest published release and `gh release view <tag>` for its assets, and throws when either exits non-zero; only an empty release list (or a release without a Windows setup program) skips the check with a notice. Both queries return `v0.8.1` and `kirokit-desktop_0.8.1_windows_amd64-setup.exe` against mavogel/kirokit; `actionlint` passes.
 <!-- /ql:reviews -->
 
 ## Checks
@@ -90,6 +106,8 @@ Checked and clear: the server tag is absent from every shipped build (`-tags pro
 ## Verification
 
 ### Iteration 1
+
+**Revision:** 837556288739971e93951573981b7bb83ca27409d4a75bdadea9c8d3b4a0d8d1
 
 **Assignment:** ca305293-00d5-48f1-8c27-d493bcc47ec7
 **Judge:** fresh helper

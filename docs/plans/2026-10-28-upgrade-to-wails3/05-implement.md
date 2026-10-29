@@ -34,14 +34,19 @@ Delivered 29 Oct, 08:49
 - Developer commands and the showcase work on Wails v3 · slice 5 · 2 tasks
 - 1 more slices · 6 of 6 built
 
-**Verified** · 3
+**Verified** · 4
 - Project checks passed · 6 of 6 · recorded
 - Security review · done · nothing severe in the change
-- Second opinion · done · 1 finding
+- Second opinion · done · 1 finding · 1 fix awaiting checks
+- Independent review of the Done means points · 3 of 8 proved
 
-**Left** · 4
-- Independent review · Review · not done
-- Fix rounds · Fix · not done
+**Left** · 8
+- Done means 2: Every screen and action works as it does today · yours to confirm in Review
+- Done means 5: Release builds keep their formats and names on all three systems · missing
+- Done means 6: Existing installs upgrade in place · missing
+- Done means 7: The developer commands and the showcase still work · missing
+- Done means 8: The app has a native menu with the usual entries · yours to confirm in Review
+- Independent review · failed
 - Open each menu of the built macOS app (desktop/build/bin/kirokit.app) and check: kirokit (About, Settings…, Services, Hide, Hide Others, Show All, Quit), Edit, Window, Help (kirokit documentation, Report a problem with kirokit…); ⌘, opens Settings; Help entries open the docs page and the new-issue form · needs you · T5
 - Push this branch and open its pull request so the Desktop workflow runs (Ubuntu 24.04, Windows, macOS smoke starts, the linux-distros job and the Windows install-over-last-release check), then run the Release workflow by hand as a dry run · needs you · T8
 <!-- /ql:delivered -->
@@ -62,6 +67,7 @@ Delivered 29 Oct, 08:49
 - Slice 5 · `task desktop:dev` builds the pinned `wails3` into `desktop/build/dev-bin/tools/` (already gitignored) and puts it first on `PATH`; the staged release app in `desktop/build/bin/` now uses its own bundled CLI even when started from `desktop/`, since `wails3 dev` no longer runs from there; nothing you approved changes.
 - Slice 5 · `app-server.sh` also fails when the port's listener is another process (it checks the listener's pid, not only its address), so a stray server on 34115 cannot pass for the app; its server build was driven in headless Chrome to the first-launch page with no page errors; nothing you approved changes.
 - Slice 5 · T10's Files add desktop/build/Taskfile.yml (vite binds 127.0.0.1, which Wails' dev proxy dials) and scripts/desktop-build.sh (removes Wails' intermediate desktop/bin after staging, since Go cannot overwrite the universal binary there when wails3 dev builds). The 'Decided while outlining' note on menu:settings now says main.js checks setup() itself: sidebar.select does not refuse while the first-launch page shows.
+- The Plan · Verification round 1 was recorded while 4 files changed, 4 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes.
 <!-- /ql:decisions -->
 
 ## Checks
@@ -113,6 +119,9 @@ Delivered 29 Oct, 08:49
 - T10 (tactical): `task desktop:dev` builds the pinned `wails3` into `desktop/build/dev-bin/tools/` (already gitignored) and puts it first on `PATH`; the staged release app in `desktop/build/bin/` now uses its own bundled CLI even when started from `desktop/`, since `wails3 dev` no longer runs from there; nothing you approved changes.
 - T11 (tactical): `app-server.sh` also fails when the port's listener is another process (it checks the listener's pid, not only its address), so a stray server on 34115 cannot pass for the app; its server build was driven in headless Chrome to the first-launch page with no page errors; nothing you approved changes.
 - T10 (amended): T10's Files add desktop/build/Taskfile.yml (vite binds 127.0.0.1, which Wails' dev proxy dials) and scripts/desktop-build.sh (removes Wails' intermediate desktop/bin after staging, since Go cannot overwrite the universal binary there when wails3 dev builds). The 'Decided while outlining' note on menu:settings now says main.js checks setup() itself: sidebar.select does not refuse while the first-launch page shows.
+- Plan (tactical): verification round 1 was recorded while 4 files changed, 4 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes
+
+- Verify (kept): verification round 1 stands for the commit it judged (`a4dbabc`). The four files that changed while it ran are the reviewer's own added tests (`desktop/menu_test.go`, `desktop/shell_test.go`, `desktop/frontend/src/api.test.js`, committed in `687a17c` and passing in `task desktop:test`) and the Codex finding's fix to the Windows upgrade step in `.github/workflows/desktop.yaml` (`f5d5758`: fails on a `gh` error instead of skipping; `actionlint` passes and both `gh` queries return `v0.8.1` and its setup program against mavogel/kirokit). No app code changed after the judged commit, and QualityLayer handed out no second reviewer in Review; the workflow step itself only runs in CI.
 
 ## Plan amended
 
