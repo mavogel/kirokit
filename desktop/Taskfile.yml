@@ -1,0 +1,40 @@
+# Wails v3 project tasks, run with the pinned CLI (`go tool wails3 task ...`).
+# The task files call a bare `wails3`, so scripts/desktop-build.sh and
+# `task desktop:dev` first build the pinned one onto PATH. Release builds go
+# through scripts/desktop-build.sh, which stages this output (bin/) under the
+# names CI and GoReleaser read (build/bin/).
+version: '3'
+
+vars:
+  APP_NAME: "kirokit"
+  BIN_DIR: "bin"
+  PACKAGE_MANAGER: "npm"
+  VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
+  GOOS: '{{.GOOS | default OS}}'
+
+includes:
+  common: ./build/Taskfile.yml
+  windows: ./build/windows/Taskfile.yml
+  darwin: ./build/darwin/Taskfile.yml
+  linux: ./build/linux/Taskfile.yml
+
+tasks:
+  build:
+    summary: Builds the application
+    cmds:
+      - task: "{{.GOOS}}:build"
+
+  package:
+    summary: Packages a production build of the application
+    cmds:
+      - task: "{{.GOOS}}:package"
+
+  run:
+    summary: Runs the application
+    cmds:
+      - task: "{{.GOOS}}:run"
+
+  dev:
+    summary: Runs the application in development mode
+    cmds:
+      - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}

@@ -1,0 +1,185 @@
+Wails v3.0.0 spike — 2026-10-28, macOS 27.0.1 darwin/arm64, go1.27.3, node v26.12.1, go-task 3.54.0 (brew, NOT used)
+Spike dir: /private/tmp/claude-501/-Users-mavogel-Developer-projects-kirokit/a65ce6f1-c1e6-481e-97cd-0571d4c69165/scratchpad/spike-v3
+  spike/  = unmodified `wails3 init` scaffold (used for Q1, Q2)
+  srv/    = copy of the scaffold with App service + ping event (Q3)
+  ready/  = tiny desktop program for the runtime-ready hook + menu (Q4, Q5)
+Throwaway; nothing in the kirokit repo was changed except this file.
+
+======================================================================
+1. CLI PINNING
+======================================================================
+$ go mod init spiketool && go get -tool github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0
+  -> ok (adds `tool github.com/wailsapp/wails/v3/cmd/wails3` to go.mod)
+$ go tool wails3 version
+  v3.0.0
+
+$ go tool wails3 init -l
+  templates: ios, react, react-js, svelte, svelte-js, vanilla ("Vanilla + TypeScript + Vite — the default
+  template"), vanilla-js ("Vanilla + JavaScript + Vite"), vue, vue-js
+  NOTE: `-t vanilla` is TypeScript in v3. Plain JS is `-t vanilla-js`.
+$ go tool wails3 init -n spike -t vanilla-js
+  ✓ Project 'spike' created successfully.   (creates ./spike/)
+
+Created (top level): .gitignore, README.md, Taskfile.yml, go.mod (module "changeme", `go 1.26.0`,
+require wails/v3 v3.0.0), go.sum, main.go, greetservice.go, frontend/, build/
+  build/config.yml           info{companyName, productName, productIdentifier, description, copyright,
+                             comments, version}, dev_mode{...}, fileAssociations, other
+  build/Taskfile.yml         "common" tasks: go:mod:tidy, install:frontend:deps, build:frontend,
+                             generate:bindings, generate:icons, build:server, run:server, build:docker, ...
+  build/darwin/              Taskfile.yml, Info.plist, Info.dev.plist, icons.icns, Assets.car,
+                             dmg-background.png, dmg-file-icon.icns/.png
+  build/windows/             Taskfile.yml, icon.ico, info.json, wails.exe.manifest, nsis/{project.nsi,
+                             wails_tools.nsh}, msix/{app_manifest.xml,template.xml}
+  build/linux/               Taskfile.yml, desktop, appimage/build.sh, nfpm/{nfpm.yaml, scripts/*.sh}
+  build/ios/, build/android/ (full mobile scaffolds), build/docker/{Dockerfile.cross,Dockerfile.server}
+  build/appicon.png, build/appicon.icon/ (Icon Composer source)
+  frontend/                  index.html, src/main.js, public/{style.css, fonts, images}, package.json
+                             (deps: "@wailsio/runtime": "3.0.0"; dev: "vite": "^8.2.4"), vite.config.js
+                             (uses `@wailsio/runtime/plugins/vite` with "./bindings"), tsconfig.json, .npmrc
+  Taskfile.yml (root)        vars APP_NAME: "spike", BIN_DIR: "bin"; includes common/windows/darwin/linux/
+                             ios/android; tasks build, package, run, dev, build:server, run:server, ...
+
+GOTCHA A: the scaffold is its own module, so the tool must be pinned in the APP's go.mod:
+  $ cd spike && go tool wails3 task darwin:package:universal   -> go: no such tool "wails3"
+  $ go get -tool github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0   (in spike/) -> ok
+GOTCHA B: Taskfile cmds call bare `wails3 ...` (generate bindings/icons, tool prepare-macos-output, ...).
+  `go tool wails3 task` does NOT put itself on PATH (internal/commands/task.go has no PATH handling):
+  task: [darwin:common:generate:bindings] wails3 generate bindings -f '...' -clean=true -time-type=Date
+  "wails3": executable file not found in $PATH   ERROR exit status 127
+  Fix used: go build -o <dir>/wails3 github.com/wailsapp/wails/v3/cmd/wails3 (resolves the go.mod pin)
+  and PATH=<dir>:$PATH. (`go install` of the pinned tool into a repo-local GOBIN would work the same.)
+
+======================================================================
+2. macOS UNIVERSAL PACKAGE
+======================================================================
+$ PATH=<tools>:$PATH go tool wails3 task darwin:package:universal      -> exit 0, 32 s wall
+Task sequence (key lines):
+  go mod tidy; wails3 generate icons ...; wails3 generate bindings ...; npm install; npm run build -q
+  wails3 tool prepare-macos-output --dir "bin"
+  go build -tags production -trimpath -buildvcs=false -ldflags="-w -s" -o "bin/spike-amd64"   (and -arm64)
+  lipo -create -output "bin/spike" "bin/spike-amd64" "bin/spike-arm64"; rm both
+  create:app:bundle: rm -rf bin/spike.app; mkdir Contents/{MacOS,Resources};
+    cp build/darwin/icons.icns + Assets.car -> Resources; cp bin/spike -> Contents/MacOS;
+    cp build/darwin/Info.plist -> Contents
+  codesign:adhoc: xattr -cr; codesign --force --deep --sign -; codesign --verify --deep --strict
+
+Output: bin/spike.app (plus bare universal binary bin/spike, 19.1M). YES, under bin/ (BIN_DIR var).
+  bin/spike.app/Contents/Info.plist
+  bin/spike.app/Contents/MacOS/spike
+  bin/spike.app/Contents/Resources/icons.icns        <- v2 used iconfile.icns; v3 = icons.icns
+  bin/spike.app/Contents/Resources/Assets.car
+.app name and executable name = {{.APP_NAME}} from root Taskfile.yml `vars: APP_NAME: "spike"` (set
+from `init -n`). NOT from config.yml productName. Info.plist is copied verbatim from build/darwin/Info.plist:
+  CFBundleExecutable=spike, CFBundleName="My Product", CFBundleIdentifier=com.example.spike,
+  CFBundleVersion=0.1.0, CFBundleIconFile=icons, CFBundleIconName=appicon, LSMinimumSystemVersion=12.0.0
+  (Note: this init-generated Info.plist did not match config.yml's identifier/version
+  com.mycompany.myproduct / 0.0.1; config.yml -> plist only via `wails3 task common:update:build-assets`.)
+LSMinimumSystemVersion: static string in build/darwin/Info.plist (12.0.0). Separately, the darwin Taskfile
+  hard-codes build env: CGO_CFLAGS/CGO_LDFLAGS "-mmacosx-version-min=12.0", MACOSX_DEPLOYMENT_TARGET "12.0".
+$ lipo -info bin/spike.app/Contents/MacOS/spike
+  Architectures in the fat file: ... are: x86_64 arm64
+$ vtool -show-build ... -> x86_64 minos 12.0 / arm64 minos 12.0
+
+CGO_CFLAGS override:
+$ CGO_CFLAGS=-mmacosx-version-min=13.0 CGO_LDFLAGS=-mmacosx-version-min=13.0 MACOSX_DEPLOYMENT_TARGET=13.0 \
+    go tool wails3 task darwin:build ARCH=arm64 OUTPUT=bin/spike-env13   -> exit 0; vtool: minos 13.0  (HONOURED)
+$ go tool wails3 task darwin:build ARCH=arm64 OUTPUT=bin/spike-var13 CGO_CFLAGS=-mmacosx-version-min=13.0 ...
+    -> minos 12.0  (task CLI vars do NOT override the Taskfile env)
+  => process env wins over the Taskfile `env:`; Info.plist LSMinimumSystemVersion must still be edited
+     separately. Side note: go1.27's own go.o is built for macOS 13.0 — linking with min 12.0 prints
+     "ld: warning: object file (go.o) was built for newer 'macOS' version (13.0) than being linked (12.0)".
+go-task: NOT needed separately — `wails3 task` embeds go-task (brew `task` 3.54.0 is installed but unused);
+  only requirement is `wails3` itself on PATH (gotcha B).
+
+======================================================================
+3. SERVER BUILD + HEADLESS CHROME
+======================================================================
+srv/app.go:  type App struct{}; type PingPayload struct{ B64 string `json:"b64"` }
+             func (a *App) Echo(s string) (string, error) { "" -> errors.New("echo: empty input"); else "echo:"+s }
+srv/main.go: application.New(Options{Services: []application.Service{application.NewService(&App{})},
+             Assets: AssetOptions{Handler: application.AssetFileServerFS(assets)}, ...});
+             goroutine: app.Event.Emit("ping", PingPayload{B64: base64(...)}) every 1 s
+frontend/src/main.js: import { Call, Events } from "@wailsio/runtime";
+             Events.On("ping", h); Call.ByName("main.App.Echo", s)
+$ npm ls @wailsio/runtime   -> @wailsio/runtime@3.0.0  (vite@8.3.5)
+GOTCHA C: scaffold vite.config.js uses wails("./bindings") from @wailsio/runtime/plugins/vite; without
+  generated bindings `vite build` fails:
+  "RolldownError: Event bindings module not found at import specifier
+   './bindings/github.com/wailsapp/wails/v3/internal/eventcreate'"
+  -> replaced with plain `defineConfig({})`; then build ok (dist/assets/index-*.js 25.33 kB).
+$ go build -tags server -o spike-server .     -> ok (17 MB)
+$ ./spike-server
+  INF Platform Info: mode=server
+  INF Server mode enabled (built with -tags server)
+  INF Server mode starting address=localhost:8080          <- ready line; default port 8080, host localhost
+Port: Options.Server = application.ServerOptions{Host, Port, ReadTimeout, WriteTimeout, IdleTimeout,
+  ShutdownTimeout, TLS}; env WAILS_SERVER_PORT overrides Port, WAILS_SERVER_HOST overrides Host
+  (pkg/application/application_server.go). Verified:
+  $ WAILS_SERVER_PORT=18234 ./spike-server -> "Server mode starting address=localhost:18234", curl 200.
+Driver: playwright-core@1.64.1, chromium.launch({channel:'chrome', headless:true}), goto http://localhost:8080/
+  (spike-v3/drive.mjs)
+Results:
+  Call.ByName("main.App.Echo","hi")      -> "echo:hi"                         WORKS
+  Call.ByName("App.Echo","x")            -> rejects "Binding call failed: unknown bound method name 'App.Echo'"
+  Call.ByName("changeme.App.Echo","x")   -> same "unknown bound method name" (module path is NOT used)
+  Name format = "<Go package path>.<Type>.<Method>"; package main's PkgPath is "main" -> "main.App.Echo".
+  Go error -> Promise rejection: e.name === "RuntimeError", e.message === "echo: empty input" (exact
+    err.Error() text, no prefix), Object.keys(e) = ["name","cause"], e.cause = {}; HTTP 422 on the wire.
+  ping handler arg: a WailsEvent object {name:"ping", data:{b64:"dGljayAx"}} -> payload is e.data
+    (the object itself, NOT e.data[0]). JSON: {"name":"ping","data":{"b64":"dGljayAx"}}
+  Console: "[Wails] Event WebSocket connected" (events via ws /wails/events); a harmless
+    "⚠️ Browser Environment Detected ... Only UI previews are available in the browser" warning; one 404
+    (favicon). Bindings + events both work in the browser.
+Shutdown on SIGTERM: "Shutdown signal received" / "Server stopped".
+
+======================================================================
+4. DESKTOP RUNTIME-READY HOOK
+======================================================================
+ready/main.go (normal build, no server tag):
+  app := application.New(application.Options{Name: "ready",
+      Assets: application.AssetOptions{Handler: application.BundledAssetFileServer(os.DirFS("."))},
+      Mac:    application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true}})   <- COMPILES
+  win := app.Window.NewWithOptions(application.WebviewWindowOptions{Title: "ready", URL: "/index.html", ...})
+  win.OnWindowEvent(events.Common.WindowRuntimeReady, func(e *application.WindowEvent) {
+      if os.Getenv("SMOKE") == "1" { app.Quit() } })
+$ CGO_CFLAGS=-mmacosx-version-min=12.0 CGO_LDFLAGS=-mmacosx-version-min=12.0 go build -o ready . && go vet .  -> ok
+Run 1 (index.html WITHOUT the JS runtime): window loads (/index.html served) but the hook NEVER fires;
+  the process hung (killed after >60 s). WindowRuntimeReady is emitted only when the page's JS runtime
+  posts "wails:runtime:ready" (webview_window.go:846).
+Run 2 (index.html with <script type="module" src="/wails/runtime.js"></script>, served by
+  BundledAssetFileServer; a page importing @wailsio/runtime does the same):
+$ SMOKE=1 ./ready
+  WindowRuntimeReady after 272.958917ms
+  exit=0      wall=0.298s
+Note: the log line after app.Run() did not print — app.Quit() on macOS terminates the process
+  (impl.destroy) without returning from Run; put cleanup in Options.OnShutdown / PostShutdown.
+  Also note Go handles SIGALRM, so `perl -e 'alarm N; exec'` is not a usable timeout for these binaries.
+
+======================================================================
+5. MENU (compiled into ready/, not clicked)
+======================================================================
+  menu := app.NewMenu()                     // = app.Menu.New(); application.NewMenu() also exists
+  menu.AddRole(application.AppMenu)         // AddRole(role Role) *Menu
+  menu.AddRole(application.EditMenu)
+  menu.AddRole(application.WindowMenu)
+  menu.AddRole(application.HelpMenu)        // NB: HelpMenu role adds a "Learn More" item -> https://wails.io
+  custom := menu.AddSubmenu("Kirokit")      // returns *Menu
+  custom.Add("Reload teams").SetAccelerator("CmdOrCtrl+R").OnClick(func(ctx *application.Context) {...})
+  app.Menu.Set(menu)                        // MenuManager.Set == SetApplicationMenu; there is NO app.SetMenu
+Window-level menu for Windows/Linux (all compile):
+  WebviewWindowOptions{ Windows: application.WindowsWindow{Menu: menu},
+                        Linux:   application.LinuxWindow{Menu: menu},
+                        UseApplicationMenu: true }   // UseApplicationMenu: Win/Linux window uses the app
+                                                     // menu when no explicit window menu; no-op on macOS
+  win.SetMenu(menu)                         // runtime alternative (webview_window.go:225)
+  WindowsWindow.DisableMenu bool also exists. Other roles: ViewMenu, ServicesMenu, Minimise, Zoom, ...
+
+======================================================================
+DID NOT WORK / CAVEATS
+======================================================================
+- `go tool wails3 task ...` fails unless a `wails3` binary is on PATH (Taskfiles shell out to `wails3`).
+- Tool pin must be in the app module's go.mod (scaffold is a separate module "changeme").
+- Scaffold vite config requires generated bindings; dropped for the no-bindings approach.
+- WindowRuntimeReady never fires for a page that doesn't load the Wails JS runtime -> SMOKE run hangs.
+- `task` CLI var overrides of CGO_CFLAGS are ignored; only process env overrides work.
+- Not tested: dev mode, DMG, Windows/Linux builds, clicking menus.

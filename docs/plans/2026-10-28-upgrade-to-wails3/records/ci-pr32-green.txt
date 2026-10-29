@@ -1,0 +1,19 @@
+PR #32 CI after the AppArmor fix (commit b946d52), 2026-10-29 — every check passed:
+  build-vet-lint-test	pass	https://github.com/mavogel/kirokit/actions/runs/40853536417/job/123379546369
+  desktop (macos-latest)	pass	https://github.com/mavogel/kirokit/actions/runs/40853536617/job/123378684307
+  desktop (ubuntu-24.04)	pass	https://github.com/mavogel/kirokit/actions/runs/40853536617/job/123378684438
+  desktop (windows-latest)	pass	https://github.com/mavogel/kirokit/actions/runs/40853536617/job/123378684252
+  linux-distros (amd64)	pass	https://github.com/mavogel/kirokit/actions/runs/40853536617/job/123378684450
+  linux-distros (arm64)	pass	https://github.com/mavogel/kirokit/actions/runs/40853536617/job/123378683965
+  test (macos-latest)	pass	https://github.com/mavogel/kirokit/actions/runs/40853536417/job/123378684501
+  test (ubuntu-latest)	pass	https://github.com/mavogel/kirokit/actions/runs/40853536417/job/123378684920
+  test (windows-latest)	pass	https://github.com/mavogel/kirokit/actions/runs/40853536417/job/123378684827
+
+desktop (ubuntu-24.04) steps: Test, Build, Smoke start (build-path AppArmor profile loaded), Release snapshot,
+  'Install the Linux packages and start the app' (the .deb's postinstall loaded /etc/apparmor.d/kirokit-desktop; installed app smoke start exit 0).
+linux-distros (amd64, arm64): ubuntu:24.04, ubuntu:26.04, debian:13 each started the app.
+desktop (windows-latest), 'Install over the last release (Windows)':
+  installing D:\a\_temp\last-release\kirokit-desktop_0.8.1_windows_amd64-setup.exe
+  installing D:\a\kirokit\kirokit\desktop\build\bin\installers\kirokit-desktop_0.8.1-19-g853bb4b_windows_amd64-setup.exe
+  uninstall entry: mavogelkirokit (kirokit)
+  (step passed: installed kirokit-desktop.exe and bin\kirokit.exe hashes equal the new build; exactly one uninstall entry)

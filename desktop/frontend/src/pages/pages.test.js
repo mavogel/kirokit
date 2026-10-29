@@ -288,12 +288,12 @@ function settingsPage({ stored, cloneRejects, onUpdate = () => {} }) {
   });
   globalThis.document = { getElementById: el };
   const calls = [];
-  globalThis.window = {
-    go: { main: { App: {
-      State: async () => ({ settings: { kiroHome: '/h', repoUrl: stored.repoUrl }, env: { ready: true, defaultKiroHome: '/h', note: '' } }),
-      SaveSettings: async (s) => { calls.push(['save', s.repoUrl]); stored.repoUrl = s.repoUrl; },
-    } } },
+  const bound = {
+    'main.App.State': async () => ({ settings: { kiroHome: '/h', repoUrl: stored.repoUrl }, env: { ready: true, defaultKiroHome: '/h', note: '' } }),
+    'main.App.SaveSettings': async (s) => { calls.push(['save', s.repoUrl]); stored.repoUrl = s.repoUrl; },
   };
+  // api.js's runtime seam (see api.test.js).
+  globalThis.__kirokitRuntime = { Call: { ByName: (name, ...args) => bound[name](...args) } };
   const page = initSettings(onUpdate, async (address) => {
     calls.push(['clone', address]);
     if (cloneRejects) throw new Error(cloneRejects);

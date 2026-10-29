@@ -1,0 +1,7 @@
+$ git grep -nE 'wailsapp/wails/v2|window\.go|window\.runtime|go tool wails |wails dev|wails build' a4dbabc -- ':!docs/plans/'
+exit=1 (1 = no match)
+$ git grep -c 'wails/v2' a4dbabc -- desktop/go.mod desktop/go.sum
+exit=1 (1 = no match)
+$ cd desktop && go list -m all | grep wailsapp
+github.com/wailsapp/task/v3 v3.40.1-patched3
+github.com/wailsapp/wails/v3 v3.0.0

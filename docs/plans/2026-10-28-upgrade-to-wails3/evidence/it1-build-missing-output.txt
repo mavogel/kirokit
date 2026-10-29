@@ -1,0 +1,4 @@
+$ (scratch clone, darwin Taskfile with the icon copy removed) VERSION=0.0.0-test scripts/desktop-build.sh
+desktop-build: missing desktop/bin/kirokit.app/Contents/Resources/iconfile.icns
+exit=1
+desktop/build/bin afterwards: 

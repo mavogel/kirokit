@@ -1,0 +1,5 @@
+# QualityLayer: a lasting artifact keeps its folders (lib/, dist/, build/) even where this
+# project ignores such names, so a teammate who pulls it gets the whole artifact. The project's
+# rules for files (.env, *.log) still apply.
+!*/
+node_modules/

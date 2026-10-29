@@ -246,9 +246,11 @@ function draw() {
   }
 }
 
-async function loadCatalog() {
+// The first load reads the state through api.start, which also tells Go the
+// page answered (a smoke start waits for that); later loads use api.state.
+async function loadCatalog(readState = api.state) {
   try {
-    const st = await api.state();
+    const st = await readState();
     terminalDock.setShell(shellLabel(st));
     view.cloned = st.cloned;
     view.loaded = true;
@@ -285,7 +287,7 @@ const refresh = () => loadCatalog().then(loadInstalls);
 
 const terminalDock = initDock(createDock());
 settings.load();
-refresh();
+loadCatalog(api.start).then(loadInstalls);
 api.on('installs:changed', (records) => {
   view.installs = records || [];
   draw();
@@ -295,6 +297,11 @@ api.on('term:kirokit', ({ id }) => {
     view.running = true;
     draw();
   }
+});
+// The native menu's Settings… (⌘, / Ctrl+,) opens Settings as its sidebar
+// button does. The first-launch page has no Settings to open, so it is ignored there.
+api.on('menu:settings', () => {
+  if (!setup()) sidebar.select('settings');
 });
 // A command that ends may have synced a new team or pin or installed one.
 api.on('term:kirokit:exit', async ({ id, code }) => {

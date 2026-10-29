@@ -4,11 +4,9 @@ import (
 	"embed"
 	"log"
 	"os"
+	"runtime"
 
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 //go:embed all:frontend/dist
@@ -17,28 +15,37 @@ var assets embed.FS
 func main() {
 	app := NewApp()
 
-	opts := &options.App{
-		Title:     "kirokit",
-		Width:     1180,
-		Height:    760,
-		MinWidth:  720,
-		MinHeight: 480,
-		AssetServer: &assetserver.Options{
-			Assets: assets,
-		},
-		BackgroundColour: &options.RGBA{R: 23, G: 19, B: 31, A: 1},
-		OnStartup:        app.startup,
-		OnShutdown:       app.shutdown,
-		Bind:             []any{app},
-	}
-	// A smoke start (CI) quits once the page has loaded, or fails after a minute.
+	wapp := application.New(application.Options{
+		Name:     "kirokit",
+		Services: []application.Service{application.NewService(app)},
+		Assets:   application.AssetOptions{Handler: application.AssetFileServerFS(assets)},
+		// v3 keeps a macOS app running with no window; kirokit quits as before.
+		Mac: application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true},
+	})
+	app.setEmitter(func(event string, data any) { wapp.Event.Emit(event, data) })
+
+	wapp.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:            "kirokit",
+		Width:            1180,
+		Height:           760,
+		MinWidth:         720,
+		MinHeight:        480,
+		BackgroundColour: application.NewRGB(23, 19, 31),
+		// Windows and Linux show the application menu at the top of the window.
+		UseApplicationMenu: true,
+	})
+	wapp.Menu.Set(buildMenu(wapp, menuFor(runtime.GOOS), app))
+
+	// A smoke start (CI) quits once the page has loaded and its first State
+	// call has answered (the page then sends smoke:ready), or fails after a minute.
 	if os.Getenv("KIROKIT_DESKTOP_SMOKE") == "1" {
-		opts.OnDomReady = smokeWatch(smokeTimeout, runtime.Quit, func() {
-			log.Print("smoke start: the page did not load within ", smokeTimeout)
+		ready := smokeWatch(smokeTimeout, wapp.Quit, func() {
+			log.Print("smoke start: the page did not answer within ", smokeTimeout)
 			os.Exit(1)
 		})
+		wapp.Event.On("smoke:ready", func(*application.CustomEvent) { ready() })
 	}
-	if err := wails.Run(opts); err != nil {
+	if err := wapp.Run(); err != nil {
 		log.Fatal(err)
 	}
 }

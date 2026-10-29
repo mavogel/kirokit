@@ -59,7 +59,7 @@ kirokit installs them for Kiro CLI, Kiro IDE and kirocrew, and exports them for 
 | System | Install |
 |---|---|
 | macOS 13+ | `brew install --cask mavogel/tap/kirokit-desktop`, or open `kirokit-desktop_<version>_darwin_<arch>.dmg` |
-| Linux (Ubuntu 22.04+, Debian 12+, Fedora 40+) | `sudo apt install ./kirokit-desktop_<version>_linux_<arch>.deb` or `sudo dnf install ./kirokit-desktop_<version>_linux_<arch>.rpm` |
+| Linux (Ubuntu 24.04+, Debian 13+; the `.rpm` needs GTK 4.14+) | `sudo apt install ./kirokit-desktop_<version>_linux_<arch>.deb` or `sudo dnf install ./kirokit-desktop_<version>_linux_<arch>.rpm` |
 | Windows 10/11 | run `kirokit-desktop_<version>_windows_<arch>-setup.exe` |
 
 <details>

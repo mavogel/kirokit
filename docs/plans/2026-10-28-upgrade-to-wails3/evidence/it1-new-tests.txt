@@ -1,0 +1,56 @@
+# github.com/mavogel/kirokit/desktop.test
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/go.o) was built for newer 'macOS' version (13.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000027.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000028.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000029.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000030.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000031.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000032.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000033.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000034.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000035.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000036.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000037.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000038.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000039.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000040.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000041.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000042.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000043.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+ld: warning: object file (/private/var/folders/cn/d8yf4brd3jz2htcnwks90k3c0000gn/T/go-link-941501909/000044.o) was built for newer 'macOS' version (27.0) than being linked (11.0)
+=== RUN   TestMenu_EveryRoleMapsToAWailsRole
+--- PASS: TestMenu_EveryRoleMapsToAWailsRole (0.00s)
+=== RUN   TestBundledCLI_LinuxWails3DevPrefersDevBin
+--- PASS: TestBundledCLI_LinuxWails3DevPrefersDevBin (0.00s)
+=== RUN   TestBundledCLI_SiblingOfDevBinFolderKeepsItsBundle
+--- PASS: TestBundledCLI_SiblingOfDevBinFolderKeepsItsBundle (0.00s)
+PASS
+ok  	github.com/mavogel/kirokit/desktop	0.297s
+go exit=0
+
+⚠️ Browser Environment Detected 
+
+Only UI previews are available in the browser. For full functionality, please run the application in desktop mode.
+More information at: https://v3.wails.io/learn/build/#using-a-browser-for-development
+
+✔ Keystrokes reach Go one call at a time, in the order they were typed (44.298958ms)
+✔ A failed keystroke call does not hold back the next one, and each target has its own line (22.289167ms)
+✔ Every call reaches main.App.<Method> with its arguments (0.414ms)
+✔ A Go error reaches the page with its own message (0.161042ms)
+✔ on hands the handler the event payload and returns the unsubscribe function (0.132958ms)
+✔ start sends smoke:ready only after State has answered, and resolves to the state (11.60925ms)
+✔ start still resolves to the state when smoke:ready cannot be sent (0.153ms)
+✔ start sends nothing when State fails, and rejects with its error (0.119084ms)
+✔ openURL opens a GitHub new-issue form and refuses every other address (0.571208ms)
+✔ Without the runtime, calls and openURL reject with a readable message (0.149625ms)
+✔ openURL rejects with the reason Wails could not open the address (0.090916ms)
+✔ on calls the handler for an event without a payload (0.075417ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 213.986375
+node exit=0

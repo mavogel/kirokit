@@ -1,0 +1,36 @@
+# tree: a4dbabc36149238a4d03a99daa6ae53d745f787d; code changes vs HEAD outside docs/plans:        0
+# app built: Oct 29 08:51:21 2026  (receipt task desktop:build at a4dbabc)
+$ cd desktop && go list -m all | grep -c wailsapp/wails/v2
+0
+github.com/wailsapp/wails/v3 v3.0.0
+$ go tool wails3 version
+v3.0.0
+$ lipo -archs
+x86_64 arm64
+$ vtool -show-build (minos)
+desktop/build/bin/kirokit.app/Contents/MacOS/kirokit (architecture x86_64):
+    minos 13.0
+desktop/build/bin/kirokit.app/Contents/MacOS/kirokit (architecture arm64):
+    minos 13.0
+$ test -x CLI && test -f iconfile.icns
+ok
+x86_64 arm64
+$ codesign --verify --deep --strict
+codesign ok
+$ plutil LSMinimumSystemVersion / CFBundleIconFile
+13.0
+iconfile
+$ KIROKIT_DESKTOP_SMOKE=1 kirokit; echo $?
+exit=0 in 1s
+$ scripts/desktop-prebuilt.sh
+staged /Users/mavogel/Developer/projects/kirokit/desktop/build/bin/prebuilt
+exit=0
+desktop/build/bin/prebuilt
+desktop/build/bin/prebuilt/kirokit_darwin_arm64
+desktop/build/bin/prebuilt/bundle
+desktop/build/bin/prebuilt/kirokit_darwin_amd64
+desktop/build/bin/prebuilt/kirokit_darwin_arm64/kirokit
+desktop/build/bin/prebuilt/bundle/Contents
+desktop/build/bin/prebuilt/kirokit_darwin_amd64/kirokit
+desktop/build/bin/prebuilt/bundle/Contents/Resources
+desktop/build/bin/prebuilt/bundle/Contents/Info.plist

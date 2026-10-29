@@ -1,0 +1,33 @@
+# Linux build task (Wails v3 template, trimmed): GTK 4 / WebKitGTK 6.0, built
+# natively (cgo), so each architecture builds on its own machine. GoReleaser
+# makes the .deb and .rpm (.goreleaser.yaml), so v3's nfpm/AppImage tasks are
+# left out.
+version: '3'
+
+includes:
+  common: ../Taskfile.yml
+
+tasks:
+  build:
+    summary: Builds the application for Linux
+    deps:
+      - task: common:build:frontend
+    cmds:
+      - go build {{.BUILD_FLAGS}} -o "{{.OUTPUT}}"
+    vars:
+      BUILD_FLAGS: '{{if eq .DEV "true"}}-buildvcs=false -gcflags=all="-l"{{else}}-tags production -trimpath -buildvcs=false -ldflags="-w -s"{{end}}'
+      DEFAULT_OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}'
+      OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
+    env:
+      GOOS: linux
+      CGO_ENABLED: 1
+      GOARCH: '{{.ARCH | default ARCH}}'
+
+  package:
+    summary: Builds the application for Linux (GoReleaser packages it)
+    cmds:
+      - task: build
+
+  run:
+    cmds:
+      - '{{.BIN_DIR}}/{{.APP_NAME}}'

@@ -1,0 +1,18 @@
+Windows setup programs on Wails v3 — built 2026-10-29 in the Ubuntu 24.04 container:
+  scripts/linux-docker.sh env GOOS=windows task desktop:build   -> exit 0
+
+desktop/build/bin/installers/kirokit-desktop_<v>_windows_amd64-setup.exe  (8.8 MB)
+desktop/build/bin/installers/kirokit-desktop_<v>_windows_arm64-setup.exe  (8.1 MB)
+desktop/build/bin/kirokit-desktop-{amd64,arm64}.exe
+
+7z l (both): kirokit-desktop.exe, bin/kirokit.exe, uninstall.exe, $PLUGINSDIR/webview2bootstrapper/MicrosoftEdgeWebview2Setup.exe
+amd64 payload vs build (sha256, first 16 hex):
+  kirokit-desktop.exe 4db4f634f388a721 == desktop/build/bin/kirokit-desktop-amd64.exe
+  bin/kirokit.exe     e6c2ac10f7ca6e7d == desktop/build/bin/cli/windows_amd64/kirokit.exe
+
+makensis -PPO (desktop/build/windows/nsis/project.nsi), the identity v2 used:
+  InstallDir "$PROGRAMFILES64\mavogel\kirokit"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\mavogelkirokit" "DisplayName" "kirokit"
+  WriteRegStr HKLM "...\Uninstall\mavogelkirokit" "DisplayIcon" "$INSTDIR\kirokit-desktop.exe"
+
+Not checked here: installing over the last release on Windows (the Desktop workflow's upgrade check in CI).

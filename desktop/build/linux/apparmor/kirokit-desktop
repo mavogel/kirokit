@@ -1,0 +1,20 @@
+# AppArmor profile for kirokit-desktop, installed by the .deb as
+# /etc/apparmor.d/kirokit-desktop.
+#
+# WebKitGTK 6.0 runs every page in a bubblewrap sandbox, which needs
+# unprivileged user namespaces. Ubuntu 23.10 and later allow those only to
+# programs whose AppArmor profile says so; without this profile the app stops
+# at start ("bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted").
+# The profile grants that and nothing else: the app is otherwise unconfined, as
+# Ubuntu's own profiles for sandboxed browsers do.
+
+abi <abi/4.0>,
+
+include <tunables/global>
+
+profile kirokit-desktop /usr/bin/kirokit-desktop flags=(unconfined) {
+  userns,
+
+  # Site-specific additions and overrides. See local/README for details.
+  include if exists <local/kirokit-desktop>
+}

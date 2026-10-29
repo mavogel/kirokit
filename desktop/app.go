@@ -8,10 +8,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-// App is the one service the frontend binds to.
+// App is the one service the frontend binds to (main.App.<Method>).
 type App struct {
 	dataDir string
 
@@ -25,7 +25,7 @@ type App struct {
 	env      EnvCapture
 	envReady bool
 
-	// emitter is set by startup; before it, emit drops events.
+	// emitter is set by setEmitter; before it, emit drops events.
 	emitter func(event string, data any)
 	cat     catalogCache
 	poller  *installPoller
@@ -70,21 +70,26 @@ func NewAppAt(dir string) *App {
 	}
 }
 
-// startup is Wails' OnStartup hook. The window is already open: the login
-// shell is read, the catalog rendered and the install records watched in the
-// background.
-func (a *App) startup(ctx context.Context) {
+// setEmitter sets the function events reach the page through; main.go sets
+// Wails' emitter before the app runs, tests set their own.
+func (a *App) setEmitter(fn func(event string, data any)) {
 	a.mu.Lock()
-	a.emitter = func(event string, data any) { runtime.EventsEmit(ctx, event, data) }
+	a.emitter = fn
 	a.mu.Unlock()
+}
 
+// ServiceStartup is Wails' service start hook: the login shell is read, the
+// catalog rendered and the install records watched in the background.
+func (a *App) ServiceStartup(context.Context, application.ServiceOptions) error {
 	go a.refreshEnv()
 	go a.refreshCatalog()
 	a.startInstallPoller()
+	return nil
 }
 
-// shutdown is Wails' OnShutdown hook.
-func (a *App) shutdown(context.Context) {
+// ServiceShutdown is Wails' service shutdown hook. On macOS quitting ends the
+// process without returning from Run, so every cleanup belongs here.
+func (a *App) ServiceShutdown() error {
 	a.mu.Lock()
 	p := a.poller
 	a.poller = nil
@@ -94,6 +99,7 @@ func (a *App) shutdown(context.Context) {
 	}
 	a.shell.close()
 	a.runner.close()
+	return nil
 }
 
 func (a *App) emit(event string, data any) {

@@ -72,9 +72,9 @@ export function feedbackURL(repo, team, kind, name, owner) {
   return `https://github.com/${repo}/issues/new?title=${title}&body=${body}&labels=${labels}`;
 }
 
-// encodeURIComponent, plus the characters it leaves alone (! ' ( ) * ~) that
-// Wails' BrowserOpenURL refuses as shell metacharacters. Markdown's ** in the
-// body would otherwise stop the browser from opening.
+// encodeURIComponent, plus the characters it leaves alone (! ' ( ) * ~), which
+// Wails v2 refused as shell metacharacters; v3 accepts them, and encoding them
+// still keeps every issue address the same as before.
 function encode(s) {
   return encodeURIComponent(s).replace(/[!'()*~]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 }
