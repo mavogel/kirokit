@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>kirokit desktop app</title>
+<meta name="description" content="The kirokit desktop app as it ships: sidebar, five pages, terminal dock, first-launch setup and the Install dialogs, drawn with the app's own tokens and markup.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* Tokens copied from desktop/frontend/src/style.css. Dark values apply under
+     the system preference unless the viewer picks a theme, and under data-theme="dark". */
+  :root {
+    color-scheme: light;
+    --bg: #f4f2fa; --window: #ffffff; --sidebar: #f1eff9; --surface: #ffffff; --surface-2: #f8f7fc;
+    --text: #1d1730; --muted: #574f6e; --border: #e1ddef; --border-strong: #c9c2e0; --control-border: #857c9f;
+    --accent: #6d28d9; --accent-text: #ffffff; --accent-soft: #ede9fe; --accent-ink: #5b21b6;
+    --ok: #166534; --ok-soft: #dcfce7; --warn: #854d0e; --warn-soft: #fef3c7; --focus: #6d28d9;
+    --term-bg: #15111f; --term-text: #e6e1f5; --term-muted: #a59dbd; --term-prompt: #b9a4fb; --term-ok: #86efac;
+    --titlebar: #e9e6f3; --titlebar-text: #3b3352;
+    --radius: 8px;
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0d0b13; --window: #17131f; --sidebar: #120f1a; --surface: #1d1828; --surface-2: #221c30;
+      --text: #ece9f6; --muted: #aaa3c2; --border: #2e2843; --border-strong: #463e60; --control-border: #776e98;
+      --term-bg: #0b0911;
+      --accent: #a78bfa; --accent-text: #14101f; --accent-soft: #2b2247; --accent-ink: #c4b5fd;
+      --ok: #4ade80; --ok-soft: #12301f; --warn: #fbbf24; --warn-soft: #33280c; --focus: #c4b5fd;
+      --titlebar: #221d2c; --titlebar-text: #d6d1e6;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d0b13; --window: #17131f; --sidebar: #120f1a; --surface: #1d1828; --surface-2: #221c30;
+    --text: #ece9f6; --muted: #aaa3c2; --border: #2e2843; --border-strong: #463e60; --control-border: #776e98;
+    --term-bg: #0b0911;
+    --accent: #a78bfa; --accent-text: #14101f; --accent-soft: #2b2247; --accent-ink: #c4b5fd;
+    --ok: #4ade80; --ok-soft: #12301f; --warn: #fbbf24; --warn-soft: #33280c; --focus: #c4b5fd;
+    --titlebar: #221d2c; --titlebar-text: #d6d1e6;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font); }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Artifact page ---------- */
+  .doc { display: grid; gap: 20px; max-width: 1280px; margin: 0 auto; padding: 32px 24px 48px; }
+  .doc-head { display: grid; gap: 6px; }
+  .eyebrow { margin: 0; font: 600 12px/1.4 var(--mono); letter-spacing: .04em; color: var(--accent-ink); }
+  .doc-head h1 { margin: 0; font-size: 26px; line-height: 1.25; font-weight: 650; }
+  .purpose { margin: 0; max-width: 72ch; color: var(--muted); }
+  .purpose b { color: var(--text); font-weight: 600; }
+
+  .states { display: grid; gap: 8px; }
+  .states-label { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seg button { min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-strong);
+    background: var(--surface); color: var(--text); font-size: 13px; font-weight: 550; cursor: pointer; }
+  .seg button:hover { background: var(--surface-2); }
+  .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .states-hint { margin: 0; font-size: 13px; color: var(--muted); }
+
+  .scroll-x { overflow-x: auto; border-radius: 12px; box-shadow: 0 1px 2px rgb(20 14 40 / .08), 0 12px 32px rgb(20 14 40 / .12); }
+
+  .notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .notes h2 { grid-column: 1 / -1; margin: 8px 0 0; font-size: 17px; font-weight: 650; }
+  .note-card { display: grid; align-content: start; gap: 8px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .note-card h3 { margin: 0; font-size: 14px; font-weight: 650; }
+  .note-card p, .note-card ul { margin: 0; font-size: 14px; color: var(--muted); }
+  .note-card ul { padding-left: 18px; display: grid; gap: 4px; }
+  .note-card code { font: 13px var(--mono); color: var(--text); overflow-wrap: anywhere; }
+  @media (max-width: 860px) { .notes { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .doc { padding: 24px 16px 40px; } .doc-head h1 { font-size: 22px; } }
+
+  /* ---------- The app window (desktop/frontend/src/style.css, scoped) ---------- */
+  .win { position: relative; width: 100%; min-width: 1200px; height: 780px; display: grid; grid-template-rows: 34px minmax(0, 1fr);
+    background: var(--window); color: var(--text); font: 14px/1.5 var(--font); border: 1px solid var(--border-strong); border-radius: 12px; overflow: hidden; }
+  .titlebar { display: flex; align-items: center; gap: 8px; padding: 0 14px; background: var(--titlebar); color: var(--titlebar-text); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; }
+  .lights { display: flex; gap: 8px; margin-right: 10px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .lights i:nth-child(1) { background: #ff5f57; } .lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
+
+  .app { position: relative; display: grid; grid-template-columns: auto 1fr; min-height: 0; }
+  .sidebar { width: 232px; display: flex; flex-direction: column; gap: 4px; padding: 14px 10px 12px;
+    background: var(--sidebar); border-right: 1px solid var(--border); transition: width .16s ease; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 14px; font-weight: 650; font-size: 15px; }
+  .brand .mark { flex: none; width: 28px; height: 28px; }
+  .nav { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+  .nav button { width: 100%; display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 10px;
+    border: 0; border-radius: 6px; background: transparent; cursor: pointer; text-align: left; color: var(--muted); }
+  .nav button:hover { background: var(--accent-soft); color: var(--text); }
+  .nav button[aria-current="page"] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+  .nav svg, .collapse svg { flex: none; width: 18px; height: 18px; }
+  .nav .count { margin-left: auto; font-size: 12px; color: var(--muted); }
+  .spacer { flex: 1; }
+  .collapse { display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 10px; border: 0; border-radius: 6px;
+    background: transparent; color: var(--muted); cursor: pointer; text-align: left; }
+  .collapse:hover { background: var(--accent-soft); color: var(--text); }
+  .collapse kbd { margin-left: auto; font: 12px var(--mono); color: var(--muted); }
+  .rail .sidebar { width: 60px; }
+  .rail .count, .rail .brand-name, .rail .collapse kbd { display: none; }
+  .rail .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .rail .nav button, .rail .collapse { justify-content: center; padding: 0; }
+  .rail .collapse svg { transform: rotate(180deg); }
+  .rail .brand { justify-content: center; padding-inline: 0; }
+  .app.setup { grid-template-columns: 1fr; }
+  .app.setup .sidebar { display: none; }
+
+  .work { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; min-height: 0; }
+  .work main { overflow: auto; padding: 24px 28px; min-height: 0; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  .win h1 { margin: 0; font-size: 20px; line-height: 1.3; font-weight: 650; }
+  .lede { margin: 2px 0 0; color: var(--muted); max-width: 70ch; }
+  .win h2 { margin: 22px 0 10px; font-size: 14px; font-weight: 650; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .card { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .card h3 { margin: 0; font: 600 15px/1.3 var(--mono); }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: 13px; }
+  .facts b { color: var(--text); font-weight: 600; }
+  .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+  .btn { height: 32px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--surface); cursor: pointer; font-weight: 550; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; filter: none; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.off { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip { display: inline-block; padding: 1px 7px; margin: 0 4px 4px 0; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); font: 12px/1.6 var(--mono); }
+  .win table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .win th, .win td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+  .win th { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--surface-2); }
+  .win tr:last-child td { border-bottom: 0; }
+  .mono { font-family: var(--mono); font-size: 13px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .desc { color: var(--muted); max-width: 46ch; }
+  .owner { display: grid; gap: 2px; }
+  .owner .mono { white-space: nowrap; }
+  .owner .from { color: var(--muted); font-size: 12px; }
+  .note { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+  .field { display: grid; gap: 6px; max-width: 520px; margin-bottom: 16px; }
+  .field label { font-weight: 600; }
+  .field input, .field select { height: 36px; padding: 0 10px; border: 1px solid var(--control-border); border-radius: 6px; background: var(--surface); font-family: var(--mono); font-size: 13px; }
+  .field select { padding: 0 8px; }
+  .field select:disabled { opacity: .55; cursor: not-allowed; }
+  .field .hint { color: var(--muted); font-size: 13px; }
+  .field .error, .actions .error { color: var(--warn); font-size: 13px; }
+  .source { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 12px; color: var(--muted); }
+  .source b { color: var(--text); font-family: var(--mono); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+  .quick-result { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; padding: 8px 10px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; }
+  .quick-result .path { font: 12px/1.4 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+  .link-btn { min-height: 24px; border: 0; padding: 0; background: none; color: var(--accent-ink); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+  .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .welcome { max-width: 520px; }
+  .status-line { color: var(--muted); font-size: 13px; }
+
+  /* Dialogs: drawn inside the window so they stay beside the screen they belong to. */
+  .scrim { position: absolute; inset: 0; display: grid; place-items: center; background: rgb(13 11 19 / .5); z-index: 5; }
+  .dialog { width: min(480px, calc(100% - 32px)); padding: 20px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--window); color: var(--text); box-shadow: 0 16px 40px rgb(13 11 19 / .3); }
+  .dialog h2 { margin: 0 0 8px; font-size: 16px; }
+  .dialog p { margin: 0; }
+  .dialog-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 16px; }
+  .dialog .status-line { margin: 12px 0 0; }
+  .btn { white-space: nowrap; }
+  .checks { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .checks li { display: grid; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 4px 8px; }
+  .checks .detail { grid-column: 2 / -1; color: var(--muted); font-size: 12px; word-break: break-all; }
+
+  /* Terminal dock */
+  .terminal { --dock: 220px; height: var(--dock); display: grid; grid-template-rows: 6px 34px minmax(0, 1fr); min-height: 0; background: var(--term-bg); color: var(--term-text); border-top: 1px solid var(--control-border); }
+  .resize { cursor: row-resize; background: transparent; }
+  .resize:hover, .resize:focus-visible { background: var(--accent); outline: none; }
+  .term-bar { display: flex; align-items: center; gap: 4px; padding: 0 8px 0 14px; font: 600 11px/1 var(--font); letter-spacing: .06em; color: var(--term-muted); }
+  .term-tabs { display: flex; gap: 16px; }
+  .term-tabs [role="tab"] { padding: 6px 0; border: 0; border-bottom: 1px solid transparent; background: transparent; color: var(--term-muted); cursor: pointer; font: inherit; letter-spacing: inherit; }
+  .term-tabs [role="tab"][aria-selected="true"] { color: var(--term-text); border-bottom-color: var(--term-prompt); }
+  .term-tabs [role="tab"]:focus-visible { outline-color: var(--term-prompt); }
+  .term-bar .grow { flex: 1; }
+  .icon-btn { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--term-muted); cursor: pointer; }
+  .icon-btn:hover { background: rgb(255 255 255 / .08); color: var(--term-text); }
+  .icon-btn:focus-visible { outline-color: var(--term-prompt); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .term-body { margin: 0; padding: 4px 14px 6px; overflow: auto; font: 13px/1.55 var(--mono); white-space: pre; }
+  .t-prompt { color: var(--term-prompt); } .t-muted { color: var(--term-muted); } .t-ok { color: var(--term-ok); }
+  .cursor { display: inline-block; width: 8px; height: 15px; vertical-align: -2px; background: var(--term-text); }
+  .term-toggle { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 14px; border: 0; border-top: 1px solid var(--border); background: var(--sidebar); color: var(--muted); cursor: pointer; font-size: 12px; text-align: left; }
+  .term-toggle kbd { font: 12px var(--mono); }
+
+  @media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } }
+</style>
+</head>
+<body>
+<div class="doc">
+  <header class="doc-head" id="overview" data-screen-label="Overview">
+    <p class="eyebrow">kirokit · desktop/</p>
+    <h1>Desktop app</h1>
+    <p class="purpose"><b>What the person does:</b> pick their team, install its agents into Kiro, keep them in sync, and give owners feedback, without typing commands.</p>
+    <p class="purpose"><b>What stays and changes:</b> this draws the app as it ships today, every page and its main states, as the baseline for the next design change. Nothing in it is new yet; the states it leaves out are listed below.</p>
+  </header>
+
+  <div class="states" role="group" aria-labelledby="states-label">
+    <span class="states-label" id="states-label">App state</span>
+    <div class="seg" id="states">
+      <button type="button" data-state="ready" aria-pressed="true">Ready</button>
+      <button type="button" data-state="running" aria-pressed="false">Command running</button>
+      <button type="button" data-state="quick" aria-pressed="false">Quick bundle ready</button>
+      <button type="button" data-state="empty" aria-pressed="false">Nothing installed</button>
+      <button type="button" data-state="replace" aria-pressed="false">Replace team</button>
+      <button type="button" data-state="checks" aria-pressed="false">Install checks</button>
+      <button type="button" data-state="welcome" aria-pressed="false">First launch</button>
+      <button type="button" data-state="choose" aria-pressed="false">Choose version</button>
+    </div>
+    <p class="states-hint">Switch pages with the app's own sidebar. Install, Cancel, Collapse, the terminal tabs and the Version list respond; nothing runs, is sent or is saved.</p>
+  </div>
+
+  <div class="scroll-x">
+  <div class="win" id="app-window" data-screen-label="Desktop app">
+    <div class="titlebar" aria-hidden="true"><span class="lights"><i></i><i></i><i></i></span>kirokit</div>
+
+    <div class="app" id="app">
+      <aside class="sidebar" aria-label="Sections">
+        <div class="brand">
+          <svg class="mark" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="kk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#4c1d95"/></linearGradient></defs><rect width="512" height="512" rx="112" fill="url(#kk-bg)"/><g fill="none" stroke="#ede9fe" stroke-opacity=".55" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"><path d="M168 120c-36 0-44 14-44 44v52c0 22-10 40-32 40 22 0 32 18 32 40v52c0 30 8 44 44 44"/><path d="M344 120c36 0 44 14 44 44v52c0 22 10 40 32 40-22 0-32 18-32 40v52c0 30-8 44-44 44"/></g><g fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"><path d="M208 200l60 56-60 56"/><path d="M290 322h54"/></g></svg>
+          <span class="brand-name">kirokit</span>
+        </div>
+        <nav aria-label="Main">
+          <ul class="nav">
+            <li><button type="button" data-page="teams" aria-current="page" title="Teams"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.3c2.6-.4 4.6 1.2 5 4.7"/></svg><span class="label">Teams</span><span class="count">3</span></button></li>
+            <li><button type="button" data-page="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 15.5h5"/></svg><span class="label">Agents</span><span class="count">9</span></button></li>
+            <li><button type="button" data-page="install" title="Install and sync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4"/><path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/></svg><span class="label">Install and sync</span></button></li>
+            <li><button type="button" data-page="skills" title="Skills and MCP versions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="label">Skills and MCP versions</span></button></li>
+            <li><button type="button" data-page="settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 7l2.6 1.5M17.2 15.5l2.6 1.5M4.2 17l2.6-1.5M17.2 8.5L19.8 7"/></svg><span class="label">Settings</span></button></li>
+          </ul>
+        </nav>
+        <div class="spacer"></div>
+        <button type="button" class="collapse" id="collapse" aria-expanded="true" title="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span class="label">Collapse</span><kbd>⌘B</kbd></button>
+      </aside>
+
+      <div class="work">
+        <main id="main">
+          <!-- First launch: before a clone exists the sidebar is hidden. -->
+          <section id="page-welcome" data-screen-label="Set up kirokit" hidden>
+            <div class="page-head"><div><h1>Set up kirokit</h1><p class="lede">Enter the address of your team's kirokit repository. kirokit copies it to this computer and uses its newest release.</p></div></div>
+            <form class="welcome" id="clone-form" novalidate>
+              <div class="field"><label for="clone-address">Repository address</label><input id="clone-address" placeholder="https://github.com/your-org/kiro-configs.git" spellcheck="false" autocomplete="off" aria-describedby="clone-hint clone-error"><span class="hint" id="clone-hint">An https, ssh or file address, git@host:path, or an absolute path. If git asks you to sign in, answer in the kirokit tab below.</span><span class="error" id="clone-error" role="alert"></span></div>
+              <div class="field"><label for="clone-dir">Repository folder</label><input id="clone-dir" placeholder="/Users/you/Library/Application Support/kirokit-desktop/repo" spellcheck="false" autocomplete="off" aria-describedby="clone-dir-hint"><span class="hint" id="clone-dir-hint">Where the repository is cloned. Leave empty to use the default.</span></div>
+              <div class="actions"><button class="btn primary" type="submit">Clone</button></div>
+            </form>
+          </section>
+
+          <section id="page-choose" data-screen-label="Choose a version" hidden>
+            <div class="page-head"><div><h1>Set up kirokit</h1><p class="lede">Your team's repository is on this computer. Choose which version kirokit uses; you can change it later in Settings.</p></div></div>
+            <form class="welcome" id="version-form" novalidate>
+              <p class="source">Cloned <b>https://github.com/your-org/kiro-configs.git</b></p>
+              <div class="field"><label for="welcome-version">Version</label>
+                <select id="welcome-version" aria-describedby="welcome-version-hint">
+                  <option value="" selected>Newest release · follows new releases (now v0.4.0)</option>
+                  <optgroup label="Branches"><option value="main">main</option><option value="quick-export">quick-export</option></optgroup>
+                  <optgroup label="Tags"><option value="v0.4.0">v0.4.0</option><option value="v0.3.1">v0.3.1</option><option value="v0.3.0">v0.3.0</option></optgroup>
+                </select>
+                <span class="hint" id="welcome-version-hint">Newest release follows each new release. Pick a branch to try changes that are not released yet, or a tag to stay on one release.</span></div>
+              <div class="actions"><button class="btn primary" type="submit" id="welcome-continue">Continue</button></div>
+            </form>
+          </section>
+
+          <section id="page-teams" data-screen-label="Teams">
+            <div class="page-head"><div><h1>Teams</h1><p class="lede">Pick your team and install its agents into Kiro. No terminal needed.</p></div></div>
+            <div class="grid">
+              <article class="card">
+                <div class="card-head"><h3>data-team</h3><span class="badge off">not installed</span></div>
+                <p class="facts"><span><b>2</b> agents</span><span><b>1</b> skill</span><span>2 prompts</span><span>1 steering</span></p>
+                <p class="note">No Quick export: this team lists no skills or agents for Quick.</p>
+                <div class="actions"><button class="btn primary" type="button" data-install="data-team">Install</button></div>
+              </article>
+              <article class="card">
+                <div class="card-head"><h3>platform-team</h3><span class="badge ok" id="platform-badge">installed</span></div>
+                <p class="facts"><span><b>2</b> agents</span><span><b>2</b> skills</span><span>3 prompts</span><span>2 steerings</span></p>
+                <p class="note" id="platform-changed">Last change <time datetime="2026-10-18T11:04:00">18 Oct 2026, 11:04</time></p>
+                <p class="note">No Quick export: this team lists no skills or agents for Quick.</p>
+                <div class="actions"><button class="btn primary" type="button" data-install="platform-team">Install</button><span class="error" id="skip-error" role="alert"></span></div>
+              </article>
+              <article class="card">
+                <div class="card-head"><h3>product-team</h3><span class="badge off">not installed</span></div>
+                <p class="facts"><span><b>5</b> agents</span><span><b>2</b> skills</span><span>1 prompt</span><span>1 steering</span></p>
+                <p class="quick-result" role="status" id="quick-result" hidden><span>Quick bundle ready: <b>1</b> skill, <b>1</b> agent.</span><button class="link-btn" type="button">Show folder</button><span class="path">/Users/you/Library/Application Support/kirokit-desktop/quick/product-team</span></p>
+                <div class="actions"><button class="btn primary" type="button" data-install="product-team">Install</button><button class="btn" type="button" id="quick-btn" title="Render the team's skills and agents for Amazon Quick and open the folder">Export for Quick</button></div>
+              </article>
+            </div>
+          </section>
+
+          <section id="page-agents" data-screen-label="Agents" hidden>
+            <div class="page-head"><div><h1>Agents</h1><p class="lede">What each team's agents do, the tools and servers they use, and who looks after them.</p></div></div>
+            <table>
+              <thead><tr><th scope="col">Agent</th><th scope="col">Team</th><th scope="col">What it does</th><th scope="col">Tools</th><th scope="col">Secrets</th><th scope="col">Owner</th><th scope="col"><span class="sr">Feedback</span></th></tr></thead>
+              <tbody id="agents-body"></tbody>
+            </table>
+            <p class="note">data-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off.</p>
+            <p class="note">platform-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off.</p>
+          </section>
+
+          <section id="page-install" data-screen-label="Install and sync" hidden>
+            <div class="page-head"><div><h1>Install and sync</h1><p class="lede">What is installed in your Kiro home folder, and whether it is current.</p></div></div>
+            <p class="source">Templates from <span class="badge off">newest release</span> <b>v0.4.0</b> at <b>b81d0a7</b></p>
+            <table id="install-table">
+              <thead><tr><th scope="col">Team</th><th scope="col">Status</th><th scope="col">Files recorded</th><th scope="col">Last change</th><th scope="col"><span class="sr">Actions</span></th></tr></thead>
+              <tbody>
+                <tr><td class="mono">platform-team</td><td><span class="badge ok">installed</span></td><td class="num">14</td><td><time datetime="2026-10-18T11:04:00">18 Oct 2026, 11:04</time></td><td><div class="row-actions"><button class="btn" type="button" data-cmd>Sync</button><button class="btn" type="button" data-cmd>Uninstall</button></div></td></tr>
+              </tbody>
+            </table>
+            <div id="install-empty" hidden><p class="note">Nothing is installed yet. Pick a team on the Teams page.</p></div>
+            <p class="note">Files recorded and Last change come from kirokit's install record for each team.</p>
+          </section>
+
+          <section id="page-skills" data-screen-label="Skills and MCP versions" hidden>
+            <div class="page-head"><div><h1>Skills and MCP versions</h1><p class="lede">Where each skill comes from, who looks after it, and the server versions every team shares.</p></div></div>
+            <h2>Skills</h2>
+            <table>
+              <thead><tr><th scope="col">Skill</th><th scope="col">Team</th><th scope="col">Source</th><th scope="col">Owner</th><th scope="col"><span class="sr">Feedback</span></th></tr></thead>
+              <tbody id="skills-body"></tbody>
+            </table>
+            <p class="note">data-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off.</p>
+            <p class="note">platform-team names no feedback repository in its manifest.yaml, so its Feedback buttons are off.</p>
+            <h2>MCP versions</h2>
+            <table>
+              <thead><tr><th scope="col">Server</th><th scope="col">Version</th><th scope="col">Used by</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">confluence-mcp</td><td class="mono">2.1.0</td><td>platform-team</td></tr>
+                <tr><td class="mono">context7-mcp</td><td class="mono">4.4.4</td><td>platform-team</td></tr>
+                <tr><td class="mono">example-mcp</td><td class="mono">1.0.0</td><td><span class="note">no agent yet</span></td></tr>
+                <tr><td class="mono">jira-mcp</td><td class="mono">1.4.2</td><td><span class="note">no agent yet</span></td></tr>
+                <tr><td class="mono">mcp-remote</td><td class="mono">0.15.2</td><td>platform-team</td></tr>
+                <tr><td class="mono">pipeline-mcp</td><td class="mono">3.0.0</td><td>data-team</td></tr>
+                <tr><td class="mono">snowflake-mcp</td><td class="mono">0.9.1</td><td>data-team</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section id="page-settings" data-screen-label="Settings" hidden>
+            <div class="page-head"><div><h1>Settings</h1><p class="lede">Where kirokit installs agents, and where its templates come from.</p></div></div>
+            <div class="field"><label for="kirohome">Kiro home folder</label><input id="kirohome" value="/Users/you/.kiro" spellcheck="false" autocomplete="off" aria-describedby="kirohome-hint"><span class="hint" id="kirohome-hint">Where Kiro reads its agents. Defaults to ~/.kiro unless KIRO_HOME is set in your shell. A team installed in the old folder stays there; uninstall it first to remove it.</span></div>
+            <div class="field"><label for="repo">Repository address</label><input id="repo" value="https://github.com/your-org/kiro-configs.git" spellcheck="false" autocomplete="off" aria-describedby="repo-hint"><span class="hint" id="repo-hint">Where your team keeps its templates.</span></div>
+            <div class="field"><label for="repodir">Repository folder</label><input id="repodir" value="/Users/you/Library/Application Support/kirokit-desktop/repo" spellcheck="false" autocomplete="off" aria-describedby="repodir-hint"><span class="hint" id="repodir-hint">Where the repository is cloned. Choosing another folder shows the setup page again so you can clone there; the old folder is left as it is.</span></div>
+            <div class="actions"><button class="btn primary" type="button" id="save">Save</button><span class="status-line" id="save-status" role="status"></span></div>
+            <h2>Templates</h2>
+            <p class="source">In use: <span class="badge off">newest release</span> <b>v0.4.0</b> at <b>b81d0a7</b></p>
+            <div class="field"><label for="version">Version</label>
+              <select id="version" aria-describedby="version-hint">
+                <option value="" selected>Newest release · follows new releases (now v0.4.0)</option>
+                <optgroup label="Branches"><option value="main">main</option><option value="quick-export">quick-export</option></optgroup>
+                <optgroup label="Tags"><option value="v0.4.0">v0.4.0</option><option value="v0.3.1">v0.3.1</option><option value="v0.3.0">v0.3.0</option></optgroup>
+              </select>
+              <span class="hint" id="version-hint">Newest release follows each new release. A branch follows its new commits; a tag stays fixed. New branches show up here after the next Update.</span></div>
+            <div class="actions"><button class="btn" type="button" id="update" data-cmd>Update</button></div>
+            <p class="note">Update fetches the selected version of your team's repository, and re-installs the installed team from it.</p>
+          </section>
+        </main>
+
+        <button type="button" class="term-toggle" id="term-open" aria-controls="terminal">Show terminal <kbd>⌃`</kbd></button>
+        <section class="terminal" id="terminal" aria-label="Terminal" hidden>
+          <div class="resize" id="resize" role="separator" aria-orientation="horizontal" aria-label="Resize terminal" aria-valuenow="220" aria-valuemin="120" aria-valuemax="480" tabindex="0"></div>
+          <div class="term-bar">
+            <div class="term-tabs" role="tablist" aria-label="Terminals">
+              <button type="button" role="tab" id="tab-kirokit" aria-selected="true" aria-controls="term-kirokit" tabindex="0">kirokit</button>
+              <button type="button" role="tab" id="tab-shell" aria-selected="false" aria-controls="term-shell" tabindex="-1">zsh</button>
+            </div>
+            <span class="grow"></span>
+            <button type="button" class="icon-btn" id="term-clear" aria-label="Clear terminal" title="Clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M10 11v6M14 11v6M7 7l1 12h8l1-12M10 7V4h4v3"/></svg></button>
+            <button type="button" class="icon-btn" id="term-close" aria-label="Hide terminal" title="Hide (⌃`)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          </div>
+          <pre class="term-body" id="term-kirokit" role="tabpanel" aria-labelledby="tab-kirokit" tabindex="0"><span class="t-muted">Buttons run their kirokit command here. Type your own commands in the zsh tab.</span>
+</pre>
+          <pre class="term-body" id="term-shell" role="tabpanel" aria-labelledby="tab-shell" tabindex="0" hidden><span class="t-prompt">kiro-configs</span> on <span class="t-muted">tags/v0.4.0</span>
+<span class="t-ok">➜</span> <span class="cursor" aria-hidden="true"></span></pre>
+        </section>
+      </div>
+
+      <div class="scrim" id="replace-scrim" hidden>
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="replace-title" aria-describedby="replace-text">
+          <h2 id="replace-title">Replace the installed team?</h2>
+          <p id="replace-text">platform-team is installed. A Kiro home holds one team, so installing product-team uninstalls platform-team first.</p>
+          <div class="dialog-actions"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="button" id="replace-ok">Replace</button></div>
+        </div>
+      </div>
+
+      <div class="scrim" id="checks-scrim" hidden>
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+          <h2 id="setup-title">Install product-team</h2>
+          <p class="note">kirokit needs these on this computer before it can install a team.</p>
+          <ul class="checks">
+            <li><span class="badge ok">found</span> <b>SOPS</b><span class="detail">/opt/homebrew/bin/sops</span></li>
+            <li><span class="badge warn">missing</span> <b>Decryption key</b><span class="detail">Ask your team lead for the age key and save it as /Users/you/Library/Application Support/sops/age/keys.txt</span></li>
+            <li><span class="badge ok">found</span> <b>Kiro CLI</b><span class="detail">/Users/you/.local/bin/kiro-cli</span></li>
+          </ul>
+          <p class="status-line" id="setup-status" role="status">1 of 3 checks needs attention. Fix them, then press Check again.</p>
+          <div class="dialog-actions"><button class="btn" type="button" data-close>Cancel</button><button class="btn" type="button" id="setup-again">Check again</button><button class="btn primary" type="button" disabled>Install</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <section class="notes" id="what-this-shows" data-screen-label="What this shows">
+    <h2>What this shows</h2>
+    <div class="note-card">
+      <h3>Drawn from the app's source</h3>
+      <ul>
+        <li>Layout, sidebar, dock and dialogs: <code>desktop/frontend/index.html</code></li>
+        <li>Colours, type and spacing: the tokens in <code>src/style.css</code>, light and dark</li>
+        <li>Cards, tables, badges and copy: <code>src/pages/*.js</code> and <code>src/dialogs.js</code></li>
+        <li>Teams, agents, skills and pins: <code>teams/*/manifest.yaml</code>, the agent templates and <code>env/mcp-versions.yaml</code></li>
+      </ul>
+    </div>
+    <div class="note-card">
+      <h3>What is simulated</h3>
+      <ul>
+        <li>Sidebar, Collapse, terminal tabs, Hide/Show terminal, the resize handle (arrow keys) and both dialogs respond.</li>
+        <li>Picking another Version turns Update into “Switch to … and update”, as in the app.</li>
+        <li>No command runs, no folder opens, nothing is sent or saved; Save and Clone only show what the app would say.</li>
+      </ul>
+    </div>
+    <div class="note-card">
+      <h3>Sample values and gaps</h3>
+      <ul>
+        <li>Sample: the install record (14 files, 18 Oct 2026), the branch and tag names, the commit, the <code>/Users/you</code> paths and the command output in the terminal.</li>
+        <li>The dock starts closed, as in the app; it opens on the kirokit tab when a command runs.</li>
+        <li>Not drawn: a catalog read error; the Teams notice for no release or a failed clone; a failed clone or switch; Settings field errors and the shell note; the busy labels Cloning…, Switching… and Exporting…; the No owner cell; the branch and pinned-tag badges; Windows and Linux title bars.</li>
+        <li>The app is desktop-only: at phone width the window scrolls sideways in its frame.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  // Viewer theme bridge: the host's View → Light/Dark choice sets data-theme.
+  const applyTheme = (t) => { if (t === 'light' || t === 'dark') root.dataset.theme = t; };
+  window.addEventListener('ql:artifact-mode', (e) => applyTheme(e.detail && e.detail.theme));
+  applyTheme(root.dataset.theme);
+
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // Agents and skills, as the catalog reports them for this repository's teams.
+  const base = ['read', 'write', 'glob', 'knowledge', 'shell'];
+  const persona = ['read', 'glob', 'knowledge', 'subagent'];
+  const agents = [
+    ['godev', 'data-team', 'Go backend developer agent for data-team, with access to the build pipeline status via a local, non-secret MCP server.', [...base, '@pipeline-mcp'], false, true],
+    ['javadev', 'data-team', 'Java backend developer agent for data-team, with access to the analytics warehouse via Snowflake.', [...base, '@snowflake-mcp'], true, true],
+    ['devops', 'platform-team', "Triages and resolves Jira tickets for platform-team, following the team's shared security baseline steering.", [...base, '@atlassian', '@context7'], true, true],
+    ['platformdev', 'platform-team', "Looks up Confluence documentation for platform-team, following the team's shared security baseline steering.", [...base, '@confluence-mcp'], true, true],
+    ['customer', 'product-team', "Speaks as product-team's customer persona: goals, frustrations and what a good experience looks like. The persona is an invented example until the team fills it from its own interviews.", persona, false, true],
+    ['engineer', 'product-team', 'Engineer for product-team: turns agreed requirements into designs and code, and reviews designs for deep modules, information hiding and red flags.', [...base, 'subagent'], false, true],
+    ['product-owner', 'product-team', 'Product owner for product-team: owns the vision and priorities, writes and reviews requirements, and consults the customer, engineer, QA and UX designer agents before deciding.', persona, false, false],
+    ['qa', 'product-team', 'QA engineer for product-team: finds how a requirement, design or change can fail and turns each case into a test with steps and an expected result.', persona, false, true],
+    ['ux-designer', 'product-team', "UX/UI designer for product-team: describes the user's path, every screen state, the words on screen and accessibility needs, reusing the product's existing patterns.", persona, false, true],
+  ];
+  const skills = [
+    ['sql-helper', 'data-team'], ['confluence-lookup', 'platform-team'], ['jira-search', 'platform-team'],
+    ['analyze-session', 'product-team'], ['user-story', 'product-team'],
+  ];
+  const withFeedback = new Set(['product-team']);
+  const ownerCell = (fromTeam) => `<td><span class="owner"><span class="mono">@mavogel</span>${fromTeam ? '<span class="from">team owner</span>' : ''}</span></td>`;
+  const feedbackCell = (team, name) => withFeedback.has(team)
+    ? `<td><button class="btn" type="button" data-cmd aria-label="Give feedback on ${esc(name)}">Feedback</button></td>`
+    : `<td><button class="btn" type="button" disabled aria-label="Give feedback on ${esc(name)} (no feedback repository)">Feedback</button></td>`;
+  const chips = (xs) => xs.map((x) => `<span class="chip">${esc(x)}</span>`).join('');
+  $('#agents-body').innerHTML = agents.map(([name, team, desc, tools, key, fromTeam]) => `<tr>
+  <td class="mono">${esc(name)}</td><td>${esc(team)}</td><td class="desc">${esc(desc)}</td><td>${chips(tools)}</td>
+  <td>${key ? '<span class="badge warn">needs key</span>' : '<span class="badge off">none</span>'}</td>${ownerCell(fromTeam)}${feedbackCell(team, name)}</tr>`).join('');
+  $('#skills-body').innerHTML = skills.map(([name, team]) => `<tr><td class="mono">${esc(name)}</td><td>${esc(team)}</td><td class="desc">Written by the team</td>${ownerCell(true)}${feedbackCell(team, name)}</tr>`).join('');
+
+  // Sidebar pages and collapse.
+  const app = $('#app');
+  const navButtons = $$('.nav button');
+  const PAGES = ['teams', 'agents', 'install', 'skills', 'settings'];
+  let page = 'teams';
+  let mode = 'ready';
+  function showPage(p) {
+    page = p;
+    const setup = mode === 'welcome' || mode === 'choose';
+    for (const id of PAGES) $('#page-' + id).hidden = setup || id !== p;
+    $('#page-welcome').hidden = mode !== 'welcome';
+    $('#page-choose').hidden = mode !== 'choose';
+    for (const b of navButtons) {
+      if (b.dataset.page === p) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    }
+    $('#main').scrollTop = 0;
+  }
+  for (const b of navButtons) b.addEventListener('click', () => showPage(b.dataset.page));
+  const collapse = $('#collapse');
+  function setRail(on) {
+    app.classList.toggle('rail', on);
+    collapse.setAttribute('aria-expanded', String(!on));
+    collapse.title = on ? 'Expand sidebar' : 'Collapse sidebar';
+    $('.label', collapse).textContent = on ? 'Expand' : 'Collapse';
+  }
+  collapse.addEventListener('click', () => setRail(!app.classList.contains('rail')));
+
+  // Terminal dock: tabs, hide/show, clear, resize by keyboard.
+  const tabs = $$('[role="tab"]');
+  const shellText = $('#term-shell').innerHTML;
+  const kirokitIdle = '<span class="t-muted">Buttons run their kirokit command here. Type your own commands in the zsh tab.</span>\n';
+  const kirokitRunning = kirokitIdle + '<span class="t-prompt">$</span> kirokit install product-team\n<span class="t-muted">(the command\'s own output streams here while it runs)</span>\n';
+  const kirokitQuick = kirokitIdle + '<span class="t-prompt">$</span> kirokit render --quick product-team --out "/Users/you/Library/Application Support/kirokit-desktop/quick/product-team"\n<span class="t-muted">(the command\'s own output)</span>\n';
+  const kirokitClone = kirokitIdle + '<span class="t-prompt">$</span> git clone -- https://github.com/your-org/kiro-configs.git "/Users/you/Library/Application Support/kirokit-desktop/repo"\n<span class="t-prompt">$</span> kirokit sync --latest-tag\n<span class="t-muted">(the commands\' own output)</span>\n';
+  function selectTab(tab, focus) {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      $('#' + t.getAttribute('aria-controls')).hidden = !on;
+    }
+    if (focus) tab.focus();
+  }
+  for (const t of tabs) {
+    t.addEventListener('click', () => selectTab(t));
+    t.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      selectTab(tabs[(tabs.indexOf(t) + 1) % tabs.length], true);
+    });
+  }
+  const terminal = $('#terminal');
+  const termOpen = $('#term-open');
+  $('#term-close').addEventListener('click', () => { terminal.hidden = true; termOpen.hidden = false; termOpen.focus(); });
+  termOpen.addEventListener('click', () => { terminal.hidden = false; termOpen.hidden = true; $('#term-close').focus(); });
+  $('#term-clear').addEventListener('click', () => {
+    const panel = tabs.find((t) => t.getAttribute('aria-selected') === 'true').getAttribute('aria-controls');
+    $('#' + panel).innerHTML = panel === 'term-shell' ? '<span class="t-ok">➜</span> <span class="cursor" aria-hidden="true"></span>' : '';
+  });
+  const resize = $('#resize');
+  resize.addEventListener('keydown', (e) => {
+    const step = { ArrowUp: 20, ArrowDown: -20 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const h = Math.min(480, Math.max(120, Number(resize.getAttribute('aria-valuenow')) + step));
+    resize.setAttribute('aria-valuenow', String(h));
+    terminal.style.setProperty('--dock', h + 'px');
+  });
+
+  // Dialogs: the rest of the window is inert while one is open; Escape cancels.
+  const work = $('.work');
+  const sidebarEl = $('.sidebar');
+  let opener = null;
+  function openDialog(id, from) {
+    for (const s of $$('.scrim')) s.hidden = s.id !== id;
+    work.inert = true; sidebarEl.inert = true;
+    opener = from || null;
+    const first = $('#' + id + ' [data-close]');
+    if (first) first.focus({ preventScroll: true });
+  }
+  function closeDialogs() {
+    for (const s of $$('.scrim')) s.hidden = true;
+    work.inert = false; sidebarEl.inert = false;
+    if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
+    opener = null;
+  }
+  for (const b of $$('[data-close]')) b.addEventListener('click', () => { closeDialogs(); if (mode === 'replace' || mode === 'checks') setMode('ready', false); });
+  app.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $$('.scrim').some((s) => !s.hidden)) { e.preventDefault(); closeDialogs(); setMode('ready', false); } });
+  $('#replace-ok').addEventListener('click', () => openDialog('checks-scrim', opener));
+  $('#setup-again').addEventListener('click', () => { $('#setup-status').textContent = 'Checking...'; setTimeout(() => { $('#setup-status').textContent = '1 of 3 checks needs attention. Fix them, then press Check again.'; }, 500); });
+
+  // Install follows the app's plan: skip an installed team, ask before replacing, then the checks.
+  for (const b of $$('[data-install]')) b.addEventListener('click', () => {
+    const team = b.dataset.install;
+    $('#skip-error').textContent = '';
+    if (team === 'platform-team') { $('#skip-error').textContent = 'platform-team is already installed.'; return; }
+    $('#replace-text').textContent = `platform-team is installed. A Kiro home holds one team, so installing ${team} uninstalls platform-team first.`;
+    $('#setup-title').textContent = 'Install ' + team;
+    openDialog('replace-scrim', b);
+  });
+
+  // Version select: another entry changes Update's label.
+  $('#version').addEventListener('change', (e) => { $('#update').textContent = e.target.value === '' ? 'Update' : `Switch to ${e.target.value} and update`; });
+  $('#welcome-version').addEventListener('change', (e) => { $('#welcome-continue').textContent = e.target.value === '' ? 'Continue' : `Switch to ${e.target.value} and continue`; });
+  $('#save').addEventListener('click', () => { $('#save-status').textContent = 'Saved on this computer (simulated: nothing is stored).'; });
+  $('#clone-form').addEventListener('submit', (e) => { e.preventDefault(); setMode('choose'); });
+  $('#version-form').addEventListener('submit', (e) => { e.preventDefault(); setMode('ready'); });
+  $('#quick-btn').addEventListener('click', () => setMode('quick'));
+
+  // App states.
+  const stateButtons = $$('#states button');
+  function setMode(next, moveFocus) {
+    mode = next;
+    for (const b of stateButtons) b.setAttribute('aria-pressed', String(b.dataset.state === next));
+    closeDialogs();
+    const setup = next === 'welcome' || next === 'choose';
+    app.classList.toggle('setup', setup);
+    const running = next === 'running';
+    for (const b of $$('[data-install], [data-cmd], #quick-btn')) b.disabled = running;
+    $('#version').disabled = running;
+    $('#quick-btn').textContent = 'Export for Quick';
+    $('#quick-result').hidden = next !== 'quick';
+    // The dock starts closed; a command writing output opens it on the kirokit tab.
+    $('#term-kirokit').innerHTML = running ? kirokitRunning : next === 'quick' ? kirokitQuick : next === 'choose' ? kirokitClone : kirokitIdle;
+    $('#term-shell').innerHTML = shellText;
+    const dockOpen = running || next === 'quick' || next === 'choose';
+    terminal.hidden = !dockOpen;
+    termOpen.hidden = dockOpen;
+    selectTab(tabs[0]);
+    // Nothing installed: no install record, so the table gives way to its message.
+    const empty = next === 'empty';
+    $('#install-table').hidden = empty;
+    $('#install-empty').hidden = !empty;
+    $('#platform-badge').className = empty ? 'badge off' : 'badge ok';
+    $('#platform-badge').textContent = empty ? 'not installed' : 'installed';
+    $('#platform-changed').hidden = empty;
+    if (empty) page = 'install';
+    if (next === 'quick' || next === 'replace' || next === 'checks') page = 'teams';
+    showPage(page);
+    if (next === 'replace') openDialog('replace-scrim');
+    if (next === 'checks') openDialog('checks-scrim');
+    if (moveFocus === false) return;
+  }
+  for (const b of stateButtons) b.addEventListener('click', () => setMode(b.dataset.state));
+
+  // Named states for previews: ?state=running&page=agents&rail=1
+  const q = new URLSearchParams(window.QL_PREVIEW_QUERY ?? location.search);
+  if (PAGES.includes(q.get('page'))) page = q.get('page');
+  if (q.get('rail') === '1') setRail(true);
+  const st = q.get('state');
+  setMode(stateButtons.some((b) => b.dataset.state === st) ? st : 'ready', false);
+})();
+</script>
+</body>
+</html>
