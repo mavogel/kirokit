@@ -192,7 +192,7 @@ Linux, CI and the showcase:
 ## How it was verified
 
 <!-- ql:checked -->
-12 items remain unverified. Lanes that ran: Security review, Project checks, Code review and Second opinion.
+12 items remain unverified; the owner approved with these limits. Lanes that ran: Security review, Project checks, Code review and Second opinion.
 
 - T5: Open each menu of the built macOS app (desktop/build/bin/kirokit.app) and check: kirokit (About, Settings…, Services, Hide, Hide Others, Show All, Quit), Edit, Window, Help (kirokit documentation, Report a problem with kirokit…); ⌘, opens Settings; Help entries open the docs page and the new-issue form. This session has no macOS accessibility permission, so it can read the menu bar only from a screenshot, not open the menus or press shortcuts.
 - T8: Push this branch and open its pull request so the Desktop workflow runs (Ubuntu 24.04, Windows, macOS smoke starts, the linux-distros job and the Windows install-over-last-release check), then run the Release workflow by hand as a dry run. This session may not push.
@@ -248,7 +248,7 @@ Linux, CI and the showcase:
 ## Accepted with open items
 
 <!-- ql:accepted -->
-These items remain unverified for Review:
+Approved with these unresolved items. They remain unverified:
 
 - T5: Open each menu of the built macOS app (desktop/build/bin/kirokit.app) and check: kirokit (About, Settings…, Services, Hide, Hide Others, Show All, Quit), Edit, Window, Help (kirokit documentation, Report a problem with kirokit…); ⌘, opens Settings; Help entries open the docs page and the new-issue form. This session has no macOS accessibility permission, so it can read the menu bar only from a screenshot, not open the menus or press shortcuts.
 - T8: Push this branch and open its pull request so the Desktop workflow runs (Ubuntu 24.04, Windows, macOS smoke starts, the linux-distros job and the Windows install-over-last-release check), then run the Release workflow by hand as a dry run. This session may not push.
@@ -303,5 +303,5 @@ These items remain unverified for Review:
 ## Ship
 
 <!-- ql:ship -->
-Not shipped yet. Branch `main`.
+Opened as pull request #32. Branch `main`.
 <!-- /ql:ship -->

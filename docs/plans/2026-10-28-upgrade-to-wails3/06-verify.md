@@ -5,7 +5,7 @@
 <!-- ql:summary -->
 6 of 8 points assessed · 3 passed
 
-Unverified after 1 judge run: 12 items remain unresolved. No acceptance recorded.
+Approved with 12 items still unverified after 1 judge run.
 <!-- /ql:summary -->
 
 ## Open items

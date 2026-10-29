@@ -7,10 +7,10 @@ depth: light
 level: engineering
 ui: true
 overrides: []
-stage: review
+stage: shipped
 iterations: 1
 verification_failures: 0
-gate: review
+gate: null
 created: 1793213936030
 startup_owner: 74d678ebe8123b18
 layout: seven
@@ -19,10 +19,14 @@ status: approved
 approved: true
 review_digest: 433362293b46adb6f15d4962bcab91795ac6c224a39be8619f7a9061ed2c2e85
 review_basis: 6e9e2330c25251f790111e964500f9882ecad656adc2b5487a23cdb263473819
-branch: main
+branch: feat/update-wails3
 base: b12c4a00ed9f9bd674f674b57f04554c7f402a1f
 base_ref: main
 judge_runs: 0
+shipped: 2026-10-29
+commits: ["1a3ddd7","5fb955d","c2eacbd","bd2a0a6","31f16ca","f61b5e7","71d21bc","a4dbabc","687a17c","f5d5758","90d81a2","ac235bf","7ae14b6","b946d52","c43b065"]
+touched: [".github/workflows/",".goreleaser.yaml","AGENTS.md","CONTRIBUTING.md","README.md","Taskfile.yml","desktop/.gitignore","desktop/Taskfile.yml","desktop/app.go","desktop/build/","desktop/frontend/","desktop/go.mod"]
+slices: 6
 ---
 
 # Upgrade desktop app to Wails v3
