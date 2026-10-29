@@ -27,7 +27,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Ubuntu 24.04: the oldest system the Linux app supports, as in the release.
+        os: [ubuntu-24.04, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -54,12 +55,12 @@ jobs:
       - name: Install Task
         run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
 
-      # WebKitGTK 4.1 to build the app, xvfb for its smoke start.
+      # GTK 4 / WebKitGTK 6.0 to build the app, xvfb for its smoke start.
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libgtk-3-dev libwebkit2gtk-4.1-dev xvfb
+          sudo apt-get install -y --no-install-recommends libgtk-4-dev libwebkitgtk-6.0-dev xvfb
 
       # makensis builds the Windows setup .exe.
       - name: Install NSIS
@@ -74,7 +75,8 @@ jobs:
       - name: Build
         run: task desktop:build
 
-      # The built app quits with 0 once its page has loaded, 1 after a minute without.
+      # The built app quits with 0 once its page has loaded and answered a call
+      # to Go (smoke:ready after State), 1 after a minute without.
       - name: Smoke start
         timeout-minutes: 5
         env:
@@ -85,6 +87,51 @@ jobs:
             Linux) xvfb-run -a desktop/build/bin/kirokit-desktop ;;
             Windows) "desktop/build/bin/kirokit-desktop-$(go env GOARCH).exe" ;;
           esac
+
+      # The new setup program installs over the last release's: the same folder,
+      # the new files, and one entry in Apps & Features.
+      - name: Install over the last release (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $old = (gh release view --repo $env:GITHUB_REPOSITORY --json assets --jq '.assets[].name') |
+            Where-Object { $_ -like 'kirokit-desktop_*_windows_amd64-setup.exe' } | Select-Object -First 1
+          if (-not $old) {
+            Write-Output '::notice::No release with a Windows setup program yet; the upgrade check is skipped.'
+            exit 0
+          }
+          $dl = Join-Path $env:RUNNER_TEMP 'last-release'
+          gh release download --repo $env:GITHUB_REPOSITORY --pattern $old --dir $dl
+          if ($LASTEXITCODE -ne 0) { throw "could not download $old" }
+          $new = Get-ChildItem 'desktop/build/bin/installers/*_windows_amd64-setup.exe' | Select-Object -First 1
+          foreach ($setup in @((Join-Path $dl $old), $new.FullName)) {
+            Write-Output "installing $setup"
+            $p = Start-Process -FilePath $setup -ArgumentList '/S' -Wait -PassThru
+            if ($p.ExitCode -ne 0) { throw "$setup exited $($p.ExitCode)" }
+          }
+
+          $dir = 'C:\Program Files\mavogel\kirokit'
+          foreach ($pair in @(
+              @("$dir\kirokit-desktop.exe", 'desktop/build/bin/kirokit-desktop-amd64.exe'),
+              @("$dir\bin\kirokit.exe", 'desktop/build/bin/cli/windows_amd64/kirokit.exe'))) {
+            $installed = (Get-FileHash $pair[0]).Hash
+            $built = (Get-FileHash $pair[1]).Hash
+            if ($installed -ne $built) { throw "$($pair[0]) is not the new build ($($pair[1]))" }
+          }
+
+          $entries = @(
+            'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
+            'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*',
+            'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+          ) | ForEach-Object { Get-ItemProperty $_ -ErrorAction SilentlyContinue } |
+            Where-Object { "$($_.DisplayName) $($_.InstallLocation) $($_.UninstallString)" -match 'kirokit' }
+          $entries | ForEach-Object { Write-Output "uninstall entry: $($_.PSChildName) ($($_.DisplayName))" }
+          if ($entries.Count -ne 1 -or $entries[0].PSChildName -ne 'mavogelkirokit') {
+            throw "want exactly one uninstall entry, mavogelkirokit; found $($entries.Count)"
+          }
 
       # Early feedback on the release config, on pull requests only: this OS's
       # part of the Release workflow's split build, as a snapshot that publishes
@@ -123,3 +170,63 @@ jobs:
           kirokit --version
           test -x /usr/lib/kirokit-desktop/kirokit
           xvfb-run -a /usr/bin/kirokit-desktop
+
+  # The Linux app built on Ubuntu 24.04 starts on each system the docs list, with
+  # only the libraries its .deb declares. Each runs as a regular user in a
+  # container that allows the namespaces WebKitGTK 6.0's sandbox needs (a
+  # desktop session has them; Docker's defaults do not). Debian 12 is not
+  # listed: its GTK 4.8 is older than the 4.14 Wails v3 needs.
+  linux-distros:
+    name: linux-distros (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: stable
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: lts/*
+
+      - name: Install Task
+        run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgtk-4-dev libwebkitgtk-6.0-dev
+
+      - name: Build
+        run: task desktop:build
+
+      - name: Start the app on each supported system
+        run: |
+          deps="$(yq '.nfpms[] | select(.id == "kirokit-desktop") | .overrides.deb.dependencies[]' .goreleaser.yaml | xargs)"
+          echo "the .deb declares: $deps"
+          for image in ubuntu:24.04 ubuntu:26.04 debian:13; do
+            echo "::group::$image"
+            docker run --rm --security-opt seccomp=unconfined --security-opt systempaths=unconfined \
+              -e DEPS="$deps" -v "$PWD/desktop/build/bin:/app:ro" "$image" bash -euc '
+                export DEBIAN_FRONTEND=noninteractive
+                apt-get update -qq
+                apt-get install -y -qq --no-install-recommends $DEPS xvfb xauth >/dev/null
+                useradd -m tester
+                su tester -c "cd && KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a /app/kirokit-desktop"'
+            echo "$image: the app started"
+            echo "::endgroup::"
+          done
