@@ -204,3 +204,25 @@ test('Without the runtime, calls and openURL reject with a readable message', as
   await assert.rejects(api.state(), /^Error: kirokit is not running inside its window$/);
   assert.equal(typeof api.on('x', () => {}), 'function');
 });
+
+// v3's Browser.OpenURL can refuse an address or fail to start the browser; the
+// Feedback button shows that reason, so openURL must reject, not report success.
+test('openURL rejects with the reason Wails could not open the address', async () => {
+  const rt = fakeRuntime();
+  rt.Browser.OpenURL = () => Promise.reject(Object.assign(new Error('no browser'), { name: 'RuntimeError' }));
+  globalThis.__kirokitRuntime = rt;
+
+  await assert.rejects(api.openURL('https://github.com/acme/cfg/issues/new?title=x'), { message: 'no browser' });
+});
+
+// menu:settings carries no payload (Go emits nil); its handler still runs once.
+test('on calls the handler for an event without a payload', () => {
+  const listeners = {};
+  globalThis.__kirokitRuntime = fakeRuntime({ listeners });
+  const got = [];
+
+  api.on('menu:settings', (...args) => got.push(args));
+  listeners['menu:settings'].forEach((cb) => cb({ name: 'menu:settings', data: null }));
+
+  assert.deepEqual(got, [[null]]);
+});

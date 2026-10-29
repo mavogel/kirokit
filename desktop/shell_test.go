@@ -266,6 +266,34 @@ func TestBundledCLI_LinuxAndWindowsLayouts(t *testing.T) {
 	}
 }
 
+// Under wails3 dev the dev-bin CLI comes first on Linux too, before the
+// package-style <exe>/../lib/kirokit-desktop/kirokit that sits beside <wd>/bin.
+func TestBundledCLI_LinuxWails3DevPrefersDevBin(t *testing.T) {
+	work := filepath.Join(t.TempDir(), "work")
+	dev := writeScript(t, filepath.Join(work, "build", "dev-bin"), "kirokit", "")
+	writeScript(t, filepath.Join(work, "lib", "kirokit-desktop"), "kirokit", "")
+	exe := filepath.Join(work, "bin", "kirokit")
+
+	got, err := resolveCLIFor("linux", "", exe, work)
+	if err != nil || got != dev {
+		t.Errorf("resolveCLIFor = %q, %v; want the dev-bin CLI %q", got, err, dev)
+	}
+}
+
+// Only <wd>/bin/ is wails3 dev's folder: an app in a sibling folder whose name
+// merely starts with "bin" keeps its own bundled CLI.
+func TestBundledCLI_SiblingOfDevBinFolderKeepsItsBundle(t *testing.T) {
+	work := filepath.Join(t.TempDir(), "work")
+	writeScript(t, filepath.Join(work, "build", "dev-bin"), "kirokit", "")
+	exe := filepath.Join(work, "binaries", "kirokit.app", "Contents", "MacOS", "kirokit")
+	bundled := writeScript(t, filepath.Join(work, "binaries", "kirokit.app", "Contents", "Resources", "bin"), "kirokit", "")
+
+	got, err := resolveCLIFor("darwin", "", exe, work)
+	if err != nil || got != bundled {
+		t.Errorf("resolveCLIFor = %q, %v; want the bundled CLI %q", got, err, bundled)
+	}
+}
+
 func TestShellCommandFor_PerOS(t *testing.T) {
 	pwsh := func(name string) (string, error) {
 		if name == "pwsh.exe" {

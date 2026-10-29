@@ -177,3 +177,26 @@ func TestMenu_UnknownActionHasNoHandler(t *testing.T) {
 		t.Error("an unknown action got a handler")
 	}
 }
+
+// Every role menuFor names must reach the native menu: addRole only logs an
+// unknown name and leaves the entry out, so a typo would silently drop Quit or
+// Edit from one system's menu.
+func TestMenu_EveryRoleMapsToAWailsRole(t *testing.T) {
+	for _, goos := range []string{"darwin", "windows", "linux"} {
+		for _, g := range menuFor(goos) {
+			if g.Role != "" {
+				if _, ok := menuRoles[g.Role]; !ok {
+					t.Errorf("%s %s: group role %q has no Wails role", goos, g.Title, g.Role)
+				}
+			}
+			for _, it := range g.Items {
+				if it.Role == "" {
+					continue
+				}
+				if _, ok := menuRoles[it.Role]; !ok {
+					t.Errorf("%s %s: role %q has no Wails role", goos, g.Title, it.Role)
+				}
+			}
+		}
+	}
+}
