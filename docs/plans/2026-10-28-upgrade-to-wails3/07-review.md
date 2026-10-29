@@ -88,7 +88,7 @@ Linux, CI and the showcase:
 ## Built, slice by slice
 
 <!-- ql:slices -->
-6 slices · 14 tasks · 9 commits · 51 files · +2138 −515
+6 slices · 14 tasks · 10 commits · 51 files · +2136 −513
 
 **Slice 1 · The app starts and works on Wails v3 on macOS** · T1, T2, T3 · 23 files · +987 −359
 
@@ -122,10 +122,12 @@ Linux, CI and the showcase:
 - `desktop/menu_test.go` · T4 · +202 −0
 - `desktop/menu_wails.go` · T5 · new · +56 −0
 
-**Slice 3 · Linux on GTK 4 and Windows setup programs build with Wails v3** · T6, T7 · 8 files · +426 −69
+**Slice 3 · Linux on GTK 4 and Windows setup programs build with Wails v3** · T6, T7 · 10 files · +459 −69
 
 - `.goreleaser.yaml` · T6 · +15 −6
 - `desktop/build/linux/Taskfile.yml` · T6 · new · +33 −0
+- `desktop/build/linux/apparmor/kirokit-desktop` · T6 · new · +20 −0
+- `desktop/build/linux/apparmor/postinstall.sh` · T6 · new · +13 −0
 - `desktop/build/windows/Taskfile.yml` · T7 · new · +64 −0
 - `desktop/build/windows/info.json` · T7 · +7 −7
 - `desktop/build/windows/nsis/project.nsi` (renamed from `desktop/build/windows/installer/project.nsi`) · T7 · +14 −44
@@ -133,9 +135,9 @@ Linux, CI and the showcase:
 - `desktop/build/windows/wails.exe.manifest` · T7 · +8 −1
 - `scripts/linux-docker.Dockerfile` · T6 · +13 −6
 
-**Slice 4 · CI and the release build, smoke-start and check the v3 app on every system** · T8, T9 · 2 files · +154 −19
+**Slice 4 · CI and the release build, smoke-start and check the v3 app on every system** · T8, T9 · 2 files · +152 −17
 
-- `.github/workflows/desktop.yaml` · T8 · +147 −14
+- `.github/workflows/desktop.yaml` · T8 · +145 −12
 - `.github/workflows/release.yaml` · T9 · +7 −5
 
 **Slice 5 · Developer commands and the showcase work on Wails v3** · T10, T11 · 6 files · +176 −46
@@ -156,11 +158,6 @@ Linux, CI and the showcase:
 - `desktop/frontend/src/pages/feedback.test.js` · T13 · +4 −3
 - `docs/desktop-app.md` · T12 · +6 −4
 - `renovate.json` · T13 · +4 −4
-
-**Decided by the agent** · 2 files · +33 −0
-
-- `desktop/build/linux/apparmor/kirokit-desktop` · new · +20 −0
-- `desktop/build/linux/apparmor/postinstall.sh` · new · +13 −0
 <!-- /ql:slices -->
 
 ## What was asked for, and how each point was proved

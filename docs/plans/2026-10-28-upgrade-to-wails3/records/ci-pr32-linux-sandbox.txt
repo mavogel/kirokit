@@ -1,0 +1,19 @@
+PR #32, Desktop workflow run 40851783163 (first CI run of the Wails v3 branch), 2026-10-29
+
+desktop (ubuntu-24.04), job 123372784443, step 'Smoke start' (app run directly on the runner, regular user):
+  bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted
+  ** (kirokit-desktop:18541): ERROR **: 09:46:46.565: Connection: failed to receive credentials: Expecting to read a single byte for receiving credentials but read zero bytes
+  SIGTRAP: trace trap
+  ##[error]Process completed with exit code 2.
+
+linux-distros (amd64), job 123372784078, ubuntu:24.04 container (seccomp and /proc unconfined, Docker's default AppArmor profile):
+  bwrap: Failed to make / slave: Permission denied
+  ** (kirokit-desktop:2748): ERROR **: 09:45:45.321: Connection: failed to receive credentials: Expecting to read a single byte for receiving credentials but read zero bytes
+  SIGTRAP: trace trap
+  ##[error]Process completed with exit code 2.
+linux-distros (arm64), job 123372784498: the same 'bwrap: Failed to make / slave: Permission denied'.
+
+Cause: Ubuntu 24.04 restricts unprivileged user namespaces through AppArmor (kernel.apparmor_restrict_unprivileged_userns=1)
+for programs without a profile that allows them; WebKitGTK 6.0 cannot run its page without its bubblewrap sandbox.
+In the containers, Docker's default AppArmor profile also denies the sandbox's mount changes. The local OrbStack
+kernel has no AppArmor, so neither showed before this run (see the T8 known limit).
