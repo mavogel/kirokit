@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/base64"
 	"os"
 	"os/exec"
@@ -80,7 +79,7 @@ func shellApp(t *testing.T, shell string) (*App, *recorder, string, string) {
 	}
 	rec := &recorder{}
 	a.emitter = rec.emit
-	t.Cleanup(func() { a.shutdown(context.Background()) })
+	t.Cleanup(func() { _ = a.ServiceShutdown() })
 	return a, rec, home, cli
 }
 

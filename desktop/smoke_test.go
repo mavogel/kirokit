@@ -1,18 +1,17 @@
 package main
 
 import (
-	"context"
 	"sync/atomic"
 	"testing"
 	"time"
 )
 
-func TestSmoke_PageLoadedQuitsWithSuccess(t *testing.T) {
+func TestSmoke_PageReadyQuitsWithSuccess(t *testing.T) {
 	var quits, fails atomic.Int32
-	ready := smokeWatch(time.Second, func(context.Context) { quits.Add(1) }, func() { fails.Add(1) })
+	ready := smokeWatch(time.Second, func() { quits.Add(1) }, func() { fails.Add(1) })
 
-	ready(context.Background())
-	ready(context.Background()) // a second DOM-ready quits only once
+	ready()
+	ready() // a second smoke:ready (a page reload) quits only once
 	time.Sleep(1200 * time.Millisecond)
 
 	if quits.Load() != 1 || fails.Load() != 0 {
@@ -23,7 +22,7 @@ func TestSmoke_PageLoadedQuitsWithSuccess(t *testing.T) {
 func TestSmoke_NoPageWithinTheLimitFails(t *testing.T) {
 	failed := make(chan struct{})
 	var quits atomic.Int32
-	smokeWatch(50*time.Millisecond, func(context.Context) { quits.Add(1) }, func() { close(failed) })
+	smokeWatch(50*time.Millisecond, func() { quits.Add(1) }, func() { close(failed) })
 
 	select {
 	case <-failed:
@@ -31,6 +30,6 @@ func TestSmoke_NoPageWithinTheLimitFails(t *testing.T) {
 		t.Fatal("no failure after the limit")
 	}
 	if quits.Load() != 0 {
-		t.Error("quit called although the page never loaded")
+		t.Error("quit called although the page never answered")
 	}
 }

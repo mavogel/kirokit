@@ -246,9 +246,11 @@ function draw() {
   }
 }
 
-async function loadCatalog() {
+// The first load reads the state through api.start, which also tells Go the
+// page answered (a smoke start waits for that); later loads use api.state.
+async function loadCatalog(readState = api.state) {
   try {
-    const st = await api.state();
+    const st = await readState();
     terminalDock.setShell(shellLabel(st));
     view.cloned = st.cloned;
     view.loaded = true;
@@ -285,7 +287,7 @@ const refresh = () => loadCatalog().then(loadInstalls);
 
 const terminalDock = initDock(createDock());
 settings.load();
-refresh();
+loadCatalog(api.start).then(loadInstalls);
 api.on('installs:changed', (records) => {
   view.installs = records || [];
   draw();

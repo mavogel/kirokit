@@ -1,0 +1,44 @@
+# Wails v3 project configuration. `info` carries the same product info v2's
+# wails.json did, so the Windows installer keeps its identity (uninstall key
+# mavogelkirokit, folder Program Files\mavogel\kirokit). The committed assets
+# (darwin/Info.plist, windows/info.json, windows/nsis/project.nsi) are edited by
+# hand; do not run `wails3 update build-assets`, which overwrites them.
+version: '3'
+
+info:
+  companyName: "mavogel"
+  productName: "kirokit"
+  productIdentifier: "io.github.mavogel.kirokit"
+  description: "Install your team's Kiro agents."
+  copyright: "Copyright mavogel"
+  comments: "Install your team's Kiro agents."
+  version: "0.0.0"
+
+# `wails3 dev` (task desktop:dev): build, start vite, then run the app.
+dev_mode:
+  root_path: .
+  log_level: warn
+  debounce: 1000
+  ignore:
+    dir:
+      - .git
+      - node_modules
+      - frontend
+      - bin
+      - build
+    file:
+      - .DS_Store
+      - .gitignore
+      - .gitkeep
+      - "*_test.go"
+    watched_extension:
+      - "*.go"
+    git_ignore: true
+  executes:
+    - cmd: wails3 build DEV=true
+      type: blocking
+    - cmd: wails3 task common:dev:frontend
+      type: background
+    - cmd: wails3 task run
+      type: primary
+      exit_policy: shutdown

@@ -1,52 +1,68 @@
-// The only module that reaches Go. Wails injects window.go and window.runtime
-// at run time, so nothing generated is committed and `npm run build` works
-// before any Wails run. Pages import this file and nothing else from Go.
+// The only module that reaches Go, through Wails' @wailsio/runtime: methods are
+// called by name (main.App.<Method>), so nothing generated is committed and
+// `npm run build` works before any Wails run. Pages import this file and
+// nothing else from Go.
+import * as wails from '@wailsio/runtime';
 
-const app = () => {
-  const bound = window.go && window.go.main && window.go.main.App;
-  if (!bound) throw new Error('kirokit is not running inside its window');
-  return bound;
-};
+const NOT_IN_WINDOW = 'kirokit is not running inside its window';
 
-export const state = () => app().State();
+// Tests set globalThis.__kirokitRuntime to a fake runtime (null for none).
+function runtime() {
+  const rt = '__kirokitRuntime' in globalThis ? globalThis.__kirokitRuntime : wails;
+  if (!rt) throw new Error(NOT_IN_WINDOW);
+  return rt;
+}
+
+// A Go error rejects as Wails' RuntimeError whose message is err.Error().
+const call = async (method, ...args) => runtime().Call.ByName(`main.App.${method}`, ...args);
+
+export const state = () => call('State');
+
+// Calls State and then tells Go the page has loaded and the bridge answers
+// (smoke:ready, which a smoke start waits for); sends nothing when State fails.
+export async function start() {
+  const st = await state();
+  await runtime().Events.Emit('smoke:ready');
+  return st;
+}
 
 // Stores only the clone folder (empty restores the default); rejects with a
 // "RepoDir: ..." line when the folder is refused.
-export const setRepoDir = (dir) => app().SetRepoDir(dir);
+export const setRepoDir = (dir) => call('SetRepoDir', dir);
 
-export const saveSettings = (settings) => app().SaveSettings(settings);
+export const saveSettings = (settings) => call('SaveSettings', settings);
 
-export const catalog = () => app().Catalog();
+export const catalog = () => call('Catalog');
 
-export const installs = () => app().Installs();
+export const installs = () => call('Installs');
 
 // Captures the login environment afresh each time it is called.
-export const prerequisites = (team) => app().Prerequisites(team);
+export const prerequisites = (team) => call('Prerequisites', team);
 
 // Runs kirokit with args in the kirokit tab and resolves to the run id.
-export const run = (args) => app().Run(args);
+export const run = (args) => call('Run', args);
 
 // Where Export for Quick renders a team's bundle (<app data>/quick/<team>),
 // what that bundle holds ({ dir, skills, agents }), and showing it in the
 // file manager. Each takes only the team name; Go builds the path.
-export const quickDir = (team) => app().QuickDir(team);
-export const quickBundle = (team) => app().QuickBundle(team);
-export const openFolder = (team) => app().OpenFolder(team);
+export const quickDir = (team) => call('QuickDir', team);
+export const quickBundle = (team) => call('QuickBundle', team);
+export const openFolder = (team) => call('OpenFolder', team);
 
 // Clones the repository at address and syncs to its newest release; resolves
 // when the clone starts, rejects with the reason an address was refused.
 // clone:done reports the end.
-export const clone = (address) => app().Clone(address);
+export const clone = (address) => call('Clone', address);
 
 // The clone's current version and the branches and tags it can switch to,
 // read from its own refs (no network). Empty lists before a clone.
-export const checkout = () => app().Checkout();
+export const checkout = () => call('Checkout');
 
 // Switches the clone to a branch or tag ('' for Newest release) by running
 // kirokit sync in the kirokit tab; resolves when it starts, rejects with the
 // reason it was refused. ref:done reports the end, and the choice is saved only
 // when the switch succeeded.
-export const switchRef = (ref) => app().SwitchRef(ref);
+export const switchRef = (ref) => call('SwitchRef', ref);
 
 // Wails runs every bound call on its own goroutine, so keystrokes sent without
 // waiting can reach a terminal out of order. Each terminal sends its input
@@ -64,12 +80,12 @@ const runLine = line();
 const shellLine = line();
 
 // Keystrokes for the command running in the kirokit tab.
-export const runWrite = (id, data) => runLine(() => app().RunWrite(id, data));
+export const runWrite = (id, data) => runLine(() => call('RunWrite', id, data));
 
 // Keystrokes and the dock size for the zsh tab.
-export const shellWrite = (data) => shellLine(() => app().ShellWrite(data));
+export const shellWrite = (data) => shellLine(() => call('ShellWrite', data));
 
-export const shellResize = (cols, rows) => app().ShellResize(cols, rows);
+export const shellResize = (cols, rows) => call('ShellResize', cols, rows);
 
 // The only addresses the app opens in the system browser: a GitHub
 // repository's new-issue form. The address comes from a cloned repository's
@@ -93,13 +109,17 @@ function isIssueForm(url) {
 // any address that is not a GitHub new-issue form.
 export async function openURL(url) {
   if (!isIssueForm(url)) throw new Error(`refusing to open ${url}`);
-  const rt = window.runtime;
-  if (!rt || !rt.BrowserOpenURL) throw new Error('kirokit is not running inside its window');
-  rt.BrowserOpenURL(url);
+  await runtime().Browser.OpenURL(url);
 }
 
-// Subscribes to a Go event; returns the function that unsubscribes.
+// Subscribes to a Go event and hands handler the event's payload (Wails passes
+// an event object { name, data }); returns the function that unsubscribes.
 export function on(event, handler) {
-  const rt = window.runtime;
-  return rt && rt.EventsOn ? rt.EventsOn(event, handler) : () => {};
+  let rt;
+  try {
+    rt = runtime();
+  } catch {
+    return () => {};
+  }
+  return rt.Events.On(event, (e) => handler(e.data));
 }

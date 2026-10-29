@@ -2,7 +2,7 @@
 # Build the desktop app for the OS `go env GOOS` names, with its own copy of
 # the kirokit CLI:
 #
-#   darwin   desktop/build/bin/kirokit.app: a universal Wails app with a
+#   darwin   desktop/build/bin/kirokit.app: a universal Wails v3 app with a
 #            universal CLI at Contents/Resources/bin/kirokit
 #   linux    desktop/build/bin/kirokit-desktop (WebKitGTK 4.1) and the CLI at
 #            desktop/build/bin/kirokit, for GOARCH (default: this machine's)
@@ -31,6 +31,25 @@ ldflags="-s -w -X ${pkg}.version=${version} -X ${pkg}.commit=${commit} -X ${pkg}
 work="$(mktemp -d)"
 trap 'rm -rf "${work:?}"' EXIT
 
+# Wails v3's task files (desktop/Taskfile.yml, desktop/build/*/Taskfile.yml)
+# call a bare `wails3`, so the version desktop/go.mod pins goes first on PATH.
+# It runs on this machine, so a GOOS=windows cross-build must not reach it.
+exe=""
+[ "$(env -u GOOS go env GOOS)" = windows ] && exe=".exe"
+(cd desktop && env -u GOOS -u GOARCH go build -o "$work/tools/wails3$exe" github.com/wailsapp/wails/v3/cmd/wails3)
+export PATH="$work/tools:$PATH"
+
+# Wails v3 writes to desktop/bin/; every consumer (CI's smoke start,
+# scripts/desktop-prebuilt.sh, .goreleaser.yaml, the release workflow) reads
+# desktop/build/bin/, so the output is staged there under its v2 names.
+need() {
+  for f in "$@"; do
+    [ -e "$f" ] || { echo "desktop-build: missing $f" >&2; exit 1; }
+  done
+}
+rm -rf desktop/bin desktop/build/bin
+mkdir -p desktop/build/bin
+
 case "$(go env GOOS)" in
 darwin)
   for arch in amd64 arm64; do
@@ -39,17 +58,20 @@ darwin)
   done
   lipo -create -output "$work/kirokit" "$work/kirokit-amd64" "$work/kirokit-arm64"
 
-  # macOS 13 is the app's minimum; without these the linker warns about mixed targets.
+  # macOS 13 is the app's minimum; the process environment wins over the task file's.
   export CGO_CFLAGS="-mmacosx-version-min=13.0"
   export CGO_LDFLAGS="-mmacosx-version-min=13.0"
+  export MACOSX_DEPLOYMENT_TARGET="13.0"
 
-  # -clean empties build/bin, so the CLI is copied in afterwards.
-  (cd desktop && go tool wails build -platform darwin/universal -clean)
+  (cd desktop && wails3 task darwin:package:universal)
+  need desktop/bin/kirokit.app/Contents/MacOS/kirokit desktop/bin/kirokit.app/Contents/Resources/iconfile.icns
+  cp -R desktop/bin/kirokit.app desktop/build/bin/
 
   app="desktop/build/bin/kirokit.app"
   mkdir -p "$app/Contents/Resources/bin"
   install -m 0755 "$work/kirokit" "$app/Contents/Resources/bin/kirokit"
   # Wails sealed the bundle before the CLI joined it; seal it again (ad-hoc) so the signature stays valid.
+  xattr -cr "$app"
   codesign --force --deep --sign - "$app"
   echo "built $app (version $version)"
   ;;
