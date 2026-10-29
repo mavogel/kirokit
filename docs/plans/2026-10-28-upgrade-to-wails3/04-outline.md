@@ -11,8 +11,8 @@ Six slices and fourteen tasks: first the thinnest working v3 app on macOS (Go st
 ## Where the change lands
 
 <!-- ql:landing -->
+- `desktop/build` · 10 new, 4 changed, 1 removed · slices 1, 3, 5 · risky: outside system — GTK 4 / WebKitGTK 6.0 distro packages and NSIS under v3's templates, built here only in the Linux container.
 - `desktop` · 4 new, 9 changed, 1 removed · slices 1, 2, 3, 5 · risky: outside system — GTK 4 / WebKitGTK 6.0 distro packages and NSIS under v3's templates, built here only in the Linux container.
-- `desktop/build` · 8 new, 4 changed, 1 removed · slices 1, 3, 5 · risky: outside system — GTK 4 / WebKitGTK 6.0 distro packages and NSIS under v3's templates, built here only in the Linux container.
 - `.` · 6 changed · slices 3, 5, 6 · risky: outside system — GTK 4 / WebKitGTK 6.0 distro packages and NSIS under v3's templates, built here only in the Linux container.
 - `desktop/frontend` · 5 changed · slices 1, 2, 6
 - `scripts/showcase` · 1 new, 2 changed · slice 5
@@ -201,7 +201,7 @@ After this slice `task desktop:build` produces `kirokit-desktop` (GTK 4 / WebKit
 - [x] T6 Linux builds `kirokit-desktop` against GTK 4 / WebKitGTK 6.0
   - **Objective:** Add v3's Linux build task and the script's Linux branch, move the Linux container to a base with WebKitGTK 6.0 dev packages, and change the packages' declared dependencies.
   - **Design:** "Build adapter: `scripts/desktop-build.sh`", "Linux packaging and hosts", "plan:decision:d6"
-  - **Files:** `desktop/build/linux/Taskfile.yml`, `desktop/Taskfile.yml`, `scripts/desktop-build.sh`, `scripts/linux-docker.Dockerfile`, `.goreleaser.yaml`
+  - **Files:** `desktop/build/linux/Taskfile.yml`, `desktop/Taskfile.yml`, `scripts/desktop-build.sh`, `scripts/linux-docker.Dockerfile`, `.goreleaser.yaml`, `desktop/build/linux/apparmor/kirokit-desktop`, `desktop/build/linux/apparmor/postinstall.sh`
   - **Test first:** **Trivial:** build config; `scripts/linux-docker.sh task desktop:build` fails today (the container lacks WebKitGTK 6.0 and the script still calls v2) and passes after.
   - **Definition of done:**
     - In the container, `desktop/build/bin/kirokit-desktop` and `desktop/build/bin/kirokit` exist, `ldd kirokit-desktop` lists `libwebkitgtk-6.0` and `libgtk-4`, and no `webkit2gtk-4.1`.

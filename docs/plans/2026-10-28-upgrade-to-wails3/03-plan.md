@@ -3,8 +3,8 @@ type: plan
 status: approved
 profile: full
 approved: true
-review_digest: ff41a95f3b050eb36399991a030c72318c07ef521619927be9471d284c3d075c
-review_basis: 1775894b7a9399666efe24b0b99d9265e447dcf50618da9fec51c0530546d905
+review_digest: c437d9f43dd64b9efa5fd3b14e93eba5efe525960754fd5922b0c8af266cf3a5
+review_basis: 4a03b63fcb1d817bd2fd3d0698cc0121cc53230134a31ae1f91e35d521ef197a
 ---
 
 # Upgrade the desktop app to Wails v3, with a native menu
@@ -296,6 +296,7 @@ func menuFor(goos string) []menuGroup
 
 ### Linux packaging and hosts
 - `.goreleaser.yaml` nfpm `kirokit-desktop`: deb `libgtk-4-1`, `libwebkitgtk-6.0-4`; rpm `gtk4`, `webkitgtk6.0`; comment lists the measured distros.
+- The `.deb` installs `desktop/build/linux/apparmor/kirokit-desktop` as `/etc/apparmor.d/kirokit-desktop` (a conffile): an unconfined profile for `/usr/bin/kirokit-desktop` whose only rule is `userns`, which Ubuntu 23.10+ requires before WebKitGTK 6.0's bubblewrap sandbox may create user namespaces. Its postinstall (`desktop/build/linux/apparmor/postinstall.sh`) loads it with `apparmor_parser` when AppArmor is present. The Desktop workflow's Linux smoke start loads the same profile for the build's path; the `linux-distros` job lifts the runner's user-namespace rule and runs its containers with `apparmor=unconfined`, since a profile cannot reach a path inside a container. Added after PR #32's first CI run showed the app stopping at start on Ubuntu 24.04 (records/ci-pr32-linux-sandbox.txt).
 - `apt-get install` lines in `.github/workflows/desktop.yaml:62`, `.github/workflows/release.yaml:100`, `.github/workflows/release.yaml:159` and `scripts/linux-docker.Dockerfile:15`: `libgtk-4-dev libwebkitgtk-6.0-dev`. The Dockerfile's base moves from bookworm to the oldest claimed Debian/Ubuntu that has WebKitGTK 6.0 dev packages, so local Linux builds match CI's baseline.
 - Runners: `ubuntu-latest` → `ubuntu-24.04` for the Linux desktop build in `.github/workflows/desktop.yaml:30` (matrix entry) and `.github/workflows/release.yaml:126`; `ubuntu-26.04-arm` → `ubuntu-24.04-arm` at `.github/workflows/release.yaml:77`.
 - Distro check: a `.github/workflows/desktop.yaml` job on pull requests with the snapshot, matrix `arch: [amd64 on ubuntu-24.04, arm64 on ubuntu-24.04-arm]` × `image: [ubuntu:24.04, ubuntu:26.04, debian:12, debian:13]`: `apt-get install ./kirokit-desktop_*_linux_<arch>.deb xvfb xauth`, then `KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a /usr/bin/kirokit-desktop`. Images that fail are dropped from the matrix and the docs in the same change, with the failure saved under `records/`.

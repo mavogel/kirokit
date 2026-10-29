@@ -149,6 +149,12 @@ nfpms:
         dst: /usr/share/applications/kirokit-desktop.desktop
       - src: desktop/build/linux/kirokit-desktop.png
         dst: /usr/share/icons/hicolor/512x512/apps/kirokit-desktop.png
+      # WebKitGTK 6.0's sandbox needs user namespaces, which Ubuntu 23.10+
+      # allow only to programs with an AppArmor profile that says so.
+      - src: desktop/build/linux/apparmor/kirokit-desktop
+        dst: /etc/apparmor.d/kirokit-desktop
+        type: config
+        packager: deb
     # GTK 4 / WebKitGTK 6.0 (Wails v3 needs GTK 4.14+), built on Ubuntu 24.04:
     # Ubuntu 24.04+ and Debian 13+ (the Desktop workflow's distro check).
     overrides:
@@ -156,6 +162,8 @@ nfpms:
         dependencies:
           - libgtk-4-1
           - libwebkitgtk-6.0-4
+        scripts:
+          postinstall: desktop/build/linux/apparmor/postinstall.sh
       rpm:
         dependencies:
           - gtk4

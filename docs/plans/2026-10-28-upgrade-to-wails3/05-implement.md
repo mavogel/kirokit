@@ -122,6 +122,7 @@ Delivered 29 Oct, 08:49
 - Plan (tactical): verification round 1 was recorded while 4 files changed, 4 of them code the run exercised; rerun it or keep it and say why here; nothing you approved changes
 
 - Verify (kept): verification round 1 stands for the commit it judged (`a4dbabc`). The four files that changed while it ran are the reviewer's own added tests (`desktop/menu_test.go`, `desktop/shell_test.go`, `desktop/frontend/src/api.test.js`, committed in `687a17c` and passing in `task desktop:test`) and the Codex finding's fix to the Windows upgrade step in `.github/workflows/desktop.yaml` (`f5d5758`: fails on a `gh` error instead of skipping; `actionlint` passes and both `gh` queries return `v0.8.1` and its setup program against mavogel/kirokit). No app code changed after the judged commit, and QualityLayer handed out no second reviewer in Review; the workflow step itself only runs in CI.
+- T6 (agreed): ship an apparmor profile
 
 ## Plan amended
 
@@ -138,3 +139,11 @@ Amended by the agent on 2026-10-29; changed 04-outline.md.
 T10's Files add desktop/build/Taskfile.yml (vite binds 127.0.0.1, which Wails' dev proxy dials) and scripts/desktop-build.sh (removes Wails' intermediate desktop/bin after staging, since Go cannot overwrite the universal binary there when wails3 dev builds). The 'Decided while outlining' note on menu:settings now says main.js checks setup() itself: sidebar.select does not refuse while the first-launch page shows.
 
 Amended by the agent on 2026-10-29; changed 04-outline.md.
+
+### T6 · agreed
+
+ship an apparmor profile
+
+Why: PR #32's first CI run showed the known limit was real. On the `ubuntu-24.04` runner the app stopped at its smoke start with `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`, because Ubuntu 24.04 lets a program create unprivileged user namespaces only under an AppArmor profile that allows it, and WebKitGTK 6.0 cannot run a page without its bubblewrap sandbox; the `linux-distros` containers also hit Docker's default AppArmor profile (`bwrap: Failed to make / slave`) (records/ci-pr32-linux-sandbox.txt). Asked how to fix it, the user chose the AppArmor profile over going back to GTK 3 or turning WebKit's sandbox off. What changed: `desktop/build/linux/apparmor/kirokit-desktop` (unconfined, `userns` only, for `/usr/bin/kirokit-desktop`) and its `postinstall.sh` ship in the `.deb` only; the profile parses with Ubuntu 24.04's AppArmor 4.0.1 and Debian 13's 4.1.0, and `goreleaser check` passes. The Desktop workflow's Linux smoke start loads the same profile for the build's path, the installed-`.deb` step checks the profile file is installed and loaded before starting `/usr/bin/kirokit-desktop`, and `linux-distros` lifts the runner's user-namespace rule and adds `apparmor=unconfined` to its containers. Proof is the next CI run of PR #32.
+
+Agreed with the user on 2026-10-29; changed 03-plan.md, 04-outline.md.
