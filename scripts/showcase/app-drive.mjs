@@ -1,5 +1,6 @@
-// Clicks the showcase app story in the real desktop UI (Wails dev mode serves
-// it at http://localhost:34115) and records it with headless Chrome:
+// Clicks the showcase app story in the real desktop UI (the Wails server build
+// that app-server.sh starts serves it at http://localhost:34115) and records it
+// with headless Chrome:
 //   Clone the config repository, Continue on its version step (Newest
 //   release), Install platform-team, Install in the setup dialog, wait for the
 //   "installed" badge.

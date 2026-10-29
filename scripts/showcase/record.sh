@@ -37,7 +37,7 @@ cleanup() {
   tmux -L "$sock" kill-server 2>/dev/null || true
   for pid in "${pids[@]+"${pids[@]}"}"; do
     # Each background job runs in its own process group (set -m), so its
-    # children (vite, the dev app) stop with it.
+    # children stop with it.
     kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
   done
   for pid in "${pids[@]+"${pids[@]}"}"; do wait "$pid" 2>/dev/null || true; done
@@ -63,9 +63,9 @@ done
 [[ -d "/Applications/Kiro.app" ]] || fail "Kiro IDE not found in /Applications"
 agekey="${SOPS_AGE_KEY_FILE:-$HOME/Library/Application Support/sops/age/keys.txt}"
 [[ -f "$agekey" ]] || fail "SOPS age key not found at $agekey"
-for port in 34115 5173 34117; do
+for port in 34115 34117; do
   if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
-    fail "port $port is busy: close the running wails dev or kirocrew gateway first"
+    fail "port $port is busy: close the running kirokit app server or kirocrew gateway first"
   fi
 done
 
@@ -131,42 +131,22 @@ node "$here/crew-drive.mjs" "$out" "$demo/kiro" "$demo/crew-home" "${agents[@]}"
 
 # --- 4. app clip ------------------------------------------------------------
 step=app
-say "starting the app in Wails dev mode"
-# The throwaway HOME holds the app's settings, clone and Kiro home; the Go and
-# npm caches stay the real ones so nothing is rebuilt or downloaded again.
-gocache="$(go env GOCACHE)"
-gomodcache="$(go env GOMODCACHE)"
-gopath="$(go env GOPATH)"
-npmcache="$(npm config get cache)"
-# Link, never copy, the age key to the default SOPS path in the throwaway home.
+say "starting the app as a localhost-only server"
+# The throwaway HOME holds the app's settings, clone and Kiro home. Link, never
+# copy, the age key to the default SOPS path in it.
 keydir="$demo/home/Library/Application Support/sops/age"
 mkdir -p "$keydir"
 ln -s "$agekey" "$keydir/keys.txt"
 
-set -m # own process group, so stopping it also stops vite and the dev app
-(
-  cd desktop
-  exec env -u KIRO_HOME -u KIROKIT_REPO -u SOPS_AGE_KEY_FILE \
-    -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
-    HOME="$demo/home" GOCACHE="$gocache" GOMODCACHE="$gomodcache" GOPATH="$gopath" \
-    npm_config_cache="$npmcache" go tool wails dev
-) >"$out/wails.log" 2>&1 &
-wails=$!
-set +m
-pids+=("$wails")
-
-for _ in $(seq 720); do
-  grep -q 'Using DevServer URL: http://localhost:34115' "$out/wails.log" && break
-  kill -0 "$wails" 2>/dev/null || fail "wails dev exited; see $out/wails.log (run with --keep)"
-  sleep 0.25
-done
-grep -q 'Using DevServer URL: http://localhost:34115' "$out/wails.log" \
-  || fail "wails dev did not serve http://localhost:34115 within 180 s"
+# app-server.sh builds the server into $out, serves http://localhost:34115 on
+# loopback only and prints the pid of its process group.
+server="$("$here/app-server.sh" "$out" "$demo/home")" \
+  || fail "the app server did not start (run with --keep for $out/app-server.log)"
+pids+=("$server")
 
 say "recording the app"
 node "$here/app-drive.mjs" "$out" || fail "the app driver stopped"
-kill -TERM -- "-$wails" 2>/dev/null || true
-wait "$wails" 2>/dev/null || true
+kill -TERM -- "-$server" 2>/dev/null || true
 pids=()
 say "app.webm ready"
 

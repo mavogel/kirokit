@@ -386,7 +386,7 @@ test('caption: every render paints the whole frame and every caption', { skip: !
 // --- app-drive.mjs ----------------------------------------------------------
 
 // The same test record.sh's preflight uses, so a listener on any address
-// (vite binds [::1]:5173) counts as busy.
+// counts as busy.
 async function portFree(port) {
   return spawnSync('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN']).status !== 0;
 }
@@ -404,6 +404,83 @@ test('app-drive: without a dev server it stops at the welcome step', { skip: !ha
   assert.equal(r.status, 1);
   assert.match(r.stderr, /app-drive: welcome: /);
   assert.equal(existsSync(join(dir, 'app.webm')), false);
+});
+
+// --- app-server.sh ----------------------------------------------------------
+
+// The server build answers every Go method the page can call, the shell tab's
+// included, so it must only ever listen on loopback.
+const appServer = join(here, 'app-server.sh');
+const canBuildApp = has('go') && has('npm') && has('curl');
+
+// Runs app-server.sh without blocking the event loop (a test server may need it).
+function startAppServer(t, env = {}) {
+  const out = scratch(t);
+  const home = scratch(t);
+  return new Promise((resolve) => {
+    import('node:child_process').then(({ execFile }) => execFile(appServer, [out, home], {
+      env: { ...process.env, ...env }, encoding: 'utf8', timeout: 300_000,
+    }, (err, stdout, stderr) => resolve({ status: err ? err.code : 0, stdout: stdout.trim(), stderr, out })));
+  });
+}
+
+// Waits up to 10 s for nothing to listen on 34115.
+function waitPortClosed() {
+  for (let i = 0; i < 40 && !spawnSync('lsof', ['-nP', '-iTCP:34115', '-sTCP:LISTEN']).status; i++) {
+    spawnSync('sleep', ['0.25']);
+  }
+}
+
+// Stops the server's process group; pid must be the number app-server.sh printed.
+function stopAppServer(pid) {
+  if (!/^[1-9]\d*$/.test(pid)) return;
+  spawnSync('sh', ['-c', `kill -TERM -- -${pid} 2>/dev/null || kill -TERM ${pid} 2>/dev/null; true`]);
+  waitPortClosed();
+}
+
+const listeners = () => spawnSync('lsof', ['-nP', '-iTCP:34115', '-sTCP:LISTEN', '-Fn'], { encoding: 'utf8' })
+  .stdout.split('\n').filter((l) => l.startsWith('n')).map((l) => l.slice(1));
+
+test('app-server: missing arguments print the usage', () => {
+  const r = run(appServer, []);
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /usage: scripts\/showcase\/app-server.sh <out-dir> <home>/);
+});
+
+test('app-server: an inherited WAILS_SERVER_HOST=0.0.0.0 still serves on loopback only', { skip: !canBuildApp, timeout: 320_000 }, async (t) => {
+  if (!(await portFree(34115))) return t.skip('port 34115 is in use');
+  const r = await startAppServer(t, { WAILS_SERVER_HOST: '0.0.0.0', WAILS_SERVER_PORT: '34999' });
+  assert.equal(r.status, 0, r.stderr);
+  t.after(() => stopAppServer(r.stdout));
+  assert.match(r.stdout, /^\d+$/, 'prints the server pid');
+  assert.deepEqual(listeners(), ['127.0.0.1:34115']);
+  const page = spawnSync('curl', ['-fsS', 'http://localhost:34115/'], { encoding: 'utf8' });
+  assert.equal(page.status, 0);
+  assert.match(page.stdout, /<title>kirokit<\/title>/);
+});
+
+test('app-server: a server that cannot start fails naming its log', { skip: !canBuildApp, timeout: 320_000 }, async (t) => {
+  if (!(await portFree(34115))) return t.skip('port 34115 is in use');
+  // Something else holds the port and does not answer like the app.
+  const blocker = (await import('node:http')).createServer((req, res) => { res.statusCode = 500; res.end(); });
+  await new Promise((resolve) => blocker.listen(34115, '127.0.0.1', resolve));
+  t.after(() => blocker.close());
+  const r = await startAppServer(t);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /showcase: app-server: the app server exited; see .*app-server\.log/);
+});
+
+test('app-server: a listener beyond loopback stops the run and the server', { skip: !canBuildApp, timeout: 320_000 }, async (t) => {
+  if (!(await portFree(34115))) return t.skip('port 34115 is in use');
+  // lsof reports the server's own listener on every interface.
+  const bin = scratch(t);
+  writeFileSync(join(bin, 'lsof'), '#!/bin/sh\n/usr/sbin/lsof "$@" | sed "s/^n127\\.0\\.0\\.1:/n*:/"\n');
+  chmodSync(join(bin, 'lsof'), 0o755);
+  const r = await startAppServer(t, { PATH: `${bin}:${process.env.PATH}` });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /showcase: app-server: the app server listens on \*:34115, not only on 127\.0\.0\.1/);
+  waitPortClosed();
+  assert.deepEqual(listeners(), [], 'the server was stopped');
 });
 
 // --- ide-drive.mjs ----------------------------------------------------------
@@ -569,7 +646,7 @@ test('record.sh: a missing age key fails preflight naming its path', { skip: dem
 });
 
 test('record.sh: a second run leaves a live run\'s folder alone', { skip: demoBusy() || !hasChrome || !hasKiroIDE }, async (t) => {
-  if (!(await portFree(34115)) || !(await portFree(5173))) return t.skip('a dev server port is in use');
+  if (!(await portFree(34115))) return t.skip('port 34115 is in use');
   const dir = scratch(t);
   const key = file(dir, 'keys.txt', 'not a key\n');
   // This test process stands in for the live run.
@@ -587,7 +664,7 @@ test('record.sh: a second run leaves a live run\'s folder alone', { skip: demoBu
 // that has ended (crashed, or kept with --keep) is replaced, and once this run
 // owns it, a later failure still removes it.
 test('record.sh: a dead run\'s folder is taken over and removed when the run fails', { skip: demoBusy() || !hasChrome || !hasKiroIDE }, async (t) => {
-  if (!(await portFree(34115)) || !(await portFree(5173))) return t.skip('a dev server port is in use');
+  if (!(await portFree(34115))) return t.skip('port 34115 is in use');
   const dir = scratch(t);
   const key = file(dir, 'keys.txt', 'not a key\n');
   const dead = spawnSync('sh', ['-c', 'echo $$']).stdout.toString().trim();
@@ -619,6 +696,6 @@ test('record.sh: a busy dev-server port fails preflight', { skip: demoBusy() || 
     }, (err, stdout, stderr) => resolve({ status: err ? err.code : 0, stderr })));
   });
   assert.equal(r.status, 1);
-  assert.match(r.stderr, /showcase: preflight: port 34115 is busy: close the running wails dev or kirocrew gateway first/);
+  assert.match(r.stderr, /showcase: preflight: port 34115 is busy: close the running kirokit app server or kirocrew gateway first/);
   assert.equal(existsSync('/tmp/kirokit-demo'), false);
 });

@@ -34,10 +34,11 @@ tasks:
     cmds:
       - npm run build -q
 
+  # Wails' dev proxy dials 127.0.0.1; vite alone may bind only [::1].
   dev:frontend:
     summary: Runs the frontend in development mode
     deps:
       - task: install:frontend:deps
     dir: frontend
     cmds:
-      - npm run dev -- --port {{.VITE_PORT}} --strictPort
+      - npm run dev -- --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort

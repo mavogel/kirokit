@@ -34,7 +34,7 @@ type termExit struct {
 // <exe>/../Resources/bin/kirokit in kirokit.app, <exe>/../lib/kirokit-desktop/kirokit
 // from the Linux package, <exe dir>\bin\kirokit.exe from the Windows setup.
 // 3. desktop/build/dev-bin/kirokit(.exe), which `task desktop:dev` builds;
-// under `wails dev` (the executable is in <cwd>/build/bin) it comes before 2.
+// under `wails3 dev` (the executable is in <cwd>/bin) it comes before 2.
 func BundledCLI() (string, error) {
 	exe, _ := os.Executable() //nolint:errcheck // an empty path just skips the bundle lookup
 	wd, _ := os.Getwd()       //nolint:errcheck // an empty path just skips the dev lookup
@@ -54,10 +54,9 @@ func resolveCLIFor(goos, override, exe, wd string) (string, error) {
 	if wd != "" {
 		dev = filepath.Join(wd, "build", "dev-bin", name)
 	}
-	// `wails dev` runs the app in desktop/build/bin, which an earlier
-	// desktop:build may have left with its own bundled CLI; the dev-bin build
-	// is the one under test, so it comes first there.
-	if dev != "" && exe != "" && strings.HasPrefix(exe, filepath.Join(wd, "build", "bin")+string(filepath.Separator)) {
+	// `wails3 dev` runs the app from desktop/bin; the dev-bin build is the one
+	// under test, so it comes first there.
+	if dev != "" && exe != "" && strings.HasPrefix(exe, filepath.Join(wd, "bin")+string(filepath.Separator)) {
 		candidates = append(candidates, dev)
 	}
 	if exe != "" {

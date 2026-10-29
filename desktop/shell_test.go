@@ -199,8 +199,12 @@ func TestBundledCLI_FixedOrder(t *testing.T) {
 	app := filepath.Join(root, "kirokit.app", "Contents", "MacOS", "kirokit")
 	inApp := writeScript(t, filepath.Join(root, "kirokit.app", "Contents", "Resources", "bin"), "kirokit", "")
 	dev := writeScript(t, filepath.Join(root, "work", "build", "dev-bin"), "kirokit", "")
-	devApp := filepath.Join(root, "work", "build", "bin", "kirokit.app", "Contents", "MacOS", "kirokit")
-	writeScript(t, filepath.Join(root, "work", "build", "bin", "kirokit.app", "Contents", "Resources", "bin"), "kirokit", "")
+	// wails3 dev builds the app into <desktop>/bin (kirokit.dev.app on macOS).
+	devApp := filepath.Join(root, "work", "bin", "kirokit.dev.app", "Contents", "MacOS", "kirokit")
+	writeScript(t, filepath.Join(root, "work", "bin", "kirokit.dev.app", "Contents", "Resources", "bin"), "kirokit", "")
+	// The staged release build in <desktop>/build/bin keeps its own CLI.
+	builtApp := filepath.Join(root, "work", "build", "bin", "kirokit.app", "Contents", "MacOS", "kirokit")
+	builtCLI := writeScript(t, filepath.Join(root, "work", "build", "bin", "kirokit.app", "Contents", "Resources", "bin"), "kirokit", "")
 	override := writeScript(t, filepath.Join(root, "custom"), "kirokit", "")
 	work := filepath.Join(root, "work")
 
@@ -208,9 +212,10 @@ func TestBundledCLI_FixedOrder(t *testing.T) {
 		{"override wins", override, app, work, override},
 		{"app resources", "", app, work, inApp},
 		{"dev-bin by working directory", "", filepath.Join(root, "elsewhere", "kirokit"), work, dev},
-		// wails dev runs the app that an earlier desktop:build left in build/bin,
-		// bundled CLI included; the dev-bin build is the one under test.
-		{"wails dev prefers dev-bin over a stale bundled CLI", "", devApp, work, dev},
+		// Under wails3 dev the dev-bin build is the one under test, whatever
+		// else sits beside the dev app.
+		{"wails3 dev prefers dev-bin over a bundled CLI", "", devApp, work, dev},
+		{"the staged build uses its own CLI", "", builtApp, work, builtCLI},
 	} {
 		got, err := resolveCLIFor("darwin", tc.override, tc.exe, tc.wd)
 		if err != nil || got != tc.want {
@@ -235,13 +240,13 @@ func TestBundledCLI_LinuxAndWindowsLayouts(t *testing.T) {
 	winCLI := writeScript(t, filepath.Join(root, "Programs", "kirokit", "bin"), "kirokit.exe", "")
 	work := filepath.Join(root, "work")
 	winDev := writeScript(t, filepath.Join(work, "build", "dev-bin"), "kirokit.exe", "")
-	winDevApp := filepath.Join(work, "build", "bin", "kirokit-desktop.exe")
-	writeScript(t, filepath.Join(work, "build", "bin", "bin"), "kirokit.exe", "")
+	winDevApp := filepath.Join(work, "bin", "kirokit.exe")
+	writeScript(t, filepath.Join(work, "bin", "bin"), "kirokit.exe", "")
 
 	for _, tc := range []struct{ name, goos, exe, wd, want string }{
 		{"linux package", "linux", linuxExe, root, linuxCLI},
 		{"windows setup", "windows", winExe, root, winCLI},
-		{"windows wails dev prefers dev-bin", "windows", winDevApp, work, winDev},
+		{"windows wails3 dev prefers dev-bin", "windows", winDevApp, work, winDev},
 		{"windows dev-bin by working directory", "windows", filepath.Join(root, "elsewhere", "kirokit-desktop.exe"), work, winDev},
 	} {
 		got, err := resolveCLIFor(tc.goos, "", tc.exe, tc.wd)

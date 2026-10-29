@@ -111,3 +111,7 @@ windows)
   exit 1
   ;;
 esac
+
+# Everything is staged; Wails' own output would only get in the way of
+# `wails3 dev`, which cannot overwrite the universal macOS binary in bin/.
+rm -rf desktop/bin

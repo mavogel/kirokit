@@ -37,10 +37,14 @@ tasks:
       - cd desktop && go vet ./... && go test ./...
 
   desktop:dev:
-    desc: Open the desktop app in Wails dev mode (CLI version pinned by desktop/go.mod)
+    desc: Open the desktop app in Wails v3 dev mode (wails3 version pinned by desktop/go.mod)
+    vars:
+      EXE: '{{if eq OS "windows"}}.exe{{end}}'
     cmds:
-      - go build -o desktop/build/dev-bin/kirokit ./cmd/kirokit
-      - cd desktop && go tool wails dev
+      - go build -o desktop/build/dev-bin/kirokit{{.EXE}} ./cmd/kirokit
+      # The v3 task files call a bare `wails3`, so the pinned one goes first on PATH.
+      - cd desktop && go build -o build/dev-bin/tools/wails3{{.EXE}} github.com/wailsapp/wails/v3/cmd/wails3
+      - cmd: cd desktop && PATH="$PWD/build/dev-bin/tools:$PATH" wails3 dev -config ./build/config.yml
 
   desktop:build:
     desc: Build the desktop app for this OS with the CLI bundled (macOS kirokit.app, universal, 13 or later; Linux kirokit-desktop; Windows setup .exe per arch); VERSION overrides git describe
