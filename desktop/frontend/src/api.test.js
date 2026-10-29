@@ -152,6 +152,14 @@ test('start sends smoke:ready only after State has answered, and resolves to the
   assert.deepEqual(emitted, [{ name: 'smoke:ready' }]);
 });
 
+test('start still resolves to the state when smoke:ready cannot be sent', async () => {
+  const rt = fakeRuntime({ byName: () => Promise.resolve({ cloned: false }) });
+  rt.Events.Emit = () => Promise.reject(new Error('bridge closed'));
+  globalThis.__kirokitRuntime = rt;
+
+  assert.deepEqual(await api.start(), { cloned: false });
+});
+
 test('start sends nothing when State fails, and rejects with its error', async () => {
   const emitted = [];
   globalThis.__kirokitRuntime = fakeRuntime({ emitted, byName: () => Promise.reject(new Error('no state')) });

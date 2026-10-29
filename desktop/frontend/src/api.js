@@ -20,9 +20,13 @@ export const state = () => call('State');
 
 // Calls State and then tells Go the page has loaded and the bridge answers
 // (smoke:ready, which a smoke start waits for); sends nothing when State fails.
+// The page never waits on that message: if it is lost, only a smoke start
+// notices (it fails after its time limit).
 export async function start() {
   const st = await state();
-  await runtime().Events.Emit('smoke:ready');
+  Promise.resolve()
+    .then(() => runtime().Events.Emit('smoke:ready'))
+    .catch(() => {});
   return st;
 }
 

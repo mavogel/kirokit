@@ -11,6 +11,16 @@ Six slices and fourteen tasks: first the thinnest working v3 app on macOS (Go st
 ## Where the change lands
 
 <!-- ql:landing -->
+- `desktop` · 4 new, 9 changed, 1 removed · slices 1, 2, 3, 5 · risky: outside system — GTK 4 / WebKitGTK 6.0 distro packages and NSIS under v3's templates, built here only in the Linux container.
+- `desktop/build` · 8 new, 4 changed, 1 removed · slices 1, 3, 5 · risky: outside system — GTK 4 / WebKitGTK 6.0 distro packages and NSIS under v3's templates, built here only in the Linux container.
+- `.` · 6 changed · slices 3, 5, 6 · risky: outside system — GTK 4 / WebKitGTK 6.0 distro packages and NSIS under v3's templates, built here only in the Linux container.
+- `desktop/frontend` · 5 changed · slices 1, 2, 6
+- `scripts/showcase` · 1 new, 2 changed · slice 5
+- `.github/workflows` · 2 changed · slice 4
+- `scripts` · 2 changed · slices 1, 3, 5 · risky: outside system — GTK 4 / WebKitGTK 6.0 distro packages and NSIS under v3's templates, built here only in the Linux container.
+- `docs` · 1 changed · slice 6
+
+Tests: 4 test files, named on the cards.
 <!-- /ql:landing -->
 
 ## Program design
@@ -27,6 +37,14 @@ Six slices and fourteen tasks: first the thinnest working v3 app on macOS (Go st
 ## How each point is proved
 
 <!-- ql:proof-map -->
+- Done means 1 · The app runs on Wails v3 with no Wails v2 left → "The built macOS app starts on Wails v3 and the bridge answers both ways" · runs after slice 1
+- Done means 2 · Every screen and action works as it does today → "Every page, both terminals and live updates work in the v3 app" · runs after slice 1
+- Done means 3 · Both terminal tabs stream live and take input as before → "Every page, both terminals and live updates work in the v3 app" · runs after slice 1
+- Done means 4 · Live updates still arrive without a reload → "Every page, both terminals and live updates work in the v3 app" · runs after slice 1
+- Done means 5 · Release builds keep their formats and names on all three systems → "The built macOS app starts on Wails v3 and the bridge answers both ways" · runs after slice 1; "Linux and Windows packages build under today's names and install in place" · runs after slice 4
+- Done means 6 · Existing installs upgrade in place → "Linux and Windows packages build under today's names and install in place" · runs after slice 4
+- Done means 7 · The developer commands and the showcase still work → "The developer commands and the showcase work" · runs after slice 6
+- Done means 8 · The app has a native menu with the usual entries → "The native menu reads right and its entries work" · runs after slice 2
 <!-- /ql:proof-map -->
 
 ## Oracle
@@ -37,7 +55,7 @@ Six slices and fourteen tasks: first the thinnest working v3 app on macOS (Go st
 ## Decided while outlining
 
 - The showcase launch step moves into `scripts/showcase/app-server.sh` so the loopback test can run it alone (see *Program design*).
-- `menu:settings` while the first-launch page shows does nothing, because the sidebar refuses selection there (`sidebar.select` returns false while hidden) — the same as the window, which has no Settings button on that page.
+- `menu:settings` while the first-launch page shows does nothing (`main.js` checks `setup()` before selecting Settings) — the same as the window, which has no Settings button on that page.
 - v3's own nfpm/AppImage tasks are not used: GoReleaser keeps building the `.deb`/`.rpm`, so the committed Linux Taskfile keeps only the build task.
 - `desktop/build/windows/installer/` moves to v3's `desktop/build/windows/nsis/`; the v2 folder and its gitignored `tmp/` and `wails_tools.nsh` entries are removed with it.
 - The Windows upgrade check and the distro matrix run only in CI; locally the Windows installer is built in the Linux container and its contents and uninstall identity are read back with 7-Zip and `strings`.
@@ -77,7 +95,7 @@ After this slice the desktop module builds against Wails v3.0.0 only, the page r
 ~└── desktop-build.sh             ~ darwin: pinned wails3 on PATH, v3 package task, stage under today's names
 ```
 
-- [ ] T1 Go starts the app through Wails v3 and quits a smoke start only on `smoke:ready`
+- [x] T1 Go starts the app through Wails v3 and quits a smoke start only on `smoke:ready`
   - **Objective:** Replace `wails.Run` with `application.New`, one window and `App` as a service, and make the smoke start wait for the page's `smoke:ready` event, so the desktop module no longer depends on Wails v2.
   - **Design:** "Go start-up: `application.New` + one window + menu, `App` as service", "Smoke start", "plan:decision:d1", "plan:decision:d3", "plan:decision:d9"
   - **Files:** `desktop/go.mod`, `desktop/go.sum`, `desktop/main.go`, `desktop/app.go`, `desktop/smoke.go`, `desktop/smoke_test.go`, `desktop/shell_test.go`
@@ -88,10 +106,10 @@ After this slice the desktop module builds against Wails v3.0.0 only, the page r
     - `go list -m all` in `desktop/` names `github.com/wailsapp/wails/v3 v3.0.0` and no `wails/v2`; `go tool wails3 version` prints `v3.0.0`.
     - verify: `cd desktop && go vet ./... && go test ./...`
 
-- [ ] T2 The page reaches Go through `@wailsio/runtime` and acknowledges its first `State`
+- [x] T2 The page reaches Go through `@wailsio/runtime` and acknowledges its first `State`
   - **Objective:** Move `api.js` to `Call.ByName("main.App.<Method>")`, `Events.On` (handing handlers `event.data`) and `Browser.OpenURL`, add `start()` that emits `smoke:ready` after `State` resolves, and call it on the page's first load.
   - **Design:** "Page bridge: `api.js` exports unchanged; one runtime seam", "Smoke start", "`start()` runs once, on the page's first load", "plan:decision:d2"
-  - **Files:** `desktop/frontend/package.json`, `desktop/frontend/package-lock.json`, `desktop/frontend/src/api.js`, `desktop/frontend/src/api.test.js`, `desktop/frontend/src/main.js`
+  - **Files:** `desktop/frontend/package.json`, `desktop/frontend/package-lock.json`, `desktop/frontend/src/api.js`, `desktop/frontend/src/api.test.js`, `desktop/frontend/src/main.js`, `desktop/frontend/src/pages/pages.test.js`
   - **Test first:** `api.test.js` installs `globalThis.__kirokitRuntime` with fake `Call`, `Events` and `Browser`, then asserts `shellWrite('c')` calls `Call.ByName('main.App.ShellWrite', 'c')`; it fails because `api.js` still reads `window.go`.
   - **Definition of done:**
     - Every bound call goes to `main.App.<Method>` with its arguments; keystrokes keep their per-terminal order and a failed one does not hold back the next.
@@ -101,7 +119,7 @@ After this slice the desktop module builds against Wails v3.0.0 only, the page r
     - A Go error's message reaches the page unchanged (`RuntimeError` with `err.Error()`), so `main.js`'s `RepoDir: ` strip still applies.
     - verify: `cd desktop/frontend && npm ci && npm run build && node --test "src/**/*.test.js"`
 
-- [ ] T3 `task desktop:build` builds the universal macOS app with Wails v3 under today's names
+- [x] T3 `task desktop:build` builds the universal macOS app with Wails v3 under today's names
   - **Objective:** Commit v3's project files (config, Taskfiles, darwin assets) and make `scripts/desktop-build.sh`'s darwin branch build the pinned `wails3`, put it first on `PATH`, run `darwin:package:universal`, and stage the result as `desktop/build/bin/kirokit.app` with `iconfile.icns`, the bundled CLI and an ad-hoc signature.
   - **Design:** "Build adapter: `scripts/desktop-build.sh`", "plan:decision:d4"
   - **Files:** `desktop/wails.json`, `desktop/Taskfile.yml`, `desktop/.gitignore`, `desktop/build/config.yml`, `desktop/build/Taskfile.yml`, `desktop/build/darwin/Taskfile.yml`, `desktop/build/darwin/Info.plist`, `desktop/build/darwin/Info.dev.plist`, `desktop/build/darwin/icons.icns`, `scripts/desktop-build.sh`
@@ -130,7 +148,7 @@ After this slice the macOS menu bar shows kirokit, Edit, Window and Help, and Wi
 ~    └── main.js                  ~ menu:settings selects the Settings page
 ```
 
-- [ ] T4 `menuFor(goos)` describes each system's menu and its actions
+- [x] T4 `menuFor(goos)` describes each system's menu and its actions
   - **Objective:** Add the menu as data per OS and the action mapping, tested for darwin, linux and windows on any machine.
   - **Design:** "Menu data", "Menu actions are plain functions; the Wails adapter only wires them", "plan:decision:d7"
   - **Files:** `desktop/menu.go`, `desktop/menu_test.go`
@@ -142,7 +160,7 @@ After this slice the macOS menu bar shows kirokit, Edit, Window and Help, and Wi
     - `settings` emits `menu:settings`; `docs` and `report` open exactly the two fixed addresses; an open error is logged and not raised; an unknown action yields nil.
     - verify: `cd desktop && go test -run 'Menu' ./...`
 
-- [ ] T5 The menu appears in the app and Settings… opens the Settings page
+- [x] T5 The menu appears in the app and Settings… opens the Settings page
   - **Objective:** Turn the data into a Wails menu with roles, set it as the application menu (shown in the window on Windows and Linux), and make the page answer `menu:settings` by selecting Settings.
   - **Design:** "Menu data", "Go start-up: `application.New` + one window + menu, `App` as service", "Page bridge: `api.js` exports unchanged; one runtime seam"
   - **Files:** `desktop/menu_wails.go`, `desktop/main.go`, `desktop/frontend/src/main.js`
@@ -180,18 +198,18 @@ After this slice `task desktop:build` produces `kirokit-desktop` (GTK 4 / WebKit
 ~.goreleaser.yaml                 ~ deb/rpm depend on GTK 4 / WebKitGTK 6.0
 ```
 
-- [ ] T6 Linux builds `kirokit-desktop` against GTK 4 / WebKitGTK 6.0
+- [x] T6 Linux builds `kirokit-desktop` against GTK 4 / WebKitGTK 6.0
   - **Objective:** Add v3's Linux build task and the script's Linux branch, move the Linux container to a base with WebKitGTK 6.0 dev packages, and change the packages' declared dependencies.
   - **Design:** "Build adapter: `scripts/desktop-build.sh`", "Linux packaging and hosts", "plan:decision:d6"
   - **Files:** `desktop/build/linux/Taskfile.yml`, `desktop/Taskfile.yml`, `scripts/desktop-build.sh`, `scripts/linux-docker.Dockerfile`, `.goreleaser.yaml`
   - **Test first:** **Trivial:** build config; `scripts/linux-docker.sh task desktop:build` fails today (the container lacks WebKitGTK 6.0 and the script still calls v2) and passes after.
   - **Definition of done:**
     - In the container, `desktop/build/bin/kirokit-desktop` and `desktop/build/bin/kirokit` exist, `ldd kirokit-desktop` lists `libwebkitgtk-6.0` and `libgtk-4`, and no `webkit2gtk-4.1`.
-    - `KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a desktop/build/bin/kirokit-desktop` exits 0 in the container.
+    - `KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a desktop/build/bin/kirokit-desktop` exits 0 for a regular user in the container (WebKitGTK 6.0's sandbox needs the namespaces a desktop session has: seccomp and `/proc` unconfined).
     - `.goreleaser.yaml` declares deb `libgtk-4-1, libwebkitgtk-6.0-4` and rpm `gtk4, webkitgtk6.0`; `goreleaser check` passes when GoReleaser is installed.
-    - verify: `scripts/linux-docker.sh bash -c 'task desktop:build && KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a desktop/build/bin/kirokit-desktop'`
+    - verify: `scripts/linux-docker.sh task desktop:build && docker run --rm --security-opt seccomp=unconfined --security-opt systempaths=unconfined -v "$PWD":/src:ro kirokit-linux-check bash -c 'useradd -m tester && su tester -c "cd && KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a /src/desktop/build/bin/kirokit-desktop"'`
 
-- [ ] T7 Windows builds a setup program per architecture that installs over v2's
+- [x] T7 Windows builds a setup program per architecture that installs over v2's
   - **Objective:** Commit v3's Windows assets with kirokit's NSIS customisations and make the script's Windows branch build each architecture's app and setup program, staged under today's names.
   - **Design:** "Build adapter: `scripts/desktop-build.sh`", "plan:decision:d5"
   - **Files:** `desktop/build/windows/Taskfile.yml`, `desktop/build/windows/info.json`, `desktop/build/windows/wails.exe.manifest`, `desktop/build/windows/nsis/project.nsi`, `desktop/build/windows/nsis/wails_tools.nsh`, `desktop/build/windows/installer/project.nsi`, `desktop/.gitignore`, `scripts/desktop-build.sh`
@@ -202,7 +220,7 @@ After this slice `task desktop:build` produces `kirokit-desktop` (GTK 4 / WebKit
     - A missing expected v3 output stops the script with `desktop-build: missing <path>`.
     - verify: `scripts/linux-docker.sh env GOOS=windows task desktop:build`
 
-**Validation:** automated: `scripts/linux-docker.sh bash -c 'task desktop:build && KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a desktop/build/bin/kirokit-desktop'` · `scripts/linux-docker.sh env GOOS=windows task desktop:build` · manual: none
+**Validation:** automated: `scripts/linux-docker.sh task desktop:build` · `scripts/linux-docker.sh env GOOS=windows task desktop:build` · manual: none
 
 ## Slice 4: CI and the release build, smoke-start and check the v3 app on every system
 
@@ -216,7 +234,7 @@ After this slice the Desktop and Release workflows install GTK 4 / WebKitGTK 6.0
 ~└── release.yaml                 ~ GTK 4 deps, ubuntu-24.04 / ubuntu-24.04-arm runners
 ```
 
-- [ ] T8 The Desktop workflow builds v3 on pinned runners and checks distros and Windows upgrades
+- [x] T8 The Desktop workflow builds v3 on pinned runners and checks distros and Windows upgrades
   - **Objective:** Update the Desktop workflow's Linux dependencies and runner, add the distro smoke matrix and the Windows upgrade-in-place check.
   - **Design:** "Linux packaging and hosts", "Windows upgrade check", "plan:decision:d5", "plan:decision:d6"
   - **Files:** `.github/workflows/desktop.yaml`
@@ -227,7 +245,7 @@ After this slice the Desktop and Release workflows install GTK 4 / WebKitGTK 6.0
     - The Windows check installs the latest release, then the new setup program silently, compares `Get-FileHash` of the installed app and CLI with the new build, requires exactly one uninstall entry mentioning kirokit (`mavogelkirokit`), and skips with a notice when no release exists.
     - verify: `node -e "require('node:fs'); const y=require('node:fs').readFileSync('.github/workflows/desktop.yaml','utf8'); if(/libgtk-3|webkit2gtk-4\.1|ubuntu-latest/.test(y)) process.exit(1)"`
 
-- [ ] T9 The Release workflow builds Linux on the oldest claimed Ubuntu with GTK 4
+- [x] T9 The Release workflow builds Linux on the oldest claimed Ubuntu with GTK 4
   - **Objective:** Point the release's Linux builds at `ubuntu-24.04` / `ubuntu-24.04-arm` and the GTK 4 / WebKitGTK 6.0 dev packages.
   - **Design:** "Linux packaging and hosts", "plan:decision:d6"
   - **Files:** `.github/workflows/release.yaml`
@@ -256,17 +274,17 @@ After this slice `task desktop:dev` opens the app with `wails3 dev` and the fres
 ~└── showcase.test.mjs            ~ loopback case; busy-port message
 ```
 
-- [ ] T10 `task desktop:dev` runs Wails v3's dev mode with the dev CLI
+- [x] T10 `task desktop:dev` runs Wails v3's dev mode with the dev CLI
   - **Objective:** Make `desktop:dev` build the pinned `wails3` onto `PATH` and run `wails3 dev`, and make the bundled-CLI lookup prefer `build/dev-bin` when the app runs from v3's `desktop/bin`.
   - **Design:** "plan:decision:d4"
-  - **Files:** `Taskfile.yml`, `desktop/shell.go`, `desktop/shell_test.go`
+  - **Files:** `Taskfile.yml`, `desktop/shell.go`, `desktop/shell_test.go`, `desktop/build/Taskfile.yml`, `scripts/desktop-build.sh`
   - **Test first:** a `shell_test.go` case with the executable at `<wd>/bin/kirokit` and both a bundled CLI and `build/dev-bin/kirokit` present expects the dev-bin one; it fails because the lookup only knows `<wd>/build/bin`.
   - **Definition of done:**
     - Under `<wd>/bin/` the dev-bin CLI comes first on every OS name; an installed app's lookup order is unchanged.
     - `task desktop:dev` opens the kirokit window and its kirokit tab runs `desktop/build/dev-bin/kirokit`.
     - verify: `cd desktop && go test -run 'CLI|Resolve' ./...`
 
-- [ ] T11 The showcase records the app from a loopback-only server build
+- [x] T11 The showcase records the app from a loopback-only server build
   - **Objective:** Move the app step's launch into `app-server.sh` (server build, explicit loopback host and port, readiness poll, loopback check) and call it from `record.sh`.
   - **Design:** "Showcase server build", "The showcase's launch step is its own script", "plan:decision:d8"
   - **Files:** `scripts/showcase/app-server.sh`, `scripts/showcase/record.sh`, `scripts/showcase/app-drive.mjs`, `scripts/showcase/showcase.test.mjs`
@@ -296,7 +314,7 @@ After this slice the docs name `wails3`, the menu and the GTK 4 dependencies and
 ~└── feedback.test.js             ~ comment cites v3's validator
 ```
 
-- [ ] T12 The docs say Wails v3, describe the menu and list the Linux systems that pass
+- [x] T12 The docs say Wails v3, describe the menu and list the Linux systems that pass
   - **Objective:** Update every doc that names Wails tooling, the Linux dependencies or supported distros, and describe the menu.
   - **Design:** none
   - **Files:** `docs/desktop-app.md`, `CONTRIBUTING.md`, `AGENTS.md`, `README.md`
@@ -305,7 +323,7 @@ After this slice the docs name `wails3`, the menu and the GTK 4 dependencies and
     - The Linux distro list in `README.md`, `docs/desktop-app.md` and the `.goreleaser.yaml` comment is the same and matches the distro check's passing images.
     - verify: `node scripts/check-doc-links.mjs && node scripts/sync-agent-assets.mjs --check`
 
-- [ ] T13 Renovate and the remaining comments track Wails v3
+- [x] T13 Renovate and the remaining comments track Wails v3
   - **Objective:** Point Renovate's tool-pin guard at `wails/v3/cmd/wails3` and update the comments that cite v2's URL validator.
   - **Design:** none
   - **Files:** `renovate.json`, `desktop/frontend/src/pages/feedback.js`, `desktop/frontend/src/pages/feedback.test.js`
@@ -313,7 +331,7 @@ After this slice the docs name `wails3`, the menu and the GTK 4 dependencies and
   - **Definition of done:**
     - verify: `cd desktop/frontend && node --test src/pages/feedback.test.js`
 
-- [ ] T14 Nothing outside the task records refers to Wails v2
+- [x] T14 Nothing outside the task records refers to Wails v2
   - **Objective:** Prove the Oracle's *Truth* line across the repository.
   - **Design:** none
   - **Files:** none
@@ -389,7 +407,7 @@ After this slice the docs name `wails3`, the menu and the GTK 4 dependencies and
 
 | Step | Action | Expected |
 |---|---|---|
-| 1 | `scripts/linux-docker.sh bash -c 'task desktop:build && KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a desktop/build/bin/kirokit-desktop'` | exit 0 |
+| 1 | `scripts/linux-docker.sh task desktop:build && docker run --rm --security-opt seccomp=unconfined --security-opt systempaths=unconfined -v "$PWD":/src:ro kirokit-linux-check bash -c 'useradd -m tester && su tester -c "cd && KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a /src/desktop/build/bin/kirokit-desktop"'` | exit 0 |
 | 2 | `scripts/linux-docker.sh env GOOS=windows task desktop:build` | exit 0; lists both `kirokit-desktop_*_windows_{amd64,arm64}-setup.exe` |
 | 3 | Push the branch and open its pull request | The Desktop workflow passes on Ubuntu, Windows and macOS, including the distro matrix and the Windows upgrade check (one uninstall entry `mavogelkirokit`, same install folder) |
 | 4 | Run the Release workflow by hand with dry run | The printed release files keep today's names (DMGs, `.deb`/`.rpm`, setup programs) |
@@ -413,4 +431,34 @@ After this slice the docs name `wails3`, the menu and the GTK 4 dependencies and
 ## Commands the build runs
 
 <!-- ql:commands -->
+- `task desktop:test` · slice 1, slice 6, scenario 5, project checks
+- `task desktop:build` · slice 1, slice 2, scenario 1, project checks
+- `KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit` · slice 1
+- `cd desktop && go test ./...` · slice 2, slice 5
+- `scripts/linux-docker.sh task desktop:build` · slice 3
+- `scripts/linux-docker.sh env GOOS=windows task desktop:build` · slice 3, T7, scenario 4
+- `actionlint .github/workflows/desktop.yaml .github/workflows/release.yaml` · slice 4
+- `node --test scripts/showcase/` · slice 5, T11, scenario 5, project checks
+- `node scripts/check-doc-links.mjs` · slice 6, project checks
+- `node scripts/sync-agent-assets.mjs --check` · slice 6, project checks
+- `task ci` · slice 6, scenario 5, project checks
+- `cd desktop && go vet ./... && go test ./...` · T1
+- `cd desktop/frontend && npm ci && npm run build && node --test "src/**/*.test.js"` · T2
+- `task desktop:build && KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit && scripts/desktop-prebuilt.sh` · T3
+- `cd desktop && go test -run 'Menu' ./...` · T4
+- `cd desktop && go vet ./... && GOOS=windows go vet ./... && go test ./...` · T5
+- `scripts/linux-docker.sh task desktop:build && docker run --rm --security-opt seccomp=unconfined --security-opt systempaths=unconfined -v "$PWD":/src:ro kirokit-linux-check bash -c 'useradd -m tester && su tester -c "cd && KIROKIT_DESKTOP_SMOKE=1 xvfb-run -a /src/desktop/build/bin/kirokit-desktop"'` · T6, scenario 4
+- `node -e "require('node:fs'); const y=require('node:fs').readFileSync('.github/workflows/desktop.yaml','utf8'); if(/libgtk-3|webkit2gtk-4\.1|ubuntu-latest/.test(y)) process.exit(1)"` · T8
+- `node -e "const y=require('node:fs').readFileSync('.github/workflows/release.yaml','utf8'); if(/libgtk-3|webkit2gtk-4\.1|ubuntu-26\.04-arm/.test(y)) process.exit(1)"` · T9
+- `cd desktop && go test -run 'CLI|Resolve' ./...` · T10
+- `node scripts/check-doc-links.mjs && node scripts/sync-agent-assets.mjs --check` · T12, scenario 5
+- `cd desktop/frontend && node --test src/pages/feedback.test.js` · T13
+- `! git grep -nE 'wailsapp/wails/v2|window\.go\b|window\.runtime|go tool wails |wails dev|wails build' -- ':!docs/plans/' && task ci && task desktop:test` · T14
+- `lipo -archs desktop/build/bin/kirokit.app/Contents/MacOS/kirokit` · scenario 1
+- `test -x desktop/build/bin/kirokit.app/Contents/Resources/bin/kirokit && test -f desktop/build/bin/kirokit.app/Contents/Resources/iconfile.icns && echo ok` · scenario 1
+- `KIROKIT_DESKTOP_SMOKE=1 desktop/build/bin/kirokit.app/Contents/MacOS/kirokit; echo $?` · scenario 1
+- `scripts/desktop-prebuilt.sh` · scenario 1
+- `cd desktop && go test -run Menu ./...` · scenario 3
+- `task desktop:dev` · scenario 5
+- `task showcase` · scenario 5
 <!-- /ql:commands -->
