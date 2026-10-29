@@ -4,10 +4,11 @@
 /.task
 build/bin
 build/dev-bin
-# Written again by every `wails build -nsis` (the WebView2 bootstrapper and the
-# generated NSIS defines); project.nsi is ours and stays tracked.
-build/windows/installer/tmp
-build/windows/installer/wails_tools.nsh
+# Written again by every Windows package (`wails3 generate webview2bootstrapper`);
+# project.nsi and wails_tools.nsh are ours and stay tracked.
+build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
+# The Windows build embeds this and removes it afterwards.
+/*.syso
 node_modules
 # main.go embeds frontend/dist; the placeholder keeps a clean checkout compiling
 frontend/dist/*

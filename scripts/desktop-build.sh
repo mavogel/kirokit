@@ -4,10 +4,11 @@
 #
 #   darwin   desktop/build/bin/kirokit.app: a universal Wails v3 app with a
 #            universal CLI at Contents/Resources/bin/kirokit
-#   linux    desktop/build/bin/kirokit-desktop (WebKitGTK 4.1) and the CLI at
-#            desktop/build/bin/kirokit, for GOARCH (default: this machine's)
+#   linux    desktop/build/bin/kirokit-desktop (GTK 4 / WebKitGTK 6.0) and the
+#            CLI at desktop/build/bin/kirokit, for GOARCH (default: this machine's)
 #   windows  desktop/build/bin/installers/kirokit-desktop_<v>_windows_<arch>-setup.exe
-#            (NSIS, with bin\kirokit.exe beside the app) for each of ARCHES
+#            (NSIS, with bin\kirokit.exe beside the app) and the app itself at
+#            desktop/build/bin/kirokit-desktop-<arch>.exe, for each of ARCHES
 #            (default "amd64 arm64"); needs makensis on PATH
 #
 # Wails does not cross-compile cgo, so Linux builds on Linux; Windows needs no
@@ -80,24 +81,26 @@ linux)
   arch="${GOARCH:-$(go env GOARCH)}"
   CGO_ENABLED=0 GOOS=linux GOARCH="$arch" \
     go build -trimpath -ldflags "$ldflags" -o "$work/kirokit" ./cmd/kirokit
-  # webkit2_41: the WebKitGTK ABI of Ubuntu 22.04+, Debian 12+ and Fedora 40+.
-  (cd desktop && go tool wails build -platform "linux/$arch" -tags webkit2_41 -clean -o kirokit-desktop)
+  # GTK 4 / WebKitGTK 6.0 (Wails v3's default); cgo, so arch is this machine's.
+  (cd desktop && env -u GOARCH wails3 task linux:build ARCH="$arch" OUTPUT=bin/kirokit-desktop)
+  need desktop/bin/kirokit-desktop
+  install -m 0755 desktop/bin/kirokit-desktop desktop/build/bin/kirokit-desktop
   install -m 0755 "$work/kirokit" desktop/build/bin/kirokit
   echo "built desktop/build/bin/kirokit-desktop for linux/$arch (version $version)"
   ;;
 
 windows)
   bin="desktop/build/bin"
-  rm -rf "$bin"
   mkdir -p "$bin/installers"
   for arch in ${ARCHES:-amd64 arm64}; do
-    # project.nsi takes the CLI from bin/cli/windows_<arch>/kirokit.exe.
+    # project.nsi takes the CLI from build/bin/cli/windows_<arch>/kirokit.exe.
     CGO_ENABLED=0 GOOS=windows GOARCH="$arch" \
       go build -trimpath -ldflags "$ldflags" -o "$bin/cli/windows_$arch/kirokit.exe" ./cmd/kirokit
-    # No -clean: it would delete the CLI staged above. The wails tool itself
-    # runs on this machine, so a GOOS=windows cross-build must not reach it.
-    (cd desktop && env -u GOOS -u GOARCH go tool wails build -platform "windows/$arch" -nsis -o "kirokit-desktop-$arch.exe")
-    mv "$bin/kirokit-$arch-installer.exe" "$bin/installers/kirokit-desktop_${version}_windows_$arch-setup.exe"
+    # The task files set GOOS=windows for the app build themselves.
+    (cd desktop && env -u GOOS -u GOARCH wails3 task windows:package ARCH="$arch")
+    need desktop/bin/kirokit.exe "desktop/bin/kirokit-$arch-installer.exe"
+    cp desktop/bin/kirokit.exe "$bin/kirokit-desktop-$arch.exe"
+    mv "desktop/bin/kirokit-$arch-installer.exe" "$bin/installers/kirokit-desktop_${version}_windows_$arch-setup.exe"
   done
   echo "built $bin/installers (version $version):"
   ls "$bin/installers"
