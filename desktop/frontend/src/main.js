@@ -298,6 +298,11 @@ api.on('term:kirokit', ({ id }) => {
     draw();
   }
 });
+// The native menu's Settings… (⌘, / Ctrl+,) opens Settings as its sidebar
+// button does. The first-launch page has no Settings to open, so it is ignored there.
+api.on('menu:settings', () => {
+  if (!setup()) sidebar.select('settings');
+});
 // A command that ends may have synced a new team or pin or installed one.
 api.on('term:kirokit:exit', async ({ id, code }) => {
   lastExit = Math.max(lastExit, id);

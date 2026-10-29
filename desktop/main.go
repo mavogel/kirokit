@@ -4,6 +4,7 @@ import (
 	"embed"
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -30,7 +31,10 @@ func main() {
 		MinWidth:         720,
 		MinHeight:        480,
 		BackgroundColour: application.NewRGB(23, 19, 31),
+		// Windows and Linux show the application menu at the top of the window.
+		UseApplicationMenu: true,
 	})
+	wapp.Menu.Set(buildMenu(wapp, menuFor(runtime.GOOS), app))
 
 	// A smoke start (CI) quits once the page has loaded and its first State
 	// call has answered (the page then sends smoke:ready), or fails after a minute.
