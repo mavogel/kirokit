@@ -8,7 +8,7 @@
 FROM node:26-bookworm AS node
 FROM golang:1.27-bookworm AS go
 
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 ENV GOPATH=/go PATH=/go/bin:/usr/local/go/bin:$PATH
 COPY --from=go /usr/local/go /usr/local/go
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
